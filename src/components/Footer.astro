@@ -1,0 +1,21 @@
+---
+// README「非公式サイトである旨の明記」に基づき、全ページ共通で免責文と一次情報への導線を出す。
+const officialLinks = [
+  { href: "https://www.014014.jp", label: "公式サイト" },
+  { href: "https://x.com/Masayoshi_Oishi", label: "X (本人)" },
+  { href: "http://www.oxt-music.com", label: "OxT 公式サイト" },
+];
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <p class="disclaimer">
+      本サイトは非公式のファンサイトです。オーイシマサヨシさん、および関連事務所・レーベル等とは一切関係ありません。
+    </p>
+    <ul>
+      {officialLinks.map((link) => (
+        <li><a href={link.href} target="_blank" rel="noopener noreferrer">{link.label}</a></li>
+      ))}
+    </ul>
+  </div>
+</footer>

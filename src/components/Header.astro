@@ -1,0 +1,21 @@
+---
+// サイト共通ヘッダー。実在するページのみをナビゲーションに載せる
+// (未実装ページへのリンク切れを避けるため、ページ追加のたびにここも更新する)。
+const navItems = [
+  { href: "/", label: "トップ" },
+  { href: "/profile", label: "プロフィール" },
+];
+---
+
+<header class="site-header">
+  <div class="container">
+    <nav>
+      <a class="site-title" href="/">オーイシマサヨシ非公式ファンサイト</a>
+      <ul>
+        {navItems.map((item) => (
+          <li><a href={item.href}>{item.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+</header>

@@ -1,0 +1,150 @@
+---
+// プロフィールページ。
+// 掲載情報はビクターエンタテインメント公式プロフィールおよび本人公式サイトを出典とし、
+// 紹介文は自分の言葉で要約している(README「開発ルール」参照)。
+import Layout from "../layouts/Layout.astro";
+
+const basicInfo = [
+  { label: "活動名義", value: "大石昌良 / オーイシマサヨシ" },
+  { label: "生年月日", value: "1980年1月5日" },
+  { label: "出身地", value: "愛媛県宇和島市" },
+  { label: "血液型", value: "A型" },
+];
+
+const timeline = [
+  { year: "2001年", event: "「Sound Schedule」のボーカル・ギターとしてメジャーデビュー。" },
+  { year: "2008年", event: "「大石昌良」名義でソロデビュー。アコースティックギターの弾き語りスタイルで活動を開始。" },
+  { year: "2013年", event: "アニメ『ダイヤのA』のオープニングテーマを担当し、初めてアニメ作品への楽曲提供を行う。" },
+  { year: "2014年8月", event: "アニメ・ゲーム関連の活動名義「オーイシマサヨシ」として活動開始(「君じゃなきゃダメみたい」)。" },
+  { year: "2015年", event: "Tom-H@ck氏とのユニット「OxT」を結成。" },
+];
+
+const activities = [
+  {
+    title: "大石昌良(ソロ)",
+    body: "アコースティックギター一本での弾き語りを軸に、楽曲制作・ライブ活動を行う。独特の演奏スタイルから「右手の魔術師」とも称される。",
+  },
+  {
+    title: "オーイシマサヨシ(アニソン)",
+    body: "アニメ・ゲーム作品の主題歌制作を中心に活動。『ダイヤのA』『月刊少女野崎くん』『オーバーロード』『プリンス・オブ・ストライド』『けものフレンズ』など、数多くの人気作品に楽曲を提供している。",
+  },
+  {
+    title: "OxT",
+    body: "Tom-H@ck氏とのデジタルロックユニット。アニメタイアップ楽曲を中心に活動している。",
+  },
+];
+
+const sources = [
+  { href: "https://www.jvcmusic.co.jp/-/Profile/A026071.html", label: "大石昌良 | プロフィール | ビクターエンタテインメント" },
+  { href: "https://www.014014.jp", label: "大石昌良 / オーイシマサヨシ 公式サイト" },
+];
+---
+
+<Layout title="プロフィール | オーイシマサヨシ非公式ファンサイト">
+  <h1>プロフィール</h1>
+
+  <section>
+    <h2>基本情報</h2>
+    <dl class="info-list">
+      {basicInfo.map((item) => (
+        <>
+          <dt>{item.label}</dt>
+          <dd>{item.value}</dd>
+        </>
+      ))}
+    </dl>
+  </section>
+
+  <section>
+    <h2>経歴・活動年表</h2>
+    <ul class="timeline">
+      {timeline.map((item) => (
+        <li>
+          <span class="year">{item.year}</span>
+          <span class="event">{item.event}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section>
+    <h2>主な活動内容</h2>
+    {activities.map((activity) => (
+      <article class="activity">
+        <h3>{activity.title}</h3>
+        <p>{activity.body}</p>
+      </article>
+    ))}
+  </section>
+
+  <section>
+    <h2>参照元・出典</h2>
+    <p class="note">掲載情報は以下の公開されている一次情報を出典としています。</p>
+    <ul>
+      {sources.map((source) => (
+        <li><a href={source.href} target="_blank" rel="noopener noreferrer">{source.label}</a></li>
+      ))}
+    </ul>
+  </section>
+</Layout>
+
+<style>
+  .info-list {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.5rem 1.5rem;
+    margin: 0;
+  }
+
+  .info-list dt {
+    color: var(--color-text-muted);
+  }
+
+  .info-list dd {
+    margin: 0;
+  }
+
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 2px solid var(--color-border);
+  }
+
+  .timeline li {
+    display: flex;
+    gap: 1.5rem;
+    padding: 0 0 1.5rem 1.5rem;
+    margin-left: -2px;
+  }
+
+  .timeline .year {
+    flex: none;
+    width: 6rem;
+    color: var(--color-accent);
+    font-weight: 700;
+  }
+
+  .activity {
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .activity:last-child {
+    border-bottom: none;
+  }
+
+  .activity h3 {
+    margin: 0 0 0.5rem;
+  }
+
+  .activity p {
+    margin: 0;
+    color: var(--color-text-muted);
+  }
+
+  .note {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+</style>

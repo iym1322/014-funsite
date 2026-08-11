@@ -1,17 +1,112 @@
 ---
+// トップページ(ワイヤーフレーム段階)。
+// CONTENTS_PLAN.md 2-1 の構成案(ヒーロー / プロフィール導線 / 最新ブログ / 主要ナビ)を
+// 骨組みとして実装。ブログ・ディスコグラフィー等は未実装のためプレースホルダー表示にしている。
+import Layout from "../layouts/Layout.astro";
 
+const mainContents = [
+  { href: "/profile", label: "プロフィール", desc: "経歴・活動年表など基本情報" },
+  { href: "/works", label: "ディスコグラフィー", desc: "楽曲・アルバム一覧(準備中)" },
+  { href: "/favorites", label: "推し曲コーナー", desc: "好きな曲を自分の言葉で紹介(準備中)" },
+];
 ---
 
-<html lang="ja">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>オーイシマサヨシ非公式ファンサイト</title>
-	</head>
-	<body>
-		<h1>オーイシマサヨシ非公式ファンサイト</h1>
-	</body>
-</html>
+<Layout title="オーイシマサヨシ非公式ファンサイト">
+  <section class="hero">
+    <p class="eyebrow">オーイシマサヨシ 非公式ファンサイト</p>
+    <h1>オーイシマサヨシさんの音楽の魅力を、自分の言葉で。</h1>
+    <p class="lead">
+      個人が趣味で運営する非公式サイトです。楽曲やプロフィールの魅力を、
+      一次情報をもとにまとめていきます。
+    </p>
+    <a class="cta" href="/profile">プロフィールを見る</a>
+  </section>
+
+  <section>
+    <h2>最新情報</h2>
+    <p class="placeholder">準備中です。学習記録は別リポジトリで管理しており、今後こちらに要約を表示する予定です。</p>
+  </section>
+
+  <section>
+    <h2>コンテンツ</h2>
+    <ul class="content-grid">
+      {mainContents.map((item) => (
+        <li>
+          <a href={item.href}>
+            <h3>{item.label}</h3>
+            <p>{item.desc}</p>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Layout>
+
+<style>
+  .hero {
+    text-align: center;
+    padding: 2rem 0 3rem;
+  }
+
+  .eyebrow {
+    color: var(--color-text-muted);
+    letter-spacing: 0.05em;
+    margin: 0 0 0.5rem;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+    margin: 0 0 1rem;
+  }
+
+  .lead {
+    color: var(--color-text-muted);
+    max-width: 32rem;
+    margin: 0 auto 1.5rem;
+  }
+
+  .cta {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: var(--color-surface);
+    text-decoration: none;
+  }
+
+  .placeholder {
+    color: var(--color-text-muted);
+    border: 1px dashed var(--color-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .content-grid a {
+    display: block;
+    padding: 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+    text-decoration: none;
+    color: var(--color-text);
+  }
+
+  .content-grid h3 {
+    margin: 0 0 0.5rem;
+  }
+
+  .content-grid p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+</style>

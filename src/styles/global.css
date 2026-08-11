@@ -1,0 +1,109 @@
+/*
+  共通スタイル定義
+  README「デザインの方向性」に沿って、落ち着いた色味・余白重視のシンプルなトーンにしている。
+  配色は暫定案(CONTENTS_PLAN.mdで「要検討」)。実装しながら調整する想定。
+*/
+
+:root {
+  --color-bg: #faf8f5;
+  --color-surface: #ffffff;
+  --color-text: #2f2c28;
+  --color-text-muted: #6b675f;
+  --color-accent: #8a6d5c;
+  --color-border: #e5e0d8;
+
+  --font-base: "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+
+  --content-width: 960px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-base);
+  line-height: 1.8;
+}
+
+a {
+  color: var(--color-accent);
+}
+
+.container {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.site-header {
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.site-header nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 0;
+}
+
+.site-header .site-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--color-text);
+}
+
+.site-header ul {
+  display: flex;
+  gap: 1.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-header a {
+  text-decoration: none;
+  color: var(--color-text-muted);
+}
+
+.site-header a:hover {
+  color: var(--color-accent);
+}
+
+main {
+  padding: 3rem 0;
+}
+
+section + section {
+  margin-top: 4rem;
+}
+
+h1, h2, h3 {
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.site-footer {
+  border-top: 1px solid var(--color-border);
+  padding: 2.5rem 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.site-footer .disclaimer {
+  margin: 0 0 1rem;
+}
+
+.site-footer ul {
+  display: flex;
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-wrap: wrap;
+}
