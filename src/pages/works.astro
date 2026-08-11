@@ -1,377 +1,166 @@
 ---
-// ディスコグラフィーページ。
-// 「全作品の網羅」を目指し、Sound Schedule時代/大石昌良(ソロ)/オーイシマサヨシ/OxTの
-// 音源作品に加え、映像作品(ライブDVD/Blu-ray)、他アーティストへの楽曲提供までを収録。
-// 出典はWikipedia・公式サイト等の一次〜準一次情報。複数ソースで日付表記が揺れる項目や
-// タイアップ先が未確認の項目には caution フラグを立て、画面上に「要確認」と明示している。
-// ジャケット画像・試聴リンクは権利確認ができていないため今回は掲載せず(CONTENTS_PLAN.md参照)。
+// ディスコグラフィーページ(CONTENTS_PLAN.md 2-2「サイトの核となる機能」)。
+// 全楽曲データは src/data/discography.ts に一元管理し、このページは
+// 一覧表示・検索・絞り込み・並べ替えのUIを提供するだけにしている
+// (「データを1箇所で管理→表示側は見るだけ」という方針に沿った設計)。
+// 再生回数の自動取得(フェーズ2・YouTube Data API)は未実装。まずはデータ構造と
+// 全曲網羅を優先し、リンクは確認できたものだけ掲載している。
 import Layout from "../layouts/Layout.astro";
+import { tracks, groups, types } from "../data/discography";
 
-const discographies = [
-  {
-    name: "Sound Schedule",
-    desc: "神戸商科大学の軽音楽部で結成されたバンド。大石昌良がVo/Gtを担当。2001年メジャーデビュー、2006年解散、2011年再結成し現在も並行活動中。",
-    albums: [
-      { date: "2000.11", title: "ここからはじまるストーリー", note: "インディーズ" },
-      { date: "2002.07", title: "イマココニアルモノ" },
-      { date: "2003.10", title: "456" },
-      { date: "2005.03", title: "ビオトープ" },
-      { date: "2006.02", title: "甘い夜", note: "iTunes Store限定配信" },
-      { date: "2006.09", title: "THE COMPLETE SS", note: "ベストアルバム" },
-      { date: "2011.09", title: "Place" },
-      { date: "2012.09", title: "FUTURE" },
-      { date: "2014.09", title: "LIVE", note: "ミニアルバム" },
-      { date: "2019.03", title: "Sound Schedule ALL TIME BEST", note: "ベストアルバム" },
-    ],
-    singles: [
-      { date: "2001.07", title: "コモリウタ", note: "タワーレコード限定カセット" },
-      { date: "2001.09", title: "吠える犬と君", tieIn: "「アッコとマチャミの新型テレビ」エンディングテーマ" },
-      { date: "2001.11", title: "君という花", tieIn: "「JNNスポーツ&ニュース」テーマ曲" },
-      { date: "2002.04", title: "幼なじみ", tieIn: "「COUNT DOWN TV」エンディング" },
-      { date: "2002.12", title: "ピーターパン・シンドローム", tieIn: "「AX MUSIC-TV」テーマ曲" },
-      { date: "2003.04", title: "ことばさがし", tieIn: "「saku saku」エンディング" },
-      { date: "2003.07", title: "さらばピニャコラーダ", tieIn: "「おかしや?さんま!」エンディング" },
-      { date: "2004.06", title: "スペシャルナンバー", tieIn: "「たけしの誰でもピカソ」エンディング" },
-      { date: "2005.01", title: "アンサー", tieIn: "NHK-BS2「週刊なびTV」エンディング" },
-      { date: "2016.09", title: "TIME MACHINE", caution: true },
-    ],
-  },
-  {
-    name: "大石昌良(ソロ)",
-    desc: "アコースティックギターの弾き語りを軸にしたソロ活動。2008年デビュー。",
-    albums: [
-      { date: "2008.11", title: "あの街この街" },
-      { date: "2009.11", title: "G.D. アトラクション" },
-      { date: "2012.01", title: "31マイスクリーム" },
-      { date: "2013.02", title: "マジカルミュージックツアー" },
-      { date: "2015.12", title: "大石昌良の弾き語りラボ" },
-      { date: "2016.07", title: "君に聞かせる物語" },
-    ],
-    singles: [
-      { date: "2008.06", title: "ほのかてらす", tieIn: "『神さまぁ〜ず』エンディングテーマ" },
-      { date: "2008.09", title: "うしろのしょうめん" },
-      { date: "2009.06", title: "ラブ", tieIn: "『クメピポ!』エンディングテーマ" },
-      { date: "2009.10", title: "幻想アンダーグラウンド" },
-      { date: "2010.12", title: "ダイヤモンド" },
-      { date: "2013.03", title: "MAGICAL ACOUSTIC TOUR", caution: true },
-      { date: "2013.12", title: "PHASE ONE" },
-      { date: "2018.03", title: "パラレルワールド" },
-      { date: "2018.11", title: "ボーダーライン" },
-    ],
-  },
-  {
-    name: "オーイシマサヨシ",
-    desc: "アニメ・ゲーム作品への楽曲提供を中心とした活動名義。2014年始動。",
-    albums: [
-      { date: "2017.07", title: "仮歌", note: "カバーアルバム" },
-      { date: "2019.06", title: "仮歌II", note: "カバーアルバム" },
-      { date: "2021.08", title: "エンターテイナー" },
-      { date: "2024.02", title: "ユニバース" },
-      { date: "2026.08", title: "仮歌Ⅲ", note: "カバーアルバム(想定)", caution: true },
-    ],
-    singles: [
-      { date: "2014.08", title: "君じゃなきゃダメみたい", tieIn: "『月刊少女野崎くん』オープニングテーマ" },
-      { date: "2018.05", title: "オトモダチフィルム", tieIn: "『多田くんは恋をしない』オープニングテーマ" },
-      { date: "2018.07", title: "Hands", tieIn: "『ウルトラマンR/B』主題歌" },
-      { date: "2018.08", title: "ドラゴンエネルギー", tieIn: "オーイシマサヨシ×加藤純一名義。ネット番組テーマ曲" },
-      { date: "2019.04", title: "沼", tieIn: "『臨死‼江古田ちゃん』エンディングテーマ" },
-      { date: "2019.08", title: "楽園都市", tieIn: "『コップクラフト』オープニングテーマ" },
-      { date: "2019.11", title: "ボルテシモ", caution: true },
-      { date: "2020.02", title: "No.7", tieIn: "『地縛少年花子くん』オープニングテーマ", caution: true },
-      { date: "2020.06", title: "世界が君を必要とする時が来たんだ/英雄の歌", tieIn: "前者は『トミカ絆合体 アースグランナー』オープニングテーマ、後者は劇場版『モンスターストライク』主題歌" },
-      { date: "2020.07", title: "キンカンのうた2020", caution: true },
-      { date: "2021.02", title: "神或アルゴリズム", tieIn: "feat.りりあ。", caution: true },
-      { date: "2021.04", title: "インパーフェクト", tieIn: "『SSSS.DYNAZENON』オープニングテーマ" },
-      { date: "2021.04", title: "ロールプレイング", tieIn: "『ドラゴン、家を買う。』オープニングテーマ" },
-      { date: "2022.06", title: "恋はエクスプロージョン", tieIn: "『恋は世界征服のあとで』オープニングテーマ(feat.田村ゆかり)" },
-      { date: "2022.09", title: "碧い砲撃" },
-      { date: "2023.03", title: "ギフト", tieIn: "『お隣の天使様にいつの間にか駄目人間にされていた件』オープニングテーマ" },
-      { date: "2023.05", title: "死んだ!", tieIn: "『勇者が死んだ!』オープニングテーマ" },
-      { date: "2023.09", title: "黄金航路" },
-      { date: "2023.11", title: "好きになっちゃダメな人", tieIn: "『お嬢と番犬くん』オープニングテーマ" },
-      { date: "2024.02", title: "なまらめんこいギャル", tieIn: "『道産子ギャルはなまらめんこい』オープニングテーマ" },
-      { date: "2024.04", title: "デュエルしようぜ！" },
-      { date: "2024.08", title: "あとの祭り" },
-      { date: "2024.09", title: "Sea of Wonderland" },
-      { date: "2024.11", title: "ギャンブリングホール", tieIn: "『凍牌』オープニングテーマ" },
-      { date: "2025.01", title: "主人公になろう！", tieIn: "feat.鈴木愛理" },
-      { date: "2025.01", title: "L'oN" },
-      { date: "2025.03", title: "uni-verse – From THE FIRST TAKE", note: "THE FIRST TAKE配信" },
-      { date: "2025.03", title: "君じゃなきゃダメみたい – From THE FIRST TAKE", note: "THE FIRST TAKE配信" },
-      { date: "2025.07", title: "かごめかごめ" },
-      { date: "2025.07", title: "ふたりキャンプ", tieIn: "feat.SPECIAL OTHERS" },
-      { date: "2026.02", title: "ニンゲン" },
-      { date: "2026.04", title: "ポケモンオールスターズ1025", note: "213/1025" },
-      { date: "2026.06", title: "君は恋人" },
-      { date: "2026.07", title: "ハイメンテナンスガール" },
-      { date: "2026.08", title: "嗚呼、素晴らしき日常" },
-    ],
-  },
-  {
-    name: "OxT",
-    desc: "Tom-H@ck氏とのデジタルロックユニット。2013年始動。",
-    albums: [
-      { date: "2016.03", title: "OxT COMPLETE SONGS \"ACE OF DIAMOND\"", note: "初期シングル集" },
-      { date: "2018.09", title: "Hello New World", note: "1stアルバム" },
-      { date: "2020.09", title: "REUNION", note: "2ndアルバム" },
-    ],
-    singles: [
-      { date: "2013.10", title: "Go EXCEED!!", tieIn: "『ダイヤのA』主題歌" },
-      { date: "2014", title: "Perfect HERO" },
-      { date: "2015.05", title: "KIMERO!!" },
-      { date: "2015.08", title: "Grateful Story", note: "10日間限定配信" },
-      { date: "2015.08", title: "Clattanoia", tieIn: "『オーバーロード』オープニングテーマ" },
-      { date: "2015.11", title: "BLOOM OF YOUTH", tieIn: "『ダイヤのA -SECOND SEASON-』エンディングテーマ" },
-      { date: "2016.02", title: "STRIDER'S HIGH", tieIn: "『プリンス・オブ・ストライド オルタネイティブ』オープニングテーマ" },
-      { date: "2017.01", title: "Be The Best! Be The Blue!/Tears of a Genius", caution: true },
-      { date: "2017.01", title: "One Hand Message", caution: true },
-      { date: "2018.01", title: "Number One", caution: true },
-      { date: "2018.01", title: "GO CRY GO", caution: true },
-      { date: "2018.08", title: "Silent Solitude", caution: true },
-      { date: "2018.11", title: "UNION", tieIn: "『SSSS.GRIDMAN』オープニングテーマ" },
-      { date: "2019.04", title: "ゴールデンアフタースクール", tieIn: "『ダイヤのA act II』エンディングテーマ" },
-      { date: "2020.02", title: "Everlasting Dream", caution: true },
-      { date: "2022.07", title: "HOLLOW HUNGER", caution: true },
-      { date: "2022.10", title: "HIGHEST", caution: true },
-      { date: "2023.10", title: "grayscale dominator", note: "配信限定" },
-      { date: "2024.09", title: "WHEELER-DEALER", note: "配信限定" },
-    ],
-  },
-];
-
-// ライブ映像・DVD/Blu-ray作品(名義別)
-const videoWorks = [
-  {
-    name: "Sound Schedule",
-    items: [
-      { date: "2005.08", title: "SS FILMS 〜8 Clips of Singles〜" },
-      { date: "2006.02", title: "SS LIVES 〜Live Tour \"you can't beat that.\"〜" },
-      { date: "2020.03", title: "Sound Schedule Live Tour \"PLACE2019\" LIQUIDROOM" },
-    ],
-  },
-  {
-    name: "大石昌良(ソロ)",
-    items: [
-      { date: "2010.03", title: "G.D.アトラクション(映像盤)" },
-      { date: "2013.09", title: "MAGICAL MUSIC TOUR THE LIVE @ SHIBUYA" },
-      { date: "2016.04", title: "大石昌良の弾き語りラボツアー2015 東京公演" },
-      { date: "2016.09", title: "耳の聞こえなくなった恋人とそのうたうたい" },
-      { date: "2019.05", title: "大石昌良の弾き語りラボ〜10th Anniversary \"One Man\" Show〜" },
-    ],
-  },
-  {
-    name: "オーイシマサヨシ",
-    items: [
-      { date: "2017.12", title: "仮歌ツアー" },
-      { date: "2019.11", title: "仮歌ツアー2019" },
-      { date: "2022.03", title: "オーイシマサヨシ ワンマンライブ「エンターテイナー」" },
-      { date: "2024.08", title: "オーイシ武道館 〜オーイシマサヨシ ワンマンライブ at 日本武道館〜" },
-      { date: "2025.03", title: "オーイシSSA 〜オーイシマサヨシ ワンマンライブ at さいたまスーパーアリーナ〜", caution: true },
-      { date: "2025.08", title: "オーイシ武道館 Vol.2 〜オーイシマサヨシ ワンマンライブ at 日本武道館〜", caution: true },
-    ],
-  },
-  {
-    name: "OxT",
-    items: [{ date: "2019.03", title: "UNION MUSIC VIDEO/Making of UNION" }],
-  },
-];
-
-// 他アーティストへの楽曲提供(作詞・作曲・編曲での参加)
-const artistCredits = [
-  { subject: "アース・スター ドリーム", title: "ブラッドタイプ☆ハートビート", role: "作詞・作曲・編曲" },
-  { subject: "愛美", title: "かかった魔法はアマノジャク", role: "作詞・作曲・編曲" },
-  { subject: "i☆Ris", title: "愛 for you!", role: "作曲" },
-  { subject: "亜咲花", title: "わやわやわー!", role: "作詞・作曲・編曲" },
-  { subject: "上坂すみれ", title: "ハッピーエンドプリンセス", role: "作詞・作曲・編曲" },
-  { subject: "上田桃夏", title: "私と、わたし", role: "編曲" },
-  { subject: "内田真礼", title: "モラトリアムダンスフロア", role: "作詞・作曲・編曲" },
-  { subject: "内田真礼", title: "君のヒロインでいるために", role: "作詞・作曲・編曲" },
-  { subject: "内田真礼×内田雄馬", title: "BIG LOVE", role: "作曲" },
-  { subject: "浦島坂田船", title: "ARK", role: "作詞・作曲・編曲" },
-  { subject: "浦島坂田船", title: "シンデレラステップ", role: "作詞・作曲" },
-  { subject: "えなこ", title: "名探偵キミに告ぐ", role: "作詞・作曲・編曲" },
-  { subject: "大橋彩香", title: "シンガロン進化論", role: "作詞・作曲・編曲" },
-  { subject: "柿原徹也", title: "リングオブドランカー", role: "作詞・作曲・編曲" },
-  { subject: "CUBERS", title: "トーキョーラビリンス", role: "作詞・作曲・編曲" },
-  { subject: "工藤圭一", title: "reborn", role: "プロデュース・コーラス" },
-  { subject: "工藤圭一", title: "ルーキー", role: "プロデュース・コーラス" },
-  { subject: "KEISUKE", title: "バトン", role: "作詞・作曲・編曲" },
-  { subject: "Gero", title: "ベイビーミュージックライダー", role: "作詞・作曲・編曲" },
-  { subject: "koume", title: "一期一会", role: "作曲" },
-  { subject: "斉藤壮馬", title: "フィッシュストーリー", role: "作詞・作曲・編曲" },
-  { subject: "阪本奨悟", title: "無限のトライ", role: "編曲" },
-  { subject: "佐久間大介(Snow Man)", title: "守りたい、その笑顔", role: "作詞・作曲" },
-  { subject: "鈴村健一", title: "turn on a radio", role: "作曲・編曲" },
-  { subject: "鈴木愛理", title: "最強の推し!", role: "作詞・作曲・編曲" },
-  { subject: "鈴木愛理", title: "一生☆キミ推し", role: "作詞・作曲・編曲" },
-  { subject: "鈴木このみ", title: "Nice to Me CHU!!!", role: "作詞・作曲" },
-  { subject: "鈴木雅之", title: "たとえ世界がそっぽ向いても", role: "作詞・作曲" },
-  { subject: "ZeBRA☆STAR", title: "ゼブラワールド", role: "作詞・作曲・編曲" },
-  { subject: "Daisy×Daisy", title: "あしたてんきになあれ", role: "作詞・作曲・編曲" },
-  { subject: "東山奈央", title: "とおりゃんせ", role: "作詞・作曲・編曲" },
-  { subject: "TRUE", title: "酸素", role: "作曲・編曲" },
-  { subject: "となりの坂田。", title: "スーパーヒーロー", role: "作詞・作曲" },
-  { subject: "流れ星", title: "おんなじ拳", role: "編曲" },
-  { subject: "花江夏樹", title: "ヒーローインポッシボー", role: "作詞・作曲・編曲" },
-  { subject: "花れん", title: "トビウオ", role: "作詞・作曲・編曲" },
-  { subject: "みみめめMIMI", title: "チョコレート革命", role: "編曲" },
-  { subject: "三森すずこ", title: "チャンス!", role: "作曲・編曲" },
-  { subject: "May'n", title: "未来ノート", role: "作詞・作曲・編曲" },
-  { subject: "May'n", title: "あはっててっぺんっ", role: "作詞・作曲" },
-  { subject: "メロディーキッチン", title: "歌う魚", role: "編曲" },
-  { subject: "メロディーキッチン", title: "きらきら", role: "編曲" },
-  { subject: "メロディーキッチン", title: "花束", role: "編曲" },
-  { subject: "りぶ", title: "不可侵領域デストロイヤー", role: "作詞・作曲・編曲" },
-  { subject: "和島あみ", title: "永遠ループ", role: "作詞" },
-  { subject: "和島あみ", title: "モノクロテリトリー", role: "作詞" },
-];
-
-// アニメ・ゲーム・舞台作品への楽曲提供
-const mediaCredits = [
-  { subject: "IDOLY PRIDE", title: "サヨナラから始まる物語", role: "作詞・作曲・編曲" },
-  { subject: "IDOLY PRIDE", title: "星色のカレイドスコープ", role: "作曲" },
-  { subject: "アニソン!プレミアム!", title: "☆(きらりん)トリルで始まっちゃう!", role: "作曲" },
-  { subject: "Animelo Summer Live 2020/2021 -COLORS-", title: "なんてカラフルな世界!", role: "作詞・作曲・編曲" },
-  { subject: "異世界かるてっと", title: "異世界かるてっと", role: "作詞・作曲・編曲" },
-  { subject: "異世界かるてっと2", title: "異世界ショータイム", role: "作詞・作曲・編曲" },
-  { subject: "異世界かるてっと3", title: "異世界こんちぇると", role: "作曲" },
-  { subject: "ウマ娘 プリティーダービー 新時代の扉(映画)", title: "Ready!! Steady!! Derby!!", role: "作詞・作曲" },
-  { subject: "アニメ「A3!」", title: "Act! Addict! Actors!", role: "作詞・作曲・編曲" },
-  { subject: "アニメ「A3!」", title: "Circle of Seasons", role: "作詞・作曲・編曲" },
-  { subject: "ゲーム「A3!」", title: "MANKAI☆開花宣言", role: "作詞・作曲・編曲" },
-  { subject: "ゲーム「A3!」", title: "ワンダーランド・ア・ゴーゴー!!", role: "作詞・作曲・編曲" },
-  { subject: "ゲーム「A3!」", title: "奇天烈ポエマー", role: "作詞・作曲・編曲" },
-  { subject: "ゲーム「A3!」", title: "春夏秋冬☆Blooming!", role: "作詞・作曲・編曲" },
-  { subject: "ゲーム「A3!」", title: "ペテン師の憂鬱", role: "作詞・作曲" },
-  { subject: "ゲーム「A3!」", title: "Ever☆Blooming!", role: "作詞・作曲・編曲" },
-  { subject: "舞台「A3!」", title: "The Show Must Go On!", role: "作詞・作曲・編曲" },
-  { subject: "アニメ「【推しの子】」", title: "サインはB", role: "作詞・作曲" },
-  { subject: "アニメ「【推しの子】」", title: "Bのリベンジ", role: "作詞・作曲・編曲" },
-  { subject: "アニメ「おばけずかん」", title: "おばけずかんのうた〜いつでもどこでも〜", role: "作曲" },
-  { subject: "アニメ「おばけずかん」", title: "おばけずかんのうた", role: "作詞・作曲・編曲" },
-  { subject: "アニメ「けものフレンズ」", title: "ようこそジャパリパークへ", role: "作詞・作曲・編曲(平成アニソン大賞作詞賞受賞)" },
-  { subject: "アニメ「けものフレンズ2」", title: "乗ってけ!ジャパリビート", role: "作詞・作曲・編曲" },
-  { subject: "ゲーム「けものフレンズ3」", title: "け・も・の・だ・も・の", role: "作詞・作曲・編曲" },
-  { subject: "ゲーム「けものフレンズぱびりおん」", title: "フレ!フレ!ベストフレンズ", role: "作詞・作曲・編曲" },
-  { subject: "アニメ「Back Street Girls -ゴクドルズ-」", title: "ゴクドルミュージック", role: "作詞・作曲・編曲" },
-  { subject: "アニメ「トライナイツ」", title: "無限のトライ", role: "編曲" },
-  { subject: "P's LIVE! 05", title: "Let's Go!! 〜Sing For Tomorrow〜", role: "作曲" },
-  { subject: "配信コンテンツ「PRELUDERS」", title: "ヒーローライセンス", role: "作詞・作曲・編曲" },
-  { subject: "アニメ「枕男子」", title: "枕男子", role: "作詞・作曲・編曲" },
-  { subject: "アニメ「Re:ゼロから始める異世界生活」", title: "ぼうやの夢よ", role: "作曲・編曲" },
-];
-
-const sources = [
-  { href: "https://www.014014.jp/discography", label: "大石昌良 / オーイシマサヨシ 公式サイト ディスコグラフィー" },
-  { href: "https://www.jvcmusic.co.jp/-/Profile/A026071.html", label: "大石昌良 | プロフィール | ビクターエンタテインメント" },
-  { href: "https://ja.wikipedia.org/wiki/大石昌良", label: "大石昌良 - Wikipedia" },
-  { href: "https://ja.wikipedia.org/wiki/Sound_Schedule", label: "Sound Schedule - Wikipedia" },
-  { href: "https://ja.wikipedia.org/wiki/OxT", label: "OxT - Wikipedia" },
-];
+const sorted = [...tracks].sort((a, b) => b.sortDate.localeCompare(a.sortDate));
 ---
 
 <Layout title="ディスコグラフィー | オーイシマサヨシ非公式ファンサイト">
   <h1>ディスコグラフィー</h1>
   <p class="note">
-    「全作品の網羅」を目指し、Sound Schedule時代から現在までの音源・映像作品、
-    他アーティストへの楽曲提供までをまとめています。個人調査によるものなので、
-    抜けや誤りが残っている可能性があります。<span class="caution-label">要確認</span>
-    の表記があるものはタイアップ先や表記の裏取りが十分にできていない項目です。
-    最新・正確な情報は公式サイトをご確認ください。
+    Sound Schedule時代から現在までの音源・映像作品、他アーティストへの楽曲提供までを
+    1つのデータベースとしてまとめています。曲名・作品名で検索したり、名義や種別で
+    絞り込んだりできます。個人調査によるものなので抜けや誤りが残っている可能性があり、
+    <span class="caution-label">要確認</span>は出典間で表記が揺れる項目です。
+    YouTube・配信サービスへのリンクは確認できたものだけ掲載しており、順次追加予定です。
   </p>
 
-  {discographies.map((group) => (
-    <section>
-      <h2>{group.name}</h2>
-      <p class="group-desc">{group.desc}</p>
+  <div class="controls">
+    <input type="search" id="search" placeholder="曲名・作品名で検索" aria-label="検索" />
 
-      {group.albums.length > 0 && (
-        <>
-          <h3>アルバム</h3>
-          <ul class="release-list">
-            {group.albums.map((album) => (
-              <li>
-                <span class="date">{album.date}</span>
-                <span class="title">{album.title}</span>
-                {album.caution && <span class="caution-label">要確認</span>}
-                {album.note && <span class="tie-in">{album.note}</span>}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+    <select id="filter-group" aria-label="名義で絞り込み">
+      <option value="">名義: すべて</option>
+      {groups.map((g) => <option value={g}>{g}</option>)}
+    </select>
 
-      {group.singles.length > 0 && (
-        <>
-          <h3>シングル</h3>
-          <ul class="release-list">
-            {group.singles.map((single) => (
-              <li>
-                <span class="date">{single.date}</span>
-                <span class="title">{single.title}</span>
-                {single.caution && <span class="caution-label">要確認</span>}
-                {single.tieIn && <span class="tie-in">{single.tieIn}</span>}
-                {single.note && <span class="tie-in">{single.note}</span>}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-    </section>
-  ))}
+    <select id="filter-type" aria-label="種別で絞り込み">
+      <option value="">種別: すべて</option>
+      {types.map((t) => <option value={t}>{t}</option>)}
+    </select>
 
-  <section>
-    <h2>ライブ映像・DVD/Blu-ray</h2>
-    {videoWorks.map((group) => (
-      <>
-        <h3>{group.name}</h3>
-        <ul class="release-list">
-          {group.items.map((item) => (
-            <li>
-              <span class="date">{item.date}</span>
-              <span class="title">{item.title}</span>
-              {item.caution && <span class="caution-label">要確認</span>}
-            </li>
-          ))}
-        </ul>
-      </>
-    ))}
-  </section>
+    <label class="checkbox">
+      <input type="checkbox" id="filter-tiein" />
+      タイアップのみ
+    </label>
 
-  <section>
-    <h2>他アーティストへの楽曲提供</h2>
-    <p class="group-desc">作詞・作曲・編曲などで参加した他アーティスト名義の楽曲。</p>
-    <ul class="credit-list">
-      {artistCredits.map((credit) => (
-        <li>
-          <span class="subject">{credit.subject}</span>
-          <span class="title">{credit.title}</span>
-          <span class="role">{credit.role}</span>
-        </li>
-      ))}
-    </ul>
+    <select id="sort" aria-label="並べ替え">
+      <option value="date-desc">リリース日(新しい順)</option>
+      <option value="date-asc">リリース日(古い順)</option>
+      <option value="title-asc">曲名順</option>
+      <option value="group-asc">名義順</option>
+    </select>
+  </div>
 
-    <h3>アニメ・ゲーム・舞台作品への提供曲</h3>
-    <ul class="credit-list">
-      {mediaCredits.map((credit) => (
-        <li>
-          <span class="subject">{credit.subject}</span>
-          <span class="title">{credit.title}</span>
-          <span class="role">{credit.role}</span>
-        </li>
-      ))}
-    </ul>
-  </section>
+  <p id="result-count" class="result-count"></p>
+
+  <div class="table-wrap">
+    <table id="track-table">
+      <thead>
+        <tr>
+          <th>日付</th>
+          <th>曲名</th>
+          <th>名義/提供先</th>
+          <th>種別</th>
+          <th>詳細</th>
+          <th>リンク</th>
+        </tr>
+      </thead>
+      <tbody>
+        {sorted.map((track) => {
+          const displaySubject = track.type === "提供曲" ? track.subject : track.group;
+          const detail = track.tieIn ?? track.note ?? track.role ?? "";
+          const searchText = [track.title, track.group, track.subject, track.tieIn, track.role]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+          return (
+            <tr
+              data-date={track.sortDate}
+              data-title={track.title}
+              data-group={track.group}
+              data-type={track.type}
+              data-tiein={track.tieIn ? "1" : "0"}
+              data-search={searchText}
+            >
+              <td>{track.date || "-"}</td>
+              <td>
+                {track.title}
+                {track.caution && <span class="caution-label">要確認</span>}
+              </td>
+              <td>{displaySubject}</td>
+              <td>{track.type}</td>
+              <td class="detail">{detail}</td>
+              <td class="links">
+                {track.youtube && <a href={track.youtube} target="_blank" rel="noopener noreferrer">YouTube</a>}
+                {track.appleMusic && <a href={track.appleMusic} target="_blank" rel="noopener noreferrer">Apple Music</a>}
+                {track.spotify && <a href={track.spotify} target="_blank" rel="noopener noreferrer">Spotify</a>}
+                {!track.youtube && !track.appleMusic && !track.spotify && <span class="no-link">-</span>}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
 
   <section>
     <h2>参照元・出典</h2>
     <ul>
-      {sources.map((source) => (
-        <li><a href={source.href} target="_blank" rel="noopener noreferrer">{source.label}</a></li>
-      ))}
+      <li><a href="https://www.014014.jp/discography" target="_blank" rel="noopener noreferrer">大石昌良 / オーイシマサヨシ 公式サイト ディスコグラフィー</a></li>
+      <li><a href="https://www.jvcmusic.co.jp/-/Profile/A026071.html" target="_blank" rel="noopener noreferrer">大石昌良 | プロフィール | ビクターエンタテインメント</a></li>
+      <li><a href="https://ja.wikipedia.org/wiki/大石昌良" target="_blank" rel="noopener noreferrer">大石昌良 - Wikipedia</a></li>
+      <li><a href="https://ja.wikipedia.org/wiki/Sound_Schedule" target="_blank" rel="noopener noreferrer">Sound Schedule - Wikipedia</a></li>
+      <li><a href="https://ja.wikipedia.org/wiki/OxT" target="_blank" rel="noopener noreferrer">OxT - Wikipedia</a></li>
     </ul>
   </section>
 </Layout>
+
+<script>
+  // 曲データベースの検索・絞り込み・並べ替え(フレームワーク未導入のためVanilla JSで実装)。
+  const table = document.getElementById("track-table") as HTMLTableElement;
+  const tbody = table.querySelector("tbody") as HTMLTableSectionElement;
+  const rows = Array.from(tbody.querySelectorAll("tr"));
+  const resultCount = document.getElementById("result-count") as HTMLParagraphElement;
+
+  const searchInput = document.getElementById("search") as HTMLInputElement;
+  const groupSelect = document.getElementById("filter-group") as HTMLSelectElement;
+  const typeSelect = document.getElementById("filter-type") as HTMLSelectElement;
+  const tieinCheckbox = document.getElementById("filter-tiein") as HTMLInputElement;
+  const sortSelect = document.getElementById("sort") as HTMLSelectElement;
+
+  function applyFiltersAndSort() {
+    const query = searchInput.value.trim().toLowerCase();
+    const group = groupSelect.value;
+    const type = typeSelect.value;
+    const tieinOnly = tieinCheckbox.checked;
+
+    let visibleCount = 0;
+    for (const row of rows) {
+      const matchesQuery = !query || row.dataset.search!.includes(query);
+      const matchesGroup = !group || row.dataset.group === group;
+      const matchesType = !type || row.dataset.type === type;
+      const matchesTieIn = !tieinOnly || row.dataset.tiein === "1";
+      const visible = matchesQuery && matchesGroup && matchesType && matchesTieIn;
+      row.style.display = visible ? "" : "none";
+      if (visible) visibleCount++;
+    }
+
+    const sortValue = sortSelect.value;
+    const sortedRows = [...rows].sort((a, b) => {
+      if (sortValue === "date-asc") return a.dataset.date!.localeCompare(b.dataset.date!);
+      if (sortValue === "date-desc") return b.dataset.date!.localeCompare(a.dataset.date!);
+      if (sortValue === "title-asc") return a.dataset.title!.localeCompare(b.dataset.title!, "ja");
+      if (sortValue === "group-asc") return a.dataset.group!.localeCompare(b.dataset.group!, "ja");
+      return 0;
+    });
+    for (const row of sortedRows) tbody.appendChild(row);
+
+    resultCount.textContent = `${visibleCount} / ${rows.length} 件表示`;
+  }
+
+  for (const el of [searchInput, groupSelect, typeSelect, tieinCheckbox, sortSelect]) {
+    el.addEventListener("input", applyFiltersAndSort);
+    el.addEventListener("change", applyFiltersAndSort);
+  }
+
+  applyFiltersAndSort();
+</script>
 
 <style>
   .note {
@@ -379,46 +168,80 @@ const sources = [
     font-size: 0.9rem;
   }
 
-  .group-desc {
-    color: var(--color-text-muted);
-    margin-top: -0.5rem;
-  }
-
-  h3 {
-    font-size: 1rem;
-    margin: 1.5rem 0 0.75rem;
-    color: var(--color-text-muted);
-  }
-
-  .release-list {
-    list-style: none;
-    margin: 0 0 1rem;
-    padding: 0;
-  }
-
-  .release-list li {
+  .controls {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.25rem 1rem;
-    padding: 0.6rem 0;
-    border-bottom: 1px solid var(--color-border);
+    gap: 0.75rem;
+    align-items: center;
+    margin: 1.5rem 0 0.5rem;
   }
 
-  .release-list .date {
-    flex: none;
-    width: 5rem;
-    color: var(--color-accent);
+  .controls input[type="search"] {
+    flex: 1 1 12rem;
   }
 
-  .release-list .title {
-    font-weight: 700;
+  .controls input,
+  .controls select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: inherit;
   }
 
-  .release-list .tie-in {
+  .checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     color: var(--color-text-muted);
     font-size: 0.9rem;
+  }
+
+  .result-count {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+  }
+
+  table {
     width: 100%;
-    margin-left: 5rem;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+  }
+
+  td.detail {
+    white-space: normal;
+    color: var(--color-text-muted);
+    min-width: 14rem;
+  }
+
+  th {
+    background: var(--color-surface);
+    position: sticky;
+    top: 0;
+  }
+
+  .links a {
+    margin-right: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .no-link {
+    color: var(--color-text-muted);
   }
 
   .caution-label {
@@ -427,36 +250,6 @@ const sources = [
     background: #f4e8de;
     border-radius: 4px;
     padding: 0.1rem 0.4rem;
-  }
-
-  .credit-list {
-    list-style: none;
-    margin: 0 0 1rem;
-    padding: 0;
-  }
-
-  .credit-list li {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1rem;
-    padding: 0.6rem 0;
-    border-bottom: 1px solid var(--color-border);
-    font-size: 0.9rem;
-  }
-
-  .credit-list .subject {
-    flex: none;
-    width: 12rem;
-    color: var(--color-accent);
-  }
-
-  .credit-list .title {
-    font-weight: 700;
-  }
-
-  .credit-list .role {
-    color: var(--color-text-muted);
-    width: 100%;
-    margin-left: 12rem;
+    margin-left: 0.4rem;
   }
 </style>
