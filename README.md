@@ -1,43 +1,105 @@
-# Astro Starter Kit: Minimal
+# オーイシマサヨシ非公式ファンサイト
 
-```sh
-npm create astro@latest -- --template minimal
+## 1. プロジェクト概要
+
+オーイシマサヨシさんの**非公式**ファンサイトです。個人の学習・趣味目的で制作しています。
+
+### 目的
+1. **Claude Codeを活用したサイト開発・運用の学習**
+   Web開発の基礎(Astro, HTML/CSS/JS)を、Claude Codeと一緒に手を動かしながら学ぶ。
+2. **好きなアーティストの魅力を発信する**
+   オーイシマサヨシさんの楽曲・活動の魅力を、自分なりの視点でまとめて紹介する。
+
+> 学習・制作記録は本サイトには含めず、**別リポジトリ(別プロジェクト)** として管理する。
+> ファンサイトとしての世界観と、個人の学習メモを混在させないための方針。
+
+### 非公式サイトである旨の明記
+- 全ページ共通のフッターに「本サイトは非公式のファンサイトです。オーイシマサヨシさん、および関連事務所・レーベル等とは一切関係ありません。」といった趣旨の記載を必ず入れる。
+- トップページ・プロフィールページなど主要ページの目立つ位置にも明記する。
+- 公式サイト・SNS等へのリンクを明記し、一次情報への導線を用意する。
+
+### デザインの方向性
+- **シンプルで上品**なトーンを基本とする。
+- 装飾を詰め込みすぎず、余白を活かしたレイアウトにする。
+- 配色は落ち着いたトーンを基調とし、派手な原色の多用は避ける(具体的なカラーコードは実装時に相談しながら決める)。
+- フォントも過度に個性的なものは避け、可読性を優先する。
+
+---
+
+## 2. 技術スタック
+
+- **フレームワーク**: [Astro](https://astro.build/)
+- **言語**: HTML / CSS / JavaScript(必要に応じてTypeScript)
+- **コンテンツ管理**: Markdown(Astro Content Collectionsでブログ記事等を管理)
+- **ホスティング**: GitHub Pages(予定)
+
+---
+
+## 3. ディレクトリ構成(想定)
+
 ```
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
 /
-├── public/
+├── public/              # 画像などの静的アセット
 ├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+│   ├── components/      # 再利用可能なUIコンポーネント
+│   ├── layouts/         # ページ共通レイアウト
+│   ├── pages/           # 各ページ(ルーティングは自動生成)
+│   │   ├── index.astro       # トップページ
+│   │   ├── profile.astro     # プロフィール紹介ページ
+│   │   └── works/            # 楽曲・作品紹介
+│   └── styles/           # 共通スタイル
+├── astro.config.mjs
+├── package.json
+└── README.md
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+※ 実際の構成は開発を進めながら適宜更新する。
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+---
 
-Any static assets, like images, can be placed in the `public/` directory.
+## 4. 開発ルール
 
-## 🧞 Commands
+- コードにはポイントとなる処理に簡単なコメントを入れる(学習記録も兼ねるため)。
+- コンポーネントは小さく分割し、役割を明確にする。
+- 画像・音源など著作権のある素材は無断で使用しない。公式が公開している画像(プレスリリース等)を使う場合は出典を明記する。
+- 歌詞・記事本文などの著作物をそのまま転載しない。紹介文はすべて自分の言葉で書く。
+- コミット単位は小さく、コミットメッセージは「何を・なぜ」変更したか分かるように書く。
 
-All commands are run from the root of the project, from a terminal:
+---
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+## 5. Claude Codeへの依頼時の注意点
 
-## 👀 Want to learn more?
+- 作業を依頼する際は、対象ファイル・ページを明確に伝える。
+- 新しいページやコンポーネントを追加する際は、上記の[ディレクトリ構成](#3-ディレクトリ構成想定)に沿って配置してもらう。
+- 生成されたコードには、学習用途であることを踏まえて処理内容のコメントを付けてもらう。
+- 著作権・肖像権に関わる内容(画像・歌詞の転載など)を依頼しない。
+- 大きな変更は一度に依頼せず、小さなタスクに分割して進める。
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+---
+
+## 6. セットアップ・開発コマンド(Astro導入後に使用)
+
+```bash
+# 依存関係のインストール
+npm install
+
+# 開発サーバー起動
+npm run dev
+
+# ビルド
+npm run build
+
+# ビルド結果のプレビュー
+npm run preview
+```
+
+---
+
+## 7. 今後のTODO
+
+- [ ] Astroプロジェクトの初期化
+- [ ] トップページのワイヤーフレーム作成
+- [ ] プロフィールページの作成
+- [ ] 楽曲・作品紹介ページの作成
+- [ ] ブログ(学習記録)機能の実装
+- [ ] GitHub Pagesへのデプロイ設定
