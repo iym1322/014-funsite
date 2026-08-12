@@ -1,0 +1,194 @@
+---
+// カレンダーページ(CONTENTS_PLAN.md 2-5)。
+// まずは静的な月表示から着手し、対象は2026年8月のみ(スケジュールデータが
+// 揃い次第、他の月にも拡張する想定)。日付計算はタイムゾーン起因のズレを
+// 避けるため常にUTCベースで行う。
+import Layout from "../layouts/Layout.astro";
+import { schedule } from "../data/schedule";
+
+const year = 2026;
+const month = 8; // 1-indexed
+
+const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay(); // 0=日曜
+
+const cells: (number | null)[] = [];
+for (let i = 0; i < firstWeekday; i++) cells.push(null);
+for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+while (cells.length % 7 !== 0) cells.push(null);
+
+const weekdayLabels = ["日", "月", "火", "水", "木", "金", "土"];
+
+function eventsOnDay(day: number) {
+  const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  return schedule.filter((e) => e.date === dateStr);
+}
+
+const typeLabels = { release: "リリース", live: "ライブ", event: "イベント" };
+---
+
+<Layout title="カレンダー | オーイシマサヨシ非公式ファンサイト">
+  <h1>カレンダー</h1>
+  <p class="note">
+    リリース・ライブ・イベントの予定をまとめています。まだ2026年8月分のみの掲載です。
+    公開情報をもとにしていますが、最新情報は公式サイト・公式SNSをご確認ください。
+  </p>
+
+  <h2 class="month-title">{year}年{month}月</h2>
+
+  <div class="calendar">
+    {weekdayLabels.map((w) => <div class="weekday">{w}</div>)}
+    {cells.map((day) => (
+      <div class={`cell ${day === null ? "empty" : ""}`}>
+        {day !== null && (
+          <>
+            <span class="day-number">{day}</span>
+            <ul class="day-events">
+              {eventsOnDay(day).map((e) => (
+                <li class={`event-${e.type}`}>
+                  {e.href ? <a href={e.href}>{e.title}</a> : <span>{e.title}</span>}
+                  {e.note && <span class="event-note">{e.note}</span>}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+    ))}
+  </div>
+
+  <ul class="legend">
+    {Object.entries(typeLabels).map(([key, label]) => (
+      <li><span class={`dot event-${key}`}></span>{label}</li>
+    ))}
+  </ul>
+</Layout>
+
+<style>
+  .note {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .month-title {
+    margin: 2rem 0 1rem;
+  }
+
+  .calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: var(--color-border);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .weekday {
+    background: var(--color-surface);
+    text-align: center;
+    padding: 0.5rem 0;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .cell {
+    background: var(--color-surface);
+    min-height: 6rem;
+    padding: 0.4rem;
+  }
+
+  .cell.empty {
+    background: var(--color-bg);
+  }
+
+  .day-number {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .day-events {
+    list-style: none;
+    margin: 0.3rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .day-events li {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    border-left: 3px solid var(--color-accent);
+    padding-left: 0.4rem;
+  }
+
+  .day-events a {
+    color: var(--color-text);
+  }
+
+  .day-events a:hover {
+    color: var(--color-accent);
+  }
+
+  .event-note {
+    display: block;
+    color: var(--color-text-muted);
+  }
+
+  .event-release {
+    border-left-color: #8a6d5c;
+  }
+
+  .event-live {
+    border-left-color: #5c7a8a;
+  }
+
+  .event-event {
+    border-left-color: #8a8a5c;
+  }
+
+  .legend {
+    display: flex;
+    gap: 1.5rem;
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  .legend li {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .dot {
+    display: inline-block;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 999px;
+  }
+
+  .dot.event-release {
+    background: #8a6d5c;
+  }
+
+  .dot.event-live {
+    background: #5c7a8a;
+  }
+
+  .dot.event-event {
+    background: #8a8a5c;
+  }
+
+  @media (max-width: 640px) {
+    .cell {
+      min-height: 4rem;
+    }
+    .day-events li {
+      font-size: 0.65rem;
+    }
+  }
+</style>
