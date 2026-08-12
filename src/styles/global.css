@@ -47,15 +47,20 @@ a {
 .site-header nav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 1.5rem;
   padding: 1.25rem 0;
+  /* サイト名+ナビ項目が幅に収まらない場合は、ナビ側だけを横スクロールさせる
+     (項目数が増えても各リンクのラベルが折り返さないようにするため)。 */
+  min-width: 0;
 }
 
 .site-header .site-title {
+  flex: none;
   font-size: 1.25rem;
   font-weight: 700;
   text-decoration: none;
   color: var(--color-text);
+  white-space: nowrap;
 }
 
 .site-header ul {
@@ -63,16 +68,42 @@ a {
   gap: 1.5rem;
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0.25rem 0;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  /* 右端が切れていることが分かるよう、スクロール可能な間は淡いグラデーションでヒントを出す */
+  mask-image: linear-gradient(to right, black calc(100% - 1.5rem), transparent);
+}
+
+.site-header li {
+  flex: none;
 }
 
 .site-header a {
   text-decoration: none;
   color: var(--color-text-muted);
+  white-space: nowrap;
 }
 
 .site-header a:hover {
   color: var(--color-accent);
+}
+
+@media (max-width: 640px) {
+  /* サイトタイトルが長く、横幅が狭いとナビ側の幅が0になってしまうため、
+     タイトルとナビを縦に並べてそれぞれ全幅を使えるようにする。 */
+  .site-header nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 1rem 0;
+  }
+
+  .site-header .site-title {
+    white-space: normal;
+  }
 }
 
 main {
