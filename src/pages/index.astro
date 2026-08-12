@@ -1,7 +1,10 @@
 ---
 // トップページ(ワイヤーフレーム段階)。
 // CONTENTS_PLAN.md 2-1 の構成案(ヒーロー / プロフィール導線 / 最新ブログ / 主要ナビ)を
-// 骨組みとして実装。ブログ・ディスコグラフィー等は未実装のためプレースホルダー表示にしている。
+// 骨組みとして実装。ブログは別リポジトリ管理のためここには含めない。
+// 「最新情報」はgit commitの履歴をビルド時に読み込み、サイトの更新履歴として表示している
+// (コミットメッセージの1行目=件名は、サイト閲覧者にも伝わる文面で書くこと)。
+import { execSync } from "node:child_process";
 import Layout from "../layouts/Layout.astro";
 
 const mainContents = [
@@ -9,6 +12,29 @@ const mainContents = [
   { href: "/works", label: "ディスコグラフィー", desc: "楽曲・アルバム一覧" },
   { href: "/favorites", label: "推し曲コーナー", desc: "好きな曲を自分の言葉で紹介(準備中)" },
 ];
+
+type UpdateLogEntry = { date: string; message: string };
+
+function getUpdateLog(limit: number): UpdateLogEntry[] {
+  try {
+    const output = execSync(`git log -n ${limit + 5} --pretty=format:"%ad|||%s" --date=format:"%Y-%m-%d"`, {
+      cwd: process.cwd(),
+    }).toString();
+    return output
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => {
+        const [date, message] = line.split("|||");
+        return { date, message };
+      })
+      .filter((entry) => entry.message !== "Initial commit from Astro")
+      .slice(0, limit);
+  } catch {
+    return [];
+  }
+}
+
+const updateLog = getUpdateLog(6);
 ---
 
 <Layout title="オーイシマサヨシ非公式ファンサイト">
@@ -24,7 +50,18 @@ const mainContents = [
 
   <section>
     <h2>最新情報</h2>
-    <p class="placeholder">準備中です。学習記録は別リポジトリで管理しており、今後こちらに要約を表示する予定です。</p>
+    {updateLog.length > 0 ? (
+      <ul class="update-log">
+        {updateLog.map((entry) => (
+          <li>
+            <span class="date">{entry.date}</span>
+            <span class="message">{entry.message}</span>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="placeholder">準備中です。</p>
+    )}
   </section>
 
   <section>
@@ -79,6 +116,37 @@ const mainContents = [
     border: 1px dashed var(--color-border);
     border-radius: 8px;
     padding: 1.5rem;
+  }
+
+  .update-log {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+  }
+
+  .update-log li {
+    display: flex;
+    gap: 1rem;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .update-log li:last-child {
+    border-bottom: none;
+  }
+
+  .update-log .date {
+    flex: none;
+    width: 6rem;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+  }
+
+  .update-log .message {
+    font-size: 0.95rem;
   }
 
   .content-grid {
