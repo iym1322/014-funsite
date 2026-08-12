@@ -1,0 +1,74 @@
+---
+// 曲の画像を表示するコンポーネント。
+// public/images/works/<image>.(jpg|jpeg|png|webp) が存在すればそれを表示し、
+// 無ければプレースホルダー(グラデーション+音符アイコン)を表示する。
+// ビルド時にNode の fs でファイルの有無を確認しているため、実在しない画像パスを
+// <img src> に書いてしまうことがない。
+import fs from "node:fs";
+import path from "node:path";
+
+interface Props {
+  image?: string;
+  title: string;
+  aspect?: "square" | "wide";
+}
+
+const { image, title, aspect = "square" } = Astro.props;
+
+const extensions = ["jpg", "jpeg", "png", "webp"];
+const worksDir = path.join(process.cwd(), "public", "images", "works");
+
+let resolvedSrc: string | null = null;
+if (image) {
+  for (const ext of extensions) {
+    const candidate = path.join(worksDir, `${image}.${ext}`);
+    if (fs.existsSync(candidate)) {
+      resolvedSrc = `/images/works/${image}.${ext}`;
+      break;
+    }
+  }
+}
+---
+
+{resolvedSrc ? (
+  <img class={`cover ${aspect}`} src={resolvedSrc} alt={title} loading="lazy" />
+) : (
+  <div class={`cover placeholder ${aspect}`} aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+      <circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.5" />
+      <circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="1.5" />
+    </svg>
+  </div>
+)}
+
+<style>
+  .cover {
+    display: block;
+    width: 100%;
+    object-fit: cover;
+    background: linear-gradient(135deg, #e5ded3, #cfc3af);
+    border-radius: 8px;
+  }
+
+  .cover.square {
+    aspect-ratio: 1 / 1;
+  }
+
+  .cover.wide {
+    aspect-ratio: 16 / 9;
+  }
+
+  .placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-surface);
+  }
+
+  .placeholder svg {
+    width: 30%;
+    height: 30%;
+    opacity: 0.7;
+  }
+</style>

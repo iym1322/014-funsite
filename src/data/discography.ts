@@ -17,6 +17,9 @@ export type Track = {
   youtube?: string;
   appleMusic?: string;
   spotify?: string;
+  slug?: string; // 個別ページ(/works/[slug])を持つ曲にのみ設定
+  image?: string; // public/images/works/ 配下のファイル名(自分で用意した画像のみ使用)
+  description?: string; // 楽曲紹介文
 };
 
 const toSortDate = (date: string): string => {
@@ -80,9 +83,35 @@ const raw: Omit<Track, "sortDate">[] = [
   { group: "オーイシマサヨシ", type: "アルバム", date: "2019.06", title: "仮歌II", note: "カバーアルバム" },
   { group: "オーイシマサヨシ", type: "アルバム", date: "2021.08", title: "エンターテイナー" },
   { group: "オーイシマサヨシ", type: "アルバム", date: "2024.02", title: "ユニバース" },
-  { group: "オーイシマサヨシ", type: "アルバム", date: "2026.08", title: "仮歌Ⅲ", note: "カバーアルバム(想定)", caution: true },
-  { group: "オーイシマサヨシ", type: "シングル", date: "2014.08", title: "君じゃなきゃダメみたい", tieIn: "『月刊少女野崎くん』オープニングテーマ" },
-  { group: "オーイシマサヨシ", type: "シングル", date: "2018.05", title: "オトモダチフィルム", tieIn: "『多田くんは恋をしない』オープニングテーマ" },
+  { group: "オーイシマサヨシ", type: "アルバム", date: "2026.08", title: "仮歌Ⅲ", note: "カバーアルバム(想定)", caution: true, slug: "kagauta-3", image: "kagauta-3" },
+  {
+    group: "オーイシマサヨシ",
+    type: "シングル",
+    date: "2014.08",
+    title: "君じゃなきゃダメみたい",
+    tieIn: "『月刊少女野崎くん』オープニングテーマ",
+    slug: "kimi-janakya-dame-mitai",
+    image: "kimi-janakya-dame-mitai",
+    description:
+      "オーイシマサヨシ名義としての第一弾シングル。TVアニメ『月刊少女野崎くん』のオープニングテーマとして書き下ろされ、疾走感のあるロックサウンドと軽快な歌詞回しが特徴。ここから「アニメ・ゲーム主題歌を手がけるオーイシマサヨシ」としての活動が本格的に始まった、原点ともいえる一曲。",
+    youtube: "https://www.youtube.com/watch?v=_NbjKXEbde4",
+    appleMusic: "https://music.apple.com/jp/song/%E5%90%9B%E3%81%98%E3%82%83%E3%81%AA%E3%81%8D%E3%82%83%E3%83%80%E3%83%A1%E3%81%BF%E3%81%9F%E3%81%84/908870858",
+    spotify: "https://open.spotify.com/intl-ja/track/2wvjGSWamFfhDgl2d04qBV",
+  },
+  {
+    group: "オーイシマサヨシ",
+    type: "シングル",
+    date: "2018.05",
+    title: "オトモダチフィルム",
+    tieIn: "『多田くんは恋をしない』オープニングテーマ",
+    slug: "otomodachi-film",
+    image: "otomodachi-film",
+    description:
+      "TVアニメ『多田くんは恋をしない』のオープニングテーマ。タイトル通り「友達映画」を思わせる、どこか懐かしく温かみのあるメロディが印象的な一曲。MVにはダンスバージョンも公開されており、振り付け込みで楽しまれている。",
+    youtube: "https://www.youtube.com/watch?v=CP9mzbSTZPk",
+    appleMusic: "https://music.apple.com/jp/song/%E3%82%AA%E3%83%88%E3%83%A2%E3%83%80%E3%83%81%E3%83%95%E3%82%A3%E3%83%AB%E3%83%A0/1374072398",
+    spotify: "https://open.spotify.com/intl-ja/track/1s4sRRnzMaQDvVyvKJ7b8t",
+  },
   { group: "オーイシマサヨシ", type: "シングル", date: "2018.07", title: "Hands", tieIn: "『ウルトラマンR/B』主題歌" },
   { group: "オーイシマサヨシ", type: "シングル", date: "2018.08", title: "ドラゴンエネルギー", tieIn: "オーイシマサヨシ×加藤純一名義。ネット番組テーマ曲" },
   { group: "オーイシマサヨシ", type: "シングル", date: "2019.04", title: "沼", tieIn: "『臨死‼江古田ちゃん』エンディングテーマ" },
@@ -107,21 +136,34 @@ const raw: Omit<Track, "sortDate">[] = [
   { group: "オーイシマサヨシ", type: "シングル", date: "2024.11", title: "ギャンブリングホール", tieIn: "『凍牌』オープニングテーマ" },
   { group: "オーイシマサヨシ", type: "シングル", date: "2025.01", title: "主人公になろう！", tieIn: "feat.鈴木愛理" },
   { group: "オーイシマサヨシ", type: "シングル", date: "2025.01", title: "L'oN" },
-  { group: "オーイシマサヨシ", type: "シングル", date: "2025.03", title: "uni-verse – From THE FIRST TAKE", note: "THE FIRST TAKE配信" },
+  {
+    group: "オーイシマサヨシ",
+    type: "シングル",
+    date: "2025.03",
+    title: "uni-verse – From THE FIRST TAKE",
+    tieIn: "劇場版『グリッドマン ユニバース』主題歌「uni-verse」のTHE FIRST TAKEスペシャルアレンジ・一発撮りバージョン",
+    note: "原曲は2023年発売のシングル『ギフト』収録",
+    slug: "uni-verse-first-take",
+    image: "uni-verse-first-take",
+    description:
+      "劇場版『SSSS.GRIDMAN』新作にして主題歌でもある「uni-verse」を、YouTubeチャンネル「THE FIRST TAKE」でスペシャルアレンジ・一発撮りにて披露したバージョン。原曲の壮大さはそのままに、生演奏ならではの緊張感と表現力が加わっている。",
+    youtube: "https://www.youtube.com/watch?v=0Pf-d4nLAoI",
+    appleMusic: "https://music.apple.com/jp/album/uni-verse-from-the-first-take-single/1800632250",
+  },
   { group: "オーイシマサヨシ", type: "シングル", date: "2025.03", title: "君じゃなきゃダメみたい – From THE FIRST TAKE", note: "THE FIRST TAKE配信" },
-  { group: "オーイシマサヨシ", type: "シングル", date: "2025.07", title: "かごめかごめ" },
-  { group: "オーイシマサヨシ", type: "シングル", date: "2025.07", title: "ふたりキャンプ", tieIn: "feat.SPECIAL OTHERS" },
-  { group: "オーイシマサヨシ", type: "シングル", date: "2026.02", title: "ニンゲン" },
-  { group: "オーイシマサヨシ", type: "シングル", date: "2026.04", title: "ポケモンオールスターズ1025", note: "213/1025" },
-  { group: "オーイシマサヨシ", type: "シングル", date: "2026.06", title: "君は恋人" },
-  { group: "オーイシマサヨシ", type: "シングル", date: "2026.07", title: "ハイメンテナンスガール" },
-  { group: "オーイシマサヨシ", type: "シングル", date: "2026.08", title: "嗚呼、素晴らしき日常" },
+  { group: "オーイシマサヨシ", type: "シングル", date: "2025.07", title: "かごめかごめ", slug: "kagome-kagome", image: "kagome-kagome" },
+  { group: "オーイシマサヨシ", type: "シングル", date: "2025.07", title: "ふたりキャンプ", tieIn: "feat.SPECIAL OTHERS", slug: "futari-camp", image: "futari-camp" },
+  { group: "オーイシマサヨシ", type: "シングル", date: "2026.02", title: "ニンゲン", slug: "ningen", image: "ningen" },
+  { group: "オーイシマサヨシ", type: "シングル", date: "2026.04", title: "ポケモンオールスターズ1025", note: "213/1025", slug: "pokemon-all-stars-1025", image: "pokemon-all-stars-1025" },
+  { group: "オーイシマサヨシ", type: "シングル", date: "2026.06", title: "君は恋人", slug: "kimi-wa-koibito", image: "kimi-wa-koibito" },
+  { group: "オーイシマサヨシ", type: "シングル", date: "2026.07", title: "ハイメンテナンスガール", slug: "high-maintenance-girl", image: "high-maintenance-girl" },
+  { group: "オーイシマサヨシ", type: "シングル", date: "2026.08", title: "嗚呼、素晴らしき日常", slug: "aa-subarashiki-nichijou", image: "aa-subarashiki-nichijou" },
   { group: "オーイシマサヨシ", type: "映像", date: "2017.12", title: "仮歌ツアー" },
   { group: "オーイシマサヨシ", type: "映像", date: "2019.11", title: "仮歌ツアー2019" },
   { group: "オーイシマサヨシ", type: "映像", date: "2022.03", title: "オーイシマサヨシ ワンマンライブ「エンターテイナー」" },
   { group: "オーイシマサヨシ", type: "映像", date: "2024.08", title: "オーイシ武道館 〜オーイシマサヨシ ワンマンライブ at 日本武道館〜" },
-  { group: "オーイシマサヨシ", type: "映像", date: "2025.03", title: "オーイシSSA 〜オーイシマサヨシ ワンマンライブ at さいたまスーパーアリーナ〜", caution: true },
-  { group: "オーイシマサヨシ", type: "映像", date: "2025.08", title: "オーイシ武道館 Vol.2 〜オーイシマサヨシ ワンマンライブ at 日本武道館〜", caution: true },
+  { group: "オーイシマサヨシ", type: "映像", date: "2025.03", title: "オーイシSSA 〜オーイシマサヨシ ワンマンライブ at さいたまスーパーアリーナ〜", caution: true, slug: "oishi-ssa", image: "oishi-ssa" },
+  { group: "オーイシマサヨシ", type: "映像", date: "2025.08", title: "オーイシ武道館 Vol.2 〜オーイシマサヨシ ワンマンライブ at 日本武道館〜", caution: true, slug: "oishi-budokan-vol2", image: "oishi-budokan-vol2" },
 
   // --- OxT ---
   { group: "OxT", type: "アルバム", date: "2016.03", title: "OxT COMPLETE SONGS \"ACE OF DIAMOND\"", note: "初期シングル集" },

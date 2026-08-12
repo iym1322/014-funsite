@@ -1,0 +1,155 @@
+---
+// 曲ごとの個別ページ。discography.ts で slug を持つ曲だけが生成される。
+// (design確認のため、現時点ではslugを設定した3曲のみが対象)
+import Layout from "../../layouts/Layout.astro";
+import TrackCover from "../../components/TrackCover.astro";
+import { tracks } from "../../data/discography";
+
+export function getStaticPaths() {
+  return tracks
+    .filter((t) => t.slug)
+    .map((t) => ({ params: { slug: t.slug }, props: { track: t } }));
+}
+
+const { track } = Astro.props;
+---
+
+<Layout title={`${track.title} | ディスコグラフィー | オーイシマサヨシ非公式ファンサイト`}>
+  <a class="back-link" href="/works">← ディスコグラフィー一覧に戻る</a>
+
+  <article class="track-detail">
+    <div class="cover-col">
+      <TrackCover image={track.image} title={track.title} />
+    </div>
+
+    <div class="info-col">
+      <p class="meta">{track.group} ・ {track.type} ・ {track.date}</p>
+      <h1>{track.title}</h1>
+
+      {track.tieIn && (
+        <p class="tie-in">{track.tieIn}</p>
+      )}
+
+      {track.note && <p class="note">{track.note}</p>}
+
+      {track.description && (
+        <section class="description">
+          <h2>楽曲について</h2>
+          <p>{track.description}</p>
+        </section>
+      )}
+
+      <section class="links">
+        <h2>各種リンク</h2>
+        <ul>
+          {track.youtube && (
+            <li><a href={track.youtube} target="_blank" rel="noopener noreferrer">YouTube で見る</a></li>
+          )}
+          {track.appleMusic && (
+            <li><a href={track.appleMusic} target="_blank" rel="noopener noreferrer">Apple Music で聴く</a></li>
+          )}
+          {track.spotify && (
+            <li><a href={track.spotify} target="_blank" rel="noopener noreferrer">Spotify で聴く</a></li>
+          )}
+          {!track.youtube && !track.appleMusic && !track.spotify && (
+            <li class="no-link">リンク準備中</li>
+          )}
+        </ul>
+      </section>
+    </div>
+  </article>
+</Layout>
+
+<style>
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    color: var(--color-accent);
+  }
+
+  .track-detail {
+    display: grid;
+    grid-template-columns: minmax(0, 18rem) 1fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  @media (max-width: 640px) {
+    .track-detail {
+      grid-template-columns: 1fr;
+    }
+    .cover-col {
+      max-width: 16rem;
+      margin: 0 auto;
+    }
+  }
+
+  .meta {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    margin: 0 0 0.5rem;
+  }
+
+  h1 {
+    margin: 0 0 1rem;
+    font-size: 1.75rem;
+  }
+
+  .tie-in {
+    color: var(--color-accent);
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+  }
+
+  .note {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    margin: 0 0 1.5rem;
+  }
+
+  .description h2,
+  .links h2 {
+    font-size: 1rem;
+    color: var(--color-text-muted);
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  .description p {
+    line-height: 1.9;
+  }
+
+  .links ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .links a {
+    display: inline-block;
+    padding: 0.6rem 1.2rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    text-decoration: none;
+    color: var(--color-text);
+    font-size: 0.9rem;
+  }
+
+  .links a:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .no-link {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+</style>
