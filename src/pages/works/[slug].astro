@@ -21,6 +21,17 @@ function getYouTubeId(url?: string): string | null {
   return match ? match[1] : null;
 }
 const youtubeId = getYouTubeId(track.youtube);
+
+// 個別ページを持つ曲を一覧ページと同じ並び順(リリース日が新しい順)に揃え、前後の曲への導線を出す。
+const navigable = tracks.filter((t) => t.slug).sort((a, b) => b.sortDate.localeCompare(a.sortDate));
+const currentIndex = navigable.findIndex((t) => t.slug === track.slug);
+const prevTrack = currentIndex > 0 ? navigable[currentIndex - 1] : null;
+const nextTrack = currentIndex >= 0 && currentIndex < navigable.length - 1 ? navigable[currentIndex + 1] : null;
+
+// この曲が歌われたライブ映像(セットリストにこの曲のslugが含まれるもの)を逆引きする。
+const relatedLives = tracks.filter(
+  (t) => t.type === "映像" && t.isLive && t.setlist?.some((s) => s.slug === track.slug)
+);
 ---
 
 <Layout title={`${track.title} | ディスコグラフィー | オーイシマサヨシ非公式ファンサイト`}>
@@ -45,6 +56,17 @@ const youtubeId = getYouTubeId(track.youtube);
         <section class="description">
           <h2>楽曲について</h2>
           <p>{track.description}</p>
+        </section>
+      )}
+
+      {relatedLives.length > 0 && (
+        <section class="related-lives">
+          <h2>関連ライブ映像</h2>
+          <ul>
+            {relatedLives.map((live) => (
+              <li><a href={`/works/${live.slug}`}>{live.title}</a></li>
+            ))}
+          </ul>
         </section>
       )}
 
@@ -114,6 +136,21 @@ const youtubeId = getYouTubeId(track.youtube);
       )}
     </div>
   </article>
+
+  <nav class="track-pager">
+    {prevTrack ? (
+      <a class="pager-link prev" href={`/works/${prevTrack.slug}`}>
+        <span class="pager-label">← 前の曲</span>
+        <span class="pager-title">{prevTrack.title}</span>
+      </a>
+    ) : <span />}
+    {nextTrack ? (
+      <a class="pager-link next" href={`/works/${nextTrack.slug}`}>
+        <span class="pager-label">次の曲 →</span>
+        <span class="pager-title">{nextTrack.title}</span>
+      </a>
+    ) : <span />}
+  </nav>
 </Layout>
 
 <style>
@@ -245,5 +282,73 @@ const youtubeId = getYouTubeId(track.youtube);
   .no-link {
     color: var(--color-text-muted);
     font-size: 0.9rem;
+  }
+
+  .related-lives h2 {
+    font-size: 1rem;
+    color: var(--color-text-muted);
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  .related-lives ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .related-lives a {
+    color: var(--color-text);
+  }
+
+  .related-lives a:hover {
+    color: var(--color-accent);
+  }
+
+  .track-pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .pager-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--color-text);
+    min-width: 0;
+  }
+
+  .pager-link.next {
+    text-align: right;
+    align-items: flex-end;
+  }
+
+  .pager-link:hover {
+    border-color: var(--color-accent);
+  }
+
+  .pager-link:hover .pager-title {
+    color: var(--color-accent);
+  }
+
+  .pager-label {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .pager-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
   }
 </style>
