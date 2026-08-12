@@ -1,7 +1,7 @@
 ---
-// ディスコグラフィー一覧ページ(カードグリップ表示デザイン)。
-// デザイン確認のため、現時点では image/slug を設定した曲(3曲)だけを表示している。
-// 表示内容が固まり次第、残りの楽曲にも image/slug/description を追加して全曲に拡張する想定。
+// ディスコグラフィー一覧ページ(カードグリッド表示)。
+// 個別ページ(slug)を持つ曲のみを表示し、検索・絞り込み・並べ替え・ページネーション
+// (24件/ページ、Vanilla JS)に対応している。
 import Layout from "../layouts/Layout.astro";
 import TrackCover from "../components/TrackCover.astro";
 import { tracks, groups, types } from "../data/discography";
@@ -13,9 +13,9 @@ const sorted = [...showcased].sort((a, b) => b.sortDate.localeCompare(a.sortDate
 <Layout title="ディスコグラフィー | オーイシマサヨシ非公式ファンサイト">
   <h1>ディスコグラフィー</h1>
   <p class="note">
-    曲名と画像を並べたカード形式で一覧できるようにしています。現在はデザイン確認のため
-    <strong>{showcased.length}曲</strong>のみ表示中(画像・紹介文が用意でき次第、他の曲も順次追加予定)。
-    画像が未設定の曲はプレースホルダーで表示されます。
+    曲名と画像を並べたカード形式で一覧できます。現在<strong>{showcased.length}曲</strong>を掲載中
+    (画像が未設定の曲はプレースホルダーで表示されます)。まだ個別ページを作成していない曲は
+    順次追加予定です。
   </p>
 
   <div class="controls">
@@ -73,6 +73,8 @@ const sorted = [...showcased].sort((a, b) => b.sortDate.localeCompare(a.sortDate
     })}
   </div>
 
+  <nav class="pagination" id="pagination" aria-label="ページ送り"></nav>
+
   <section>
     <h2>参照元・出典</h2>
     <ul>
@@ -86,6 +88,7 @@ const sorted = [...showcased].sort((a, b) => b.sortDate.localeCompare(a.sortDate
   const grid = document.getElementById("track-grid") as HTMLDivElement;
   const cards = Array.from(grid.querySelectorAll<HTMLAnchorElement>(".card"));
   const resultCount = document.getElementById("result-count") as HTMLParagraphElement;
+  const pagination = document.getElementById("pagination") as HTMLElement;
 
   const searchInput = document.getElementById("search") as HTMLInputElement;
   const groupSelect = document.getElementById("filter-group") as HTMLSelectElement;
@@ -93,42 +96,83 @@ const sorted = [...showcased].sort((a, b) => b.sortDate.localeCompare(a.sortDate
   const tieinCheckbox = document.getElementById("filter-tiein") as HTMLInputElement;
   const sortSelect = document.getElementById("sort") as HTMLSelectElement;
 
-  function applyFiltersAndSort() {
+  const PAGE_SIZE = 24;
+  let currentPage = 1;
+
+  function applyFiltersAndSort(resetPage = true) {
+    if (resetPage) currentPage = 1;
+
     const query = searchInput.value.trim().toLowerCase();
     const group = groupSelect.value;
     const type = typeSelect.value;
     const tieinOnly = tieinCheckbox.checked;
 
-    let visibleCount = 0;
+    const matching: HTMLAnchorElement[] = [];
     for (const card of cards) {
       const matchesQuery = !query || card.dataset.search!.includes(query);
       const matchesGroup = !group || card.dataset.group === group;
       const matchesType = !type || card.dataset.type === type;
       const matchesTieIn = !tieinOnly || card.dataset.tiein === "1";
       const visible = matchesQuery && matchesGroup && matchesType && matchesTieIn;
-      card.style.display = visible ? "" : "none";
-      if (visible) visibleCount++;
+      card.style.display = "none";
+      if (visible) matching.push(card);
     }
 
     const sortValue = sortSelect.value;
-    const sortedCards = [...cards].sort((a, b) => {
+    matching.sort((a, b) => {
       if (sortValue === "date-asc") return a.dataset.date!.localeCompare(b.dataset.date!);
       if (sortValue === "date-desc") return b.dataset.date!.localeCompare(a.dataset.date!);
       if (sortValue === "title-asc") return a.dataset.title!.localeCompare(b.dataset.title!, "ja");
       if (sortValue === "group-asc") return a.dataset.group!.localeCompare(b.dataset.group!, "ja");
       return 0;
     });
-    for (const card of sortedCards) grid.appendChild(card);
+    for (const card of matching) grid.appendChild(card);
 
-    resultCount.textContent = `${visibleCount} / ${cards.length} 件表示`;
+    const pageCount = Math.max(1, Math.ceil(matching.length / PAGE_SIZE));
+    if (currentPage > pageCount) currentPage = pageCount;
+
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = matching.slice(start, start + PAGE_SIZE);
+    for (const card of pageItems) card.style.display = "";
+
+    const rangeStart = matching.length === 0 ? 0 : start + 1;
+    const rangeEnd = Math.min(start + PAGE_SIZE, matching.length);
+    resultCount.textContent = `${matching.length}件中 ${rangeStart}-${rangeEnd}件を表示`;
+
+    renderPagination(pageCount);
+  }
+
+  function renderPagination(pageCount: number) {
+    pagination.innerHTML = "";
+    if (pageCount <= 1) return;
+
+    const makeButton = (label: string, page: number, disabled = false, current = false) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = label;
+      btn.disabled = disabled;
+      btn.setAttribute("aria-current", current ? "page" : "false");
+      btn.addEventListener("click", () => {
+        currentPage = page;
+        applyFiltersAndSort(false);
+        grid.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      return btn;
+    };
+
+    pagination.appendChild(makeButton("← 前へ", currentPage - 1, currentPage === 1));
+    for (let p = 1; p <= pageCount; p++) {
+      pagination.appendChild(makeButton(String(p), p, false, p === currentPage));
+    }
+    pagination.appendChild(makeButton("次へ →", currentPage + 1, currentPage === pageCount));
   }
 
   for (const el of [searchInput, groupSelect, typeSelect, tieinCheckbox, sortSelect]) {
-    el.addEventListener("input", applyFiltersAndSort);
-    el.addEventListener("change", applyFiltersAndSort);
+    el.addEventListener("input", () => applyFiltersAndSort(true));
+    el.addEventListener("change", () => applyFiltersAndSort(true));
   }
 
-  applyFiltersAndSort();
+  applyFiltersAndSort(true);
 </script>
 
 <style>
@@ -205,5 +249,43 @@ const sorted = [...showcased].sort((a, b) => b.sortDate.localeCompare(a.sortDate
 
   .card:hover .card-title {
     color: var(--color-accent);
+  }
+
+  .pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+  }
+
+  .pagination button {
+    min-width: 2.2rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .pagination button:hover:not(:disabled) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .pagination button:disabled {
+    color: var(--color-text-muted);
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  .pagination button[aria-current="page"] {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-surface);
+    font-weight: 700;
   }
 </style>
