@@ -1460,6 +1460,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "hands",
     image: "hands",
     description: "特撮ドラマ『ウルトラマンR/B(ルーブ)』のオープニングテーマ。兄弟の絆をテーマにした疾走感のあるナンバーで、オーイシマサヨシ名義3作目のシングル。",
+    youtube: "https://www.youtube.com/watch?v=pORJa05sMm8",
     appleMusic: "https://music.apple.com/jp/song/1405555874",
     spotify: "https://open.spotify.com/intl-ja/track/2PKGYVQikLr2uxVZCVVfr6",
   },
@@ -1484,6 +1485,7 @@ const raw: Omit<Track, "sortDate">[] = [
     image: "dragon-energy",
     description: "人気配信者・加藤純一とのコラボレーションから生まれた楽曲。「オーイシマサヨシ×加藤純一」名義でリリースされた。",
     appleMusic: "https://music.apple.com/jp/album/dragon-energy-single/1419337989",
+    spotify: "https://open.spotify.com/intl-ja/track/7wsJG6LqOWbuzZKqN2EtTb",
   },
   {
     group: "オーイシマサヨシ",
@@ -1494,6 +1496,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "numa",
     image: "numa",
     description: "TVアニメ『臨死‼江古田ちゃん』のエンディングテーマ。作詞・作曲・編曲をオーイシマサヨシ自身が手がけた。",
+    appleMusic: "https://music.apple.com/jp/song/1463747406",
   },
   {
     group: "オーイシマサヨシ",
@@ -1506,6 +1509,7 @@ const raw: Omit<Track, "sortDate">[] = [
     description: "TVアニメ『コップクラフト』のオープニングテーマ。カップリングにはWebアニメ『モンスターストライク ノア 方舟の救世主編』関連曲を収録した4作目のシングル。",
     youtube: "https://www.youtube.com/watch?v=kxYT4C5PjPw",
     appleMusic: "https://music.apple.com/jp/album/%E6%A5%BD%E5%9C%92%E9%83%BD%E5%B8%82/1474774946",
+    spotify: "https://open.spotify.com/intl-ja/track/0ZBFfztO6e114GIuwAJVqS",
   },
   {
     group: "オーイシマサヨシ",
@@ -1569,6 +1573,9 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "kinkan-no-uta-2020",
     image: "kinkan-no-uta-2020",
     description: "皮膚薬「キンカン」の2020年度CMイメージソング。起用にあわせオーイシマサヨシが同社の「広告宣伝課長」に就任し、社員に扮したミュージックビデオも公開された。後にシングル『ロールプレイング』にカップリング収録された。",
+    youtube: "https://www.youtube.com/watch?v=6ZO9mbbcGYo",
+    appleMusic: "https://music.apple.com/jp/song/1521222864",
+    spotify: "https://open.spotify.com/intl-ja/track/0qUUWlwJBOWj6XexBS55Vg",
   },
   {
     group: "オーイシマサヨシ",
@@ -1995,6 +2002,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "youkoso-japari-park-kariuta",
     image: "youkoso-japari-park-kariuta",
     description: "どうぶつビスケッツ×PPPへの提供曲を、オーイシマサヨシ自身が歌唱したセルフカバー版。",
+    spotify: "https://open.spotify.com/track/0RZiBrdTiCVCCnFCyr68Nr",
     appleMusic: "https://music.apple.com/jp/album/%E3%82%AB%E3%83%90%E3%83%BC%E3%82%A2%E3%83%AB%E3%83%90%E3%83%A0-%E4%BB%AE%E6%AD%8C/1256929899",
   },
   {
@@ -2007,6 +2015,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "blood-type-heartbeat-kariuta",
     image: "blood-type-heartbeat-kariuta",
     description: "アース・スター ドリームへの提供曲を、オーイシマサヨシ自身が歌唱したセルフカバー版。",
+    spotify: "https://open.spotify.com/track/5YTG8omEnVANa6DJCsjtXJ",
     appleMusic: "https://music.apple.com/jp/album/%E3%82%AB%E3%83%90%E3%83%BC%E3%82%A2%E3%83%AB%E3%83%90%E3%83%A0-%E4%BB%AE%E6%AD%8C/1256929899",
   },
   {
@@ -2019,6 +2028,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "makura-danshi-kariuta",
     image: "makura-danshi-kariuta",
     description: "めりぃ（CV：花江夏樹）への提供曲を、オーイシマサヨシ自身が歌唱したセルフカバー版。",
+    spotify: "https://open.spotify.com/track/7KePoY29Fbr9EBI5pFQVWL",
     appleMusic: "https://music.apple.com/jp/album/%E3%82%AB%E3%83%90%E3%83%BC%E3%82%A2%E3%83%AB%E3%83%90%E3%83%A0-%E4%BB%AE%E6%AD%8C/1256929899",
   },
   {
@@ -2031,6 +2041,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "mankai-kaika-sengen-kariuta",
     image: "mankai-kaika-sengen-kariuta",
     description: "A3ders!への提供曲を、オーイシマサヨシ自身が歌唱したセルフカバー版。",
+    spotify: "https://open.spotify.com/track/75gvYlSaPYOx531zvolMSn",
     appleMusic: "https://music.apple.com/jp/album/%E3%82%AB%E3%83%90%E3%83%BC%E3%82%A2%E3%83%AB%E3%83%90%E3%83%A0-%E4%BB%AE%E6%AD%8C/1256929899",
   },
   {
@@ -2042,6 +2053,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "fukashin-ryouiki-destroyer-kariuta",
     image: "fukashin-ryouiki-destroyer-kariuta",
     description: "りぶへの提供曲を、オーイシマサヨシ自身が歌唱したセルフカバー版。",
+    spotify: "https://open.spotify.com/track/21vvgNEndkTy2sgabwtD0r",
     appleMusic: "https://music.apple.com/jp/album/%E3%82%AB%E3%83%90%E3%83%BC%E3%82%A2%E3%83%AB%E3%83%90%E3%83%A0-%E4%BB%AE%E6%AD%8C/1256929899",
   },
   {
@@ -2053,6 +2065,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "roman-hikou-kariuta",
     image: "roman-hikou-kariuta",
     description: "米米CLUBの楽曲をアニメ向けに編曲したバージョンを、オーイシマサヨシが歌唱したカバー。",
+    spotify: "https://open.spotify.com/track/0WVRVSl2GB2BVnUTsgjYGy",
     appleMusic: "https://music.apple.com/jp/album/%E3%82%AB%E3%83%90%E3%83%BC%E3%82%A2%E3%83%AB%E3%83%90%E3%83%A0-%E4%BB%AE%E6%AD%8C/1256929899",
   },
   {
@@ -2064,6 +2077,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "moratorium-dance-floor-kariuta",
     image: "moratorium-dance-floor-kariuta",
     description: "内田真礼への提供曲を、オーイシマサヨシ自身が歌唱したセルフカバー版。",
+    spotify: "https://open.spotify.com/track/5wlAd8T6bWslhQvR1QEEmK",
     appleMusic: "https://music.apple.com/jp/album/%E3%82%AB%E3%83%90%E3%83%BC%E3%82%A2%E3%83%AB%E3%83%90%E3%83%A0-%E4%BB%AE%E6%AD%8C/1256929899",
   },
   {
@@ -2075,6 +2089,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "ring-of-drinker-kariuta",
     image: "ring-of-drinker-kariuta",
     description: "柿原徹也への提供曲を、オーイシマサヨシ自身が歌唱したセルフカバー版。",
+    spotify: "https://open.spotify.com/track/4BtL0nslk3J4uOCb6Pf3tV",
     appleMusic: "https://music.apple.com/jp/album/%E3%82%AB%E3%83%90%E3%83%BC%E3%82%A2%E3%83%AB%E3%83%90%E3%83%A0-%E4%BB%AE%E6%AD%8C/1256929899",
   },
   {
@@ -2087,6 +2102,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "bouya-no-yume-yo-kariuta",
     image: "bouya-no-yume-yo-kariuta",
     description: "エミリア（CV：高橋李依）の挿入歌を、オーイシマサヨシ自身が歌唱したセルフカバー版。",
+    spotify: "https://open.spotify.com/track/00FRTAQ6NrIY1jUxQVUHrp",
     appleMusic: "https://music.apple.com/jp/album/%E3%82%AB%E3%83%90%E3%83%BC%E3%82%A2%E3%83%AB%E3%83%90%E3%83%A0-%E4%BB%AE%E6%AD%8C/1256929899",
   },
   {
@@ -2098,6 +2114,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "hero-impossible-kariuta",
     image: "hero-impossible-kariuta",
     description: "花江夏樹への提供曲を、オーイシマサヨシ自身が歌唱したセルフカバー版。",
+    spotify: "https://open.spotify.com/track/7vRIJNOJfXZHQkiLW7J5Uo",
     appleMusic: "https://music.apple.com/jp/song/1256930041",
   },
   {
@@ -2191,6 +2208,7 @@ const raw: Omit<Track, "sortDate">[] = [
     image: "singalong-shinkaron-kariuta-2",
     description: "大橋彩香への提供曲を、オーイシマサヨシ自身が歌唱したセルフカバー版。",
     appleMusic: "https://music.apple.com/jp/album/kariuta-second/1468034886",
+    spotify: "https://open.spotify.com/track/5sOhgOScbXy7ok9nfV0rws",
   },
   {
     group: "オーイシマサヨシ",

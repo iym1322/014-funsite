@@ -22,6 +22,11 @@ function getYouTubeId(url?: string): string | null {
   return match ? match[1] : null;
 }
 const youtubeId = getYouTubeId(track.youtube);
+const linkArtist = track.group === "楽曲提供" ? (track.subject ?? "大石昌良") : track.group;
+const searchQuery = encodeURIComponent(`${linkArtist} ${track.title}`);
+const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
+const appleMusicSearchUrl = `https://music.apple.com/jp/search?term=${searchQuery}`;
+const spotifySearchUrl = `https://open.spotify.com/search/${searchQuery}`;
 
 // 個別ページを持つ曲を一覧ページと同じ並び順(リリース日が新しい順)に揃え、前後の曲への導線を出す。
 const navigable = tracks.filter((t) => t.slug).sort((a, b) => b.sortDate.localeCompare(a.sortDate));
@@ -136,23 +141,29 @@ const relatedFavorites = favoritePosts.filter((p) => p.trackSlug === track.slug)
         </section>
       )}
 
-      {track.type === "シングル" && (
+      {(track.type === "シングル" || track.type === "提供曲") && (
         <section class="links">
           <h2>各種リンク</h2>
           <ul>
-            {track.youtube && (
-              <li><a href={track.youtube} target="_blank" rel="noopener noreferrer">YouTube で見る</a></li>
-            )}
-            {track.appleMusic && (
-              <li><a href={track.appleMusic} target="_blank" rel="noopener noreferrer">Apple Music で聴く</a></li>
-            )}
-            {track.spotify && (
-              <li><a href={track.spotify} target="_blank" rel="noopener noreferrer">Spotify で聴く</a></li>
-            )}
-            {!track.youtube && !track.appleMusic && !track.spotify && (
-              <li class="no-link">リンク準備中</li>
-            )}
+            <li>
+              <a href={track.youtube ?? youtubeSearchUrl} target="_blank" rel="noopener noreferrer">
+                {track.youtube ? "YouTube で見る" : "YouTube で検索"}
+              </a>
+            </li>
+            <li>
+              <a href={track.appleMusic ?? appleMusicSearchUrl} target="_blank" rel="noopener noreferrer">
+                {track.appleMusic ? "Apple Music で聴く" : "Apple Music で検索"}
+              </a>
+            </li>
+            <li>
+              <a href={track.spotify ?? spotifySearchUrl} target="_blank" rel="noopener noreferrer">
+                {track.spotify ? "Spotify で聴く" : "Spotify で検索"}
+              </a>
+            </li>
           </ul>
+          {(!track.youtube || !track.appleMusic || !track.spotify) && (
+            <p class="link-note">直接リンク未確認のサービスは、名義と曲名による検索結果を開きます。</p>
+          )}
         </section>
       )}
 
