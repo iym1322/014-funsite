@@ -41,21 +41,6 @@ const youtubeId = getYouTubeId(track.youtube);
 
       {track.note && <p class="note">{track.note}</p>}
 
-      {youtubeId && (
-        <section class="video">
-          <h2>MV</h2>
-          <div class="video-frame">
-            <iframe
-              src={`https://www.youtube-nocookie.com/embed/${youtubeId}`}
-              title={`${track.title} MV`}
-              loading="lazy"
-              allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-            ></iframe>
-          </div>
-        </section>
-      )}
-
       {track.description && (
         <section class="description">
           <h2>楽曲について</h2>
@@ -110,6 +95,21 @@ const youtubeId = getYouTubeId(track.youtube);
               <li class="no-link">リンク準備中</li>
             )}
           </ul>
+        </section>
+      )}
+
+      {youtubeId && (
+        <section class="video">
+          <h2>MV</h2>
+          <div class="video-frame">
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${youtubeId}`}
+              title={`${track.title} MV`}
+              loading="lazy"
+              allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          </div>
         </section>
       )}
     </div>
