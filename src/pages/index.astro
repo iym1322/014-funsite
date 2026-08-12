@@ -8,6 +8,9 @@ import { execSync } from "node:child_process";
 import Layout from "../layouts/Layout.astro";
 import TrackCover from "../components/TrackCover.astro";
 import { tracks } from "../data/discography";
+import { favoritePosts, trackFor } from "../data/favorites";
+import { rankingQuestions } from "../data/ranking";
+import { schedule } from "../data/schedule";
 
 const mainContents = [
   { href: "/profile", label: "プロフィール", desc: "経歴・活動年表など基本情報" },
@@ -47,6 +50,20 @@ const featuredSong = songs[dayNumber % songs.length];
 const latestSongs = [...songs]
   .sort((a, b) => b.sortDate.localeCompare(a.sortDate))
   .slice(0, 10);
+const popularFavorites = [...favoritePosts].sort((a, b) => b.likes - a.likes).slice(0, 3);
+const activeRanking = rankingQuestions[0];
+const rankingPreview = [...activeRanking.choices]
+  .sort((a, b) => b.votes - a.votes)
+  .slice(0, 3);
+const today = new Date().toISOString().slice(0, 10);
+const nextEvent = [...schedule]
+  .filter((event) => event.date >= today)
+  .sort((a, b) => a.date.localeCompare(b.date))[0];
+const eventTypeLabels = { release: "リリース", live: "ライブ", event: "イベント" };
+const formatEventDate = (date: string) => {
+  const [year, month, day] = date.split("-");
+  return `${year}.${month}.${day}`;
+};
 ---
 
 <Layout title="オーイシマサヨシ非公式ファンサイト">
@@ -104,6 +121,88 @@ const latestSongs = [...songs]
         </a>
       ))}
     </div>
+  </section>
+
+  <section class="community-section">
+    <div class="section-heading">
+      <div>
+        <p class="section-kicker">FAN VOICES</p>
+        <h2>みんなの推し曲</h2>
+      </div>
+      <a href="/favorites">投稿を見る →</a>
+    </div>
+    <div class="favorite-grid">
+      {popularFavorites.map((post) => {
+        const track = trackFor(post.trackSlug);
+        if (!track) return null;
+        return (
+          <article class="favorite-card">
+            <a class="favorite-cover" href={`/works/${track.slug}`}>
+              <TrackCover image={track.image} title={track.title} />
+            </a>
+            <div>
+              <p class="preview-label">サンプル投稿</p>
+              <h3><a href={`/works/${track.slug}`}>{track.title}</a></h3>
+              <p class="favorite-comment">{post.body}</p>
+              <p class="favorite-meta">♡ {post.likes} ・ {post.author}</p>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  </section>
+
+  <section class="ranking-preview">
+    <div class="section-heading">
+      <div>
+        <p class="section-kicker">NOW VOTING</p>
+        <h2>開催中のランキング</h2>
+      </div>
+      <a href="/ranking">投票ページへ →</a>
+    </div>
+    <div class="ranking-panel">
+      <div class="ranking-question">
+        <span>今回のお題</span>
+        <h3>{activeRanking.question}</h3>
+        <p>現在はデザイン確認用のサンプル結果です。</p>
+      </div>
+      <ol class="ranking-list">
+        {rankingPreview.map((choice, index) => {
+          const track = tracks.find((item) => item.slug === choice.trackSlug);
+          if (!track) return null;
+          return (
+            <li>
+              <strong>{index + 1}</strong>
+              <a href={`/works/${track.slug}`}>{track.title}</a>
+              <span>{choice.votes}票</span>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  </section>
+
+  <section class="event-preview">
+    <div class="section-heading">
+      <div>
+        <p class="section-kicker">UP NEXT</p>
+        <h2>次のイベント</h2>
+      </div>
+      <a href="/calendar">カレンダーを見る →</a>
+    </div>
+    {nextEvent ? (
+      <article class="event-card">
+        <time datetime={nextEvent.date}>{formatEventDate(nextEvent.date)}</time>
+        <div class="event-copy">
+          <span class={`event-type type-${nextEvent.type}`}>{eventTypeLabels[nextEvent.type]}</span>
+          <h3>{nextEvent.title}</h3>
+          {nextEvent.note && <p>{nextEvent.note}</p>}
+        </div>
+        {nextEvent.href && <a class="event-link" href={nextEvent.href}>詳細を見る →</a>}
+      </article>
+    ) : (
+      <p class="placeholder">現在、掲載予定のイベントはありません。</p>
+    )}
   </section>
 
   <section>
@@ -334,6 +433,157 @@ const latestSongs = [...songs]
     display: block;
   }
 
+  .favorite-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .favorite-card {
+    display: grid;
+    grid-template-columns: 76px 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+  }
+
+  .favorite-cover,
+  .favorite-card h3 a {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .favorite-card h3 {
+    margin: 0.15rem 0 0.4rem;
+    font-size: 1rem;
+  }
+
+  .preview-label,
+  .favorite-meta {
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    margin: 0;
+  }
+
+  .favorite-comment {
+    display: -webkit-box;
+    margin: 0 0 0.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    line-height: 1.65;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  .ranking-panel {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: var(--color-surface);
+    overflow: hidden;
+  }
+
+  .ranking-question {
+    padding: 2rem;
+    background: #eee3d7;
+  }
+
+  .ranking-question span,
+  .ranking-question p {
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+  }
+
+  .ranking-question h3 {
+    margin: 0.5rem 0;
+    font-size: 1.5rem;
+  }
+
+  .ranking-question p {
+    margin: 0;
+  }
+
+  .ranking-list {
+    list-style: none;
+    margin: 0;
+    padding: 0.75rem 1.5rem;
+  }
+
+  .ranking-list li {
+    display: grid;
+    grid-template-columns: 2rem 1fr auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ranking-list li:last-child {
+    border-bottom: none;
+  }
+
+  .ranking-list strong {
+    color: var(--color-accent);
+    font-size: 1.25rem;
+  }
+
+  .ranking-list a {
+    color: var(--color-text);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .ranking-list span {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+  }
+
+  .event-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.5rem 2rem;
+    border-left: 5px solid #5c7a8a;
+    border-radius: 10px;
+    background: var(--color-surface);
+    box-shadow: 0 8px 24px rgb(47 44 40 / 6%);
+  }
+
+  .event-card time {
+    color: var(--color-accent);
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .event-type {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    background: #e8eef1;
+    color: #486774;
+    font-size: 0.7rem;
+  }
+
+  .event-copy h3,
+  .event-copy p {
+    margin: 0.25rem 0 0;
+  }
+
+  .event-copy p {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+  }
+
+  .event-link {
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
   .song-card strong {
     margin-top: 0.75rem;
     line-height: 1.5;
@@ -436,6 +686,20 @@ const latestSongs = [...songs]
 
     .song-rail {
       grid-auto-columns: minmax(155px, 46%);
+    }
+
+    .favorite-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .ranking-panel {
+      grid-template-columns: 1fr;
+    }
+
+    .event-card {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+      padding: 1.25rem;
     }
 
     .update-log li {
