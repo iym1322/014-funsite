@@ -40,6 +40,18 @@ const toSortDate = (date: string): string => {
   return `${y}-${m}-${d}`;
 };
 
+const soundScheduleMvs: Record<string, string> = {
+  "hoeru-inu-to-kimi": "https://www.youtube.com/watch?v=A88Tl1qUnjI",
+  "kimi-to-iu-hana": "https://www.youtube.com/watch?v=t_Q3T87NaHQ",
+  osananajimi: "https://www.youtube.com/watch?v=mDXUoQSe3VQ",
+  "peter-pan-syndrome": "https://www.youtube.com/watch?v=9-dWOEvYf9A",
+  "kotoba-sagashi": "https://www.youtube.com/watch?v=nHUDIQGrkeA",
+  "saraba-pina-colada": "https://www.youtube.com/watch?v=OSrb_VXhY-s",
+  "special-number": "https://www.youtube.com/watch?v=n8NIpLnFVEQ",
+  "answer-sound-schedule": "https://www.youtube.com/watch?v=t6C40taBebs",
+  "amai-yoru": "https://www.youtube.com/watch?v=yOSDk54mZCM",
+};
+
 const soundSong = (
   title: string,
   date: string,
@@ -52,6 +64,9 @@ const soundSong = (
   date,
   slug,
   description: `Sound Scheduleが発表した楽曲「${title}」。収録作品と結び付けて掲載しています。`,
+  youtube: soundScheduleMvs[slug],
+  appleMusic: "https://music.apple.com/jp/artist/sound-schedule/120518258",
+  spotify: "https://open.spotify.com/artist/6HORUWB9z2qb1Bm0q510Ww",
   ...details,
 });
 
@@ -1439,12 +1454,25 @@ const raw: Omit<Track, "sortDate">[] = [
   {
     group: "オーイシマサヨシ",
     type: "シングル",
-    date: "2018.07",
+    date: "2018.07.18",
     title: "Hands",
     tieIn: "『ウルトラマンR/B』主題歌",
     slug: "hands",
     image: "hands",
     description: "特撮ドラマ『ウルトラマンR/B(ルーブ)』のオープニングテーマ。兄弟の絆をテーマにした疾走感のあるナンバーで、オーイシマサヨシ名義3作目のシングル。",
+    appleMusic: "https://music.apple.com/jp/song/1405555874",
+    spotify: "https://open.spotify.com/intl-ja/track/2PKGYVQikLr2uxVZCVVfr6",
+  },
+  {
+    group: "オーイシマサヨシ",
+    type: "シングル",
+    date: "2018.07.18",
+    title: "ウルトラSing!!",
+    tieIn: "特撮ドラマ『ウルトラマンR/B』関連楽曲",
+    note: "シングル『Hands』カップリング曲",
+    slug: "ultra-sing",
+    description: "『ウルトラマンR/B』オープニング主題歌シングル『Hands』に収録されたカップリング曲。園田健太郎と伊藤翼が制作を手掛け、オーイシマサヨシが歌唱したポップな応援歌です。",
+    appleMusic: "https://music.apple.com/jp/song/1405555875",
   },
   {
     group: "オーイシマサヨシ",
@@ -2328,7 +2356,7 @@ const raw: Omit<Track, "sortDate">[] = [
           { title: "ギフト", slug: "gift" },
           { title: "死んだ!", slug: "shinda" },
           { title: "Hands", slug: "hands" },
-          { title: "ウルトラSing!!" },
+          { title: "ウルトラSing!!", slug: "ultra-sing" },
           { title: "英雄の歌", slug: "eiyu-no-uta" },
           { title: "かごめかごめ", slug: "kagome-kagome" },
           { title: "枕男子 ～ファイヤー！ by 大石昌良～", slug: "makura-danshi-kariuta" },
