@@ -1261,6 +1261,7 @@ const raw: Omit<Track, "sortDate">[] = [
     caution: true,
     note: "「別れの種だね」とともに会場限定シングル『PHASE ONE』に収録",
     slug: "mimi-no-kikoenaku-natta-koibito",
+    spotify: "https://open.spotify.com/track/1Z9PtbEYirxZx0WfbgdXrp",
     description: "大石昌良の会場限定シングル『PHASE ONE』に収録されたオリジナル曲。大石自身の実体験がもとになった楽曲とされ、後に6thアルバム『君に聞かせる物語』にリアレンジされて収録された。",
   },
   {
@@ -1271,6 +1272,7 @@ const raw: Omit<Track, "sortDate">[] = [
     caution: true,
     note: "「耳の聞こえなくなった恋人とそのうたうたい」とともに会場限定シングル『PHASE ONE』に収録",
     slug: "wakare-no-tanedane",
+    spotify: "https://open.spotify.com/track/4jQDKNc9V0d6ci7tomwiGS",
     description: "大石昌良の会場限定シングル『PHASE ONE』に収録されたオリジナル曲。後に6thアルバム『君に聞かせる物語』にリアレンジされて収録された。",
   },
   {
@@ -1572,6 +1574,7 @@ const raw: Omit<Track, "sortDate">[] = [
     description: "TVアニメ『地縛少年花子くん』のオープニングテーマ。生田鷹司・オーイシマサヨシ・ZiNGによるユニット「地縛少年バンド」名義でリリースされた楽曲で、オーイシマサヨシもボーカルの一人として参加している。",
     youtube: "https://www.youtube.com/watch?v=yExFsoZRA8k",
     appleMusic: "https://music.apple.com/jp/album/no-7-ep/1497641248",
+    spotify: "https://open.spotify.com/track/1gqadawWiosaJsKbt1NUlM",
   },
   {
     group: "オーイシマサヨシ",
@@ -1839,6 +1842,7 @@ const raw: Omit<Track, "sortDate">[] = [
     image: "kimi-janakya-dame-mitai-first-take",
     description: "オーイシマサヨシ名義としての初リリース曲「君じゃなきゃダメみたい」を、YouTubeチャンネル「THE FIRST TAKE」でスペシャルアレンジ・一発撮りにて披露したバージョン。",
     youtube: "https://www.youtube.com/watch?v=_Vq_Wkx6aqY",
+    spotify: "https://open.spotify.com/track/5gW6ksEhQGsdFCyFOaAZ7O",
   },
   {
     group: "オーイシマサヨシ",
@@ -1851,6 +1855,7 @@ const raw: Omit<Track, "sortDate">[] = [
     description: "TVアニメ『地縛少年花子くん2』のオープニングテーマ。MVは「日本の妖怪」をテーマに、狐のお面を被った4名のダンサーを引き連れて歌う幻想的な映像となっている。監督は田辺秀伸。",
     youtube: "https://www.youtube.com/watch?v=ALMhSqje8UU",
     appleMusic: "https://music.apple.com/jp/song/%E3%81%8B%E3%81%94%E3%82%81%E3%81%8B%E3%81%94%E3%82%81/1821818804",
+    spotify: "https://open.spotify.com/track/46oyoQJ6Ux4kxLniKOTno1",
   },
   {
     group: "オーイシマサヨシ",
@@ -1890,7 +1895,7 @@ const raw: Omit<Track, "sortDate">[] = [
     description: "ポケモンの新シリーズを記念し、1025種のポケモンをテーマに1025組のアーティストが参加する楽曲企画「ポケモンオールスターズ1025」の一曲としてオーイシマサヨシが参加。",
     youtube: "https://www.youtube.com/watch?v=kQ8fiBCxRAg",
     appleMusic: "https://music.apple.com/jp/song/%E3%83%9D%E3%82%B1%E3%83%A2%E3%83%B3%E3%82%AA%E3%83%BC%E3%83%AB%E3%82%B9%E3%82%BF%E3%83%BC%E3%82%BA1025-213-1025/1893808173",
-    spotify: "https://open.spotify.com/album/4YsnZW9CRKQVbEuCytMUeR",
+    spotify: "https://open.spotify.com/track/4iK2ASvgj40hjxEQ5cZ2DO",
   },
   {
     group: "オーイシマサヨシ",
@@ -1903,7 +1908,7 @@ const raw: Omit<Track, "sortDate">[] = [
     description: "『お隣の天使様にいつの間にか駄目人間にされていた件2』のオープニングテーマ。MVでは俳優の濱田龍臣が主演を務め、結城さくなが特別出演している。",
     youtube: "https://www.youtube.com/watch?v=mG0qU4B6YtI",
     appleMusic: "https://music.apple.com/jp/song/%E5%90%9B%E3%81%AF%E6%81%8B%E4%BA%BA/1884872361",
-    spotify: "https://open.spotify.com/album/6llaqDfdsFoormsUrhdrbo",
+    spotify: "https://open.spotify.com/track/2Es1Rs8TT2ooS0swxuvJOp",
   },
   {
     group: "オーイシマサヨシ",
@@ -1916,7 +1921,7 @@ const raw: Omit<Track, "sortDate">[] = [
     description: "TVアニメ『花織さんは転生しても喧嘩がしたい』のオープニングテーマ。主人公目線で描かれるハイテンションなバンドサウンドが特徴。",
     youtube: "https://www.youtube.com/watch?v=WvFsPFtAojs",
     appleMusic: "https://music.apple.com/jp/album/6781168860",
-    spotify: "https://open.spotify.com/album/3T0JjpxWBEzCQ2Qv8KzzcQ",
+    spotify: "https://open.spotify.com/track/08wiYF42f2wVoEW0xZfzAl",
   },
   {
     group: "オーイシマサヨシ",
@@ -1938,6 +1943,8 @@ const raw: Omit<Track, "sortDate">[] = [
     image: "butter-fly-first-take",
     description: "『デジモンアドベンチャー』の楽曲「Butter-Fly」を、5組のアーティストによる一発撮りで披露したTHE FIRST TAKE版。",
     appleMusic: "https://music.apple.com/jp/album/butter-fly-from-the-first-take-single/1835369291",
+    youtube: "https://www.youtube.com/watch?v=5U2ONs0rd1I",
+    spotify: "https://open.spotify.com/track/7b80lqESPsx5ccfLQYAYrr",
   },
   {
     group: "オーイシマサヨシ",
@@ -1949,6 +1956,7 @@ const raw: Omit<Track, "sortDate">[] = [
     image: "oneness-first-take",
     description: "アニソンアーティスト5組が「ONENESS」を一発撮りで歌唱したTHE FIRST TAKE版。",
     appleMusic: "https://music.apple.com/jp/song/1884553246",
+    youtube: "https://www.youtube.com/watch?v=d5MqDevV15E",
   },
   {
     group: "オーイシマサヨシ",
