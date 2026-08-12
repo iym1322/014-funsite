@@ -31,7 +31,15 @@ const nextTrack = currentIndex >= 0 && currentIndex < navigable.length - 1 ? nav
 
 // この曲が歌われたライブ映像(セットリストにこの曲のslugが含まれるもの)を逆引きする。
 const relatedLives = tracks.filter(
-  (t) => t.type === "映像" && t.isLive && t.setlist?.some((s) => s.slug === track.slug)
+  (t) =>
+    t.type === "映像" &&
+    t.isLive &&
+    (t.setlist?.some((s) => s.slug === track.slug) ||
+      t.setlists?.some((group) => group.tracks.some((s) => s.slug === track.slug)))
+);
+
+const relatedAlbums = tracks.filter(
+  (t) => t.type === "アルバム" && t.tracklist?.some((s) => s.slug === track.slug)
 );
 
 // この曲への推し曲コーナー投稿を逆引きする(現状はサンプル投稿のみ)。
@@ -74,6 +82,17 @@ const relatedFavorites = favoritePosts.filter((p) => p.trackSlug === track.slug)
         </section>
       )}
 
+      {relatedAlbums.length > 0 && (
+        <section class="related-lives">
+          <h2>収録アルバム</h2>
+          <ul>
+            {relatedAlbums.map((album) => (
+              <li><a href={`/works/${album.slug}`}>{album.title}</a></li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {track.type === "アルバム" && (
         <section class="tracklist">
           <h2>収録曲</h2>
@@ -92,7 +111,20 @@ const relatedFavorites = favoritePosts.filter((p) => p.trackSlug === track.slug)
       {track.type === "映像" && track.isLive && (
         <section class="tracklist">
           <h2>セットリスト</h2>
-          {track.setlist && track.setlist.length > 0 ? (
+          {track.setlists && track.setlists.length > 0 ? (
+            <div class="setlist-groups">
+              {track.setlists.map((group) => (
+                <section class="setlist-group">
+                  <h3>{group.title}</h3>
+                  <ol>
+                    {group.tracks.map((t) => (
+                      <li>{t.slug ? <a href={`/works/${t.slug}`}>{t.title}</a> : t.title}</li>
+                    ))}
+                  </ol>
+                </section>
+              ))}
+            </div>
+          ) : track.setlist && track.setlist.length > 0 ? (
             <ol>
               {track.setlist.map((t) => (
                 <li>{t.slug ? <a href={`/works/${t.slug}`}>{t.title}</a> : t.title}</li>
@@ -276,6 +308,25 @@ const relatedFavorites = favoritePosts.filter((p) => p.trackSlug === track.slug)
     margin: 0;
     padding-left: 1.4rem;
     line-height: 2;
+  }
+
+  .setlist-groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .setlist-group {
+    margin: 0;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+  }
+
+  .setlist-group h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
   }
 
   .tracklist a {
