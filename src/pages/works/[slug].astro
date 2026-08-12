@@ -187,9 +187,10 @@ const relatedFavorites = favoritePosts.filter((p) => p.trackSlug === track.slug)
           <h2>MV</h2>
           <div class="video-frame">
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${youtubeId}`}
+              src={`https://www.youtube.com/embed/${youtubeId}`}
               title={`${track.title} MV`}
               loading="lazy"
+              referrerpolicy="strict-origin-when-cross-origin"
               allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen
             ></iframe>
