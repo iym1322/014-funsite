@@ -12,6 +12,15 @@ export function getStaticPaths() {
 }
 
 const { track } = Astro.props;
+
+// 埋め込みは公式チャンネルの動画であることを確認済みのtrack.youtubeがある場合のみ表示する
+// (YouTubeの埋め込み機能自体が投稿者=権利者が許可した範囲の利用のため著作権上問題ない)。
+function getYouTubeId(url?: string): string | null {
+  if (!url) return null;
+  const match = url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
+  return match ? match[1] : null;
+}
+const youtubeId = getYouTubeId(track.youtube);
 ---
 
 <Layout title={`${track.title} | ディスコグラフィー | オーイシマサヨシ非公式ファンサイト`}>
@@ -31,6 +40,21 @@ const { track } = Astro.props;
       )}
 
       {track.note && <p class="note">{track.note}</p>}
+
+      {youtubeId && (
+        <section class="video">
+          <h2>MV</h2>
+          <div class="video-frame">
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${youtubeId}`}
+              title={`${track.title} MV`}
+              loading="lazy"
+              allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          </div>
+        </section>
+      )}
 
       {track.description && (
         <section class="description">
@@ -145,12 +169,30 @@ const { track } = Astro.props;
     margin: 0 0 1.5rem;
   }
 
+  .video h2,
   .description h2,
   .tracklist h2,
   .links h2 {
     font-size: 1rem;
     color: var(--color-text-muted);
     margin: 1.5rem 0 0.5rem;
+  }
+
+  .video-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .video-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
   }
 
   .description p {
