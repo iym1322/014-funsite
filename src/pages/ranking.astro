@@ -1,0 +1,167 @@
+---
+// 勝手にランキング(CONTENTS_PLAN.md 2-6)。
+// 運営が用意したお題ごとに、訪問者が候補曲に投票してランキングを見られるようにしたい機能。
+// 推し曲コーナー・イベントレポートと同じ方針: 投票ボタンは見た目は本番同様に実装しつつ、
+// バックエンド未整備のため押すと「準備中です」と案内する(得票数はすべてサンプル)。
+import Layout from "../layouts/Layout.astro";
+import TrackCover from "../components/TrackCover.astro";
+import { rankingQuestions } from "../data/ranking";
+import { tracks } from "../data/discography";
+
+function trackFor(slug: string) {
+  return tracks.find((t) => t.slug === slug);
+}
+
+const rankMedals = ["🥇", "🥈", "🥉"];
+---
+
+<Layout title="勝手にランキング | オーイシマサヨシ非公式ファンサイト">
+  <h1>勝手にランキング</h1>
+  <p class="note">
+    運営が用意したお題に投票して、みんなのランキングを見られるコーナーです。
+    投票機能はまだ準備中のため、以下の結果は<strong>デザイン確認用のサンプル</strong>です。
+  </p>
+
+  {rankingQuestions.map((q) => {
+    const sorted = [...q.choices].sort((a, b) => b.votes - a.votes);
+    const totalVotes = q.choices.reduce((sum, c) => sum + c.votes, 0);
+    return (
+      <section class="question">
+        <h2>{q.question}</h2>
+        <p class="total-votes">サンプル総投票数: {totalVotes}票</p>
+        <ol class="rank-list">
+          {sorted.map((choice, index) => {
+            const track = trackFor(choice.trackSlug);
+            if (!track) return null;
+            return (
+              <li class="rank-item">
+                <span class="rank-medal">{rankMedals[index] ?? `${index + 1}位`}</span>
+                <a class="rank-track" href={`/works/${track.slug}`}>
+                  <TrackCover image={track.image} title={track.title} />
+                </a>
+                <div class="rank-body">
+                  <a class="rank-title" href={`/works/${track.slug}`}>{track.title}</a>
+                  <p class="rank-votes">{choice.votes}票</p>
+                </div>
+                <button class="vote-button" type="button">投票する</button>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+    );
+  })}
+</Layout>
+
+<script>
+  for (const btn of document.querySelectorAll<HTMLButtonElement>(".vote-button")) {
+    btn.addEventListener("click", () => {
+      alert("投票機能は準備中です。もうしばらくお待ちください。");
+    });
+  }
+</script>
+
+<style>
+  .note {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .question {
+    margin-top: 3rem;
+  }
+
+  .question h2 {
+    margin-bottom: 0.25rem;
+  }
+
+  .total-votes {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    margin: 0 0 1rem;
+  }
+
+  .rank-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .rank-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    background: var(--color-surface);
+  }
+
+  .rank-medal {
+    flex: none;
+    width: 2.5rem;
+    text-align: center;
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+  }
+
+  .rank-track {
+    flex: none;
+    width: 3.5rem;
+    display: block;
+  }
+
+  .rank-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rank-title {
+    display: block;
+    font-weight: 700;
+    color: var(--color-text);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rank-title:hover {
+    color: var(--color-accent);
+  }
+
+  .rank-votes {
+    margin: 0.15rem 0 0;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .vote-button {
+    flex: none;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .vote-button:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  @media (max-width: 480px) {
+    .rank-item {
+      flex-wrap: wrap;
+    }
+    .vote-button {
+      margin-left: calc(2.5rem + 1rem + 3.5rem + 1rem);
+    }
+  }
+</style>
