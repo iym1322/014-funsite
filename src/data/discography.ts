@@ -40,8 +40,24 @@ const toSortDate = (date: string): string => {
   return `${y}-${m}-${d}`;
 };
 
+const soundSong = (
+  title: string,
+  date: string,
+  slug: string,
+  details?: Pick<Omit<Track, "sortDate">, "note" | "tieIn" | "appleMusic" | "youtube" | "spotify">,
+): Omit<Track, "sortDate"> => ({
+  group: "Sound Schedule",
+  type: "シングル",
+  title,
+  date,
+  slug,
+  description: `Sound Scheduleが発表した楽曲「${title}」。収録作品と結び付けて掲載しています。`,
+  ...details,
+});
+
 const raw: Omit<Track, "sortDate">[] = [
   // --- Sound Schedule ---
+  /* 旧データ（楽曲単位データへ移行済み）
   { group: "Sound Schedule", type: "アルバム", date: "2000.11", title: "ここからはじまるストーリー", note: "インディーズ" },
   { group: "Sound Schedule", type: "アルバム", date: "2002.07", title: "イマココニアルモノ" },
   { group: "Sound Schedule", type: "アルバム", date: "2003.10", title: "456" },
@@ -78,6 +94,79 @@ const raw: Omit<Track, "sortDate">[] = [
   { group: "Sound Schedule", type: "映像", date: "2005.08", title: "SS FILMS 〜8 Clips of Singles〜" },
   { group: "Sound Schedule", type: "映像", date: "2006.02", title: "SS LIVES 〜Live Tour \"you can't beat that.\"〜", isLive: true },
   { group: "Sound Schedule", type: "映像", date: "2020.03", title: "Sound Schedule Live Tour \"PLACE2019\" LIQUIDROOM", isLive: true },
+
+  */
+
+  // --- Sound Schedule: albums ---
+  {
+    group: "Sound Schedule", type: "アルバム", date: "2000.11", title: "ここからはじまるストーリー", slug: "kokokara-hajimaru-story", note: "インディーズ盤。2011年7月13日に配信復刻。",
+    description: "メジャーデビュー前に発表した9曲入り作品。Sound Scheduleの原点を収めています。",
+    tracklist: [
+      { title: "スパイス", slug: "spice-sound-schedule" }, { title: "ゴールデン・ナイト", slug: "golden-night" }, { title: "HANABI", slug: "hanabi-sound-schedule" }, { title: "きっととどかないだろう", slug: "kitto-todokanai-darou" }, { title: "竜巻", slug: "tatsumaki" }, { title: "愛のかたち", slug: "ai-no-katachi" }, { title: "Out side way", slug: "out-side-way" }, { title: "太陽の国", slug: "taiyou-no-kuni" }, { title: "傷だらけの少年", slug: "kizudarake-no-shounen" },
+    ],
+  },
+  {
+    group: "Sound Schedule", type: "アルバム", date: "2002.07.10", title: "イマココニアルモノ", slug: "ima-koko-ni-aru-mono-album", appleMusic: "https://music.apple.com/jp/album/ima-koko-ni-aru-mono/1681160195", description: "Sound Scheduleのメジャー1stアルバム。全12トラックを収録。",
+    tracklist: [
+      { title: "幼なじみ", slug: "osananajimi" }, { title: "世直しブッダ", slug: "yonaoshi-buddha" }, { title: "月が落ちる前に…", slug: "tsuki-ga-ochiru-mae-ni" }, { title: "ちょっとだけ", slug: "chotto-dake" }, { title: "君という花", slug: "kimi-to-iu-hana" }, { title: "大学物語", slug: "daigaku-monogatari" }, { title: "流星群（sound effects）" }, { title: "愛のかたち", slug: "ai-no-katachi" }, { title: "マザーコンプレックス", slug: "mother-complex" }, { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" }, { title: "恋焦がれ", slug: "koi-kogare" }, { title: "今ココにあるもの", slug: "ima-koko-ni-aru-mono" },
+    ],
+  },
+  {
+    group: "Sound Schedule", type: "アルバム", date: "2003.10.08", title: "456", slug: "456-album", description: "シングル曲を含む全11曲を収録した2ndアルバム。",
+    tracklist: [
+      { title: "IQ兄弟", slug: "iq-kyoudai" }, { title: "運命の人へ", slug: "unmei-no-hito-e" }, { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" }, { title: "コモリウタ", slug: "komoriuta" }, { title: "ペンネの女", slug: "penne-no-onna" }, { title: "僕らの行方", slug: "bokura-no-yukue" }, { title: "窓の向こう", slug: "mado-no-mukou" }, { title: "ことばさがし", slug: "kotoba-sagashi" }, { title: "東京ライフ", slug: "tokyo-life-sound-schedule" }, { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" }, { title: "結末のない二人", slug: "ketsumatsu-no-nai-futari" },
+    ],
+  },
+  {
+    group: "Sound Schedule", type: "アルバム", date: "2005.03.02", title: "ビオトープ", slug: "biotope-album", description: "全11曲で構成された3rdオリジナルアルバム。",
+    tracklist: [
+      { title: "ビオトープ", slug: "biotope-song" }, { title: "ハイライト", slug: "highlight-sound-schedule" }, { title: "真夜中のID", slug: "mayonaka-no-id" }, { title: "ヘイ！ヘイ！", slug: "hey-hey-sound-schedule" }, { title: "スペシャルナンバー", slug: "special-number" }, { title: "境界線にて", slug: "kyoukaisen-nite" }, { title: "僕らの逃避行", slug: "bokura-no-touhikou" }, { title: "エピローグ", slug: "epilogue-sound-schedule" }, { title: "コンタクト", slug: "contact-sound-schedule" }, { title: "君のためにできること", slug: "kimi-no-tame-ni-dekiru-koto" }, { title: "アンサー", slug: "answer-sound-schedule" },
+    ],
+  },
+  {
+    group: "Sound Schedule", type: "アルバム", date: "2006.09.20", title: "THE COMPLETE SS", slug: "the-complete-ss", note: "2枚組ベストアルバム", description: "シングル、カップリング曲、新曲など25曲を収録。映像項目は曲目から除外しています。",
+    tracklist: [
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" }, { title: "君という花", slug: "kimi-to-iu-hana" }, { title: "幼なじみ", slug: "osananajimi" }, { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" }, { title: "ことばさがし", slug: "kotoba-sagashi" }, { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" }, { title: "スペシャルナンバー", slug: "special-number" }, { title: "アンサー", slug: "answer-sound-schedule" }, { title: "甘い夜", slug: "amai-yoru" }, { title: "同じ空の下で", slug: "onaji-sora-no-shita-de" }, { title: "クライマックス", slug: "climax-sound-schedule" }, { title: "シチューが飲みたくなる唄", slug: "stew-ga-nomitaku-naru-uta" }, { title: "あなたを想う旅", slug: "anata-wo-omou-tabi" }, { title: "竜巻", slug: "tatsumaki" }, { title: "人の子ふたり", slug: "hito-no-ko-futari" }, { title: "燃やせ煩悩", slug: "moyase-bonnou" }, { title: "花火", slug: "hanabi-sound-schedule" }, { title: "わけあり", slug: "wakeari" }, { title: "ミーティング", slug: "meeting-sound-schedule" }, { title: "コンパス", slug: "compass-sound-schedule" }, { title: "黄金レシピ", slug: "ougon-recipe" },
+    ],
+  },
+  {
+    group: "Sound Schedule", type: "アルバム", date: "2011.09.14", title: "PLACE", slug: "place-album", appleMusic: "https://music.apple.com/jp/album/place/456895766", description: "再結成後に発表した全10曲のアルバム。",
+    tracklist: [
+      { title: "グッドタイムコミュニケーション", slug: "good-time-communication" }, { title: "たそがれスターライト", slug: "tasogare-starlight" }, { title: "君のためにできること", slug: "kimi-no-tame-ni-dekiru-koto" }, { title: "言葉以上に", slug: "kotoba-ijou-ni" }, { title: "しあわせの文字", slug: "shiawase-no-moji" }, { title: "超能力少年", slug: "chounouryoku-shounen" }, { title: "ロックンロール", slug: "rock-n-roll-sound-schedule" }, { title: "恋焦がれ", slug: "koi-kogare" }, { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" }, { title: "ことばさがし", slug: "kotoba-sagashi" },
+    ],
+  },
+  {
+    group: "Sound Schedule", type: "アルバム", date: "2012.09.05", title: "FUTURE", slug: "future-album-sound-schedule", description: "新曲、既発曲のリマスター、ボーナストラックを収めた企画アルバム。",
+    tracklist: [
+      { title: "グッドモーニング", slug: "good-morning-sound-schedule" }, { title: "エイリアン", slug: "alien-sound-schedule" }, { title: "その愛を止めないで", slug: "sono-ai-wo-tomenaide" }, { title: "僕らの足跡～はじめのいっぽ～", slug: "bokura-no-ashiato" }, { title: "コモリウタ", slug: "komoriuta" }, { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" }, { title: "僕らの行方", slug: "bokura-no-yukue" }, { title: "結末のない二人", slug: "ketsumatsu-no-nai-futari" }, { title: "ハイライト", slug: "highlight-sound-schedule" }, { title: "エピローグ", slug: "epilogue-sound-schedule" }, { title: "コンタクト", slug: "contact-sound-schedule" }, { title: "コンパス", slug: "compass-sound-schedule" }, { title: "同じ空の下で", slug: "onaji-sora-no-shita-de" }, { title: "スマイル", slug: "smile-sound-schedule" },
+    ],
+  },
+  {
+    group: "Sound Schedule", type: "アルバム", date: "2014.09.17", title: "LIVE", slug: "live-ep-sound-schedule", note: "ミニアルバム", appleMusic: "https://music.apple.com/jp/album/live-ep/912262056", description: "再結成後に発表した5曲入りミニアルバム。",
+    tracklist: [{ title: "銀河ステーション", slug: "ginga-station" }, { title: "フリーハンド", slug: "free-hand" }, { title: "ミラクル", slug: "miracle-sound-schedule" }, { title: "目隠し鬼", slug: "mekakushi-oni" }, { title: "ありがとう", slug: "arigatou-sound-schedule" }],
+  },
+  {
+    group: "Sound Schedule", type: "アルバム", date: "2019.03.27", title: "Sound Schedule ALL TIME BEST", slug: "sound-schedule-all-time-best", note: "2枚組・全34曲", description: "結成20周年を記念したオールタイムベスト。",
+    tracklist: [
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" }, { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" }, { title: "ミラクル", slug: "miracle-sound-schedule" }, { title: "運命の人へ", slug: "unmei-no-hito-e" }, { title: "ちょっとだけ", slug: "chotto-dake" }, { title: "ペンネの女", slug: "penne-no-onna" }, { title: "真夜中のID", slug: "mayonaka-no-id" }, { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" }, { title: "スペシャルナンバー", slug: "special-number" }, { title: "IQ兄弟", slug: "iq-kyoudai" }, { title: "幼なじみ", slug: "osananajimi" }, { title: "ピーターパン・シンドローム（2011MIX）", slug: "peter-pan-syndrome" }, { title: "エイリアン", slug: "alien-sound-schedule" }, { title: "愛のかたち", slug: "ai-no-katachi" }, { title: "甘い夜", slug: "amai-yoru" }, { title: "竜巻", slug: "tatsumaki" }, { title: "今ココにあるもの", slug: "ima-koko-ni-aru-mono" }, { title: "コンパス", slug: "compass-sound-schedule" }, { title: "フリーハンド", slug: "free-hand" }, { title: "ハイライト", slug: "highlight-sound-schedule" }, { title: "ことばさがし（2011MIX）", slug: "kotoba-sagashi" }, { title: "わけあり", slug: "wakeari" }, { title: "窓の向こう", slug: "mado-no-mukou" }, { title: "世直しブッダ", slug: "yonaoshi-buddha" }, { title: "エピローグ", slug: "epilogue-sound-schedule" }, { title: "シチューが飲みたくなる唄", slug: "stew-ga-nomitaku-naru-uta" }, { title: "グッドタイムコミュニケーション", slug: "good-time-communication" }, { title: "燃やせ煩悩", slug: "moyase-bonnou" }, { title: "人の子ふたり", slug: "hito-no-ko-futari" }, { title: "コモリウタ", slug: "komoriuta" }, { title: "君という花", slug: "kimi-to-iu-hana" }, { title: "同じ空の下で", slug: "onaji-sora-no-shita-de" }, { title: "アンサー", slug: "answer-sound-schedule" }, { title: "タイムマシーン", slug: "time-machine" }],
+  },
+
+  // --- Sound Schedule: songs (同一曲の再録は一つの個別ページに統合) ---
+  soundSong("スパイス", "2000.11", "spice-sound-schedule"), soundSong("ゴールデン・ナイト", "2000.11", "golden-night"), soundSong("花火", "2000.11", "hanabi-sound-schedule", { note: "初出時の表記は『HANABI』。2003年にリメイク。" }), soundSong("きっととどかないだろう", "2000.11", "kitto-todokanai-darou"), soundSong("竜巻", "2000.11", "tatsumaki"), soundSong("愛のかたち", "2000.11", "ai-no-katachi"), soundSong("Out side way", "2000.11", "out-side-way"), soundSong("太陽の国", "2000.11", "taiyou-no-kuni"), soundSong("傷だらけの少年", "2000.11", "kizudarake-no-shounen"),
+  soundSong("コモリウタ", "2001.07", "komoriuta"), soundSong("吠える犬と君", "2001.09.19", "hoeru-inu-to-kimi"), soundSong("月が落ちる前に…", "2001.09.19", "tsuki-ga-ochiru-mae-ni"), soundSong("シチューが飲みたくなる唄", "2001.09.19", "stew-ga-nomitaku-naru-uta"), soundSong("君という花", "2001.11.21", "kimi-to-iu-hana"), soundSong("世直しブッダ", "2001.11.21", "yonaoshi-buddha"), soundSong("あなたを想う旅", "2001.11.21", "anata-wo-omou-tabi"), soundSong("幼なじみ", "2002.04.17", "osananajimi"),
+  soundSong("ちょっとだけ", "2002.07.10", "chotto-dake"), soundSong("大学物語", "2002.07.10", "daigaku-monogatari"), soundSong("マザーコンプレックス", "2002.07.10", "mother-complex"), soundSong("恋焦がれ", "2002.07.10", "koi-kogare"), soundSong("今ココにあるもの", "2002.07.10", "ima-koko-ni-aru-mono"), soundSong("ピーターパン・シンドローム", "2002.12.11", "peter-pan-syndrome"), soundSong("人の子ふたり", "2002.12.11", "hito-no-ko-futari"),
+  soundSong("ことばさがし", "2003.04.16", "kotoba-sagashi"), soundSong("燃やせ煩悩", "2003.04.16", "moyase-bonnou"), soundSong("ペンネの女", "2003.04.16", "penne-no-onna"), soundSong("さらばピニャコラーダ", "2003.07.09", "saraba-pina-colada"), soundSong("IQ兄弟", "2003.10.08", "iq-kyoudai"), soundSong("運命の人へ", "2003.10.08", "unmei-no-hito-e"), soundSong("僕らの行方", "2003.10.08", "bokura-no-yukue"), soundSong("窓の向こう", "2003.10.08", "mado-no-mukou"), soundSong("東京ライフ", "2003.10.08", "tokyo-life-sound-schedule"), soundSong("結末のない二人", "2003.10.08", "ketsumatsu-no-nai-futari"),
+  soundSong("スペシャルナンバー", "2004.06.09", "special-number"), soundSong("わけあり", "2004.06.09", "wakeari"), soundSong("アンサー", "2005.01.19", "answer-sound-schedule"), soundSong("ミーティング", "2005.01.19", "meeting-sound-schedule"), soundSong("コンパス", "2005.01.19", "compass-sound-schedule", { tieIn: "ジュビロ磐田イメージソング" }), soundSong("ビオトープ", "2005.03.02", "biotope-song"), soundSong("ハイライト", "2005.03.02", "highlight-sound-schedule"), soundSong("真夜中のID", "2005.03.02", "mayonaka-no-id"), soundSong("ヘイ！ヘイ！", "2005.03.02", "hey-hey-sound-schedule"), soundSong("境界線にて", "2005.03.02", "kyoukaisen-nite"), soundSong("僕らの逃避行", "2005.03.02", "bokura-no-touhikou"), soundSong("エピローグ", "2005.03.02", "epilogue-sound-schedule"), soundSong("コンタクト", "2005.03.02", "contact-sound-schedule"), soundSong("君のためにできること", "2005.03.02", "kimi-no-tame-ni-dekiru-koto"),
+  soundSong("甘い夜", "2006.02.08", "amai-yoru"), soundSong("同じ空の下で", "2006.09.20", "onaji-sora-no-shita-de"), soundSong("クライマックス", "2006.09.20", "climax-sound-schedule", { tieIn: "ジュビロ磐田イメージソング" }), soundSong("黄金レシピ", "2006.09.20", "ougon-recipe"),
+  soundSong("グッドタイムコミュニケーション", "2011.09.14", "good-time-communication"), soundSong("たそがれスターライト", "2011.09.14", "tasogare-starlight"), soundSong("言葉以上に", "2011.09.14", "kotoba-ijou-ni"), soundSong("しあわせの文字", "2011.09.14", "shiawase-no-moji"), soundSong("超能力少年", "2011.09.14", "chounouryoku-shounen"), soundSong("ロックンロール", "2011.09.14", "rock-n-roll-sound-schedule"),
+  soundSong("グッドモーニング", "2012.09.05", "good-morning-sound-schedule"), soundSong("エイリアン", "2012.09.05", "alien-sound-schedule"), soundSong("その愛を止めないで", "2012.09.05", "sono-ai-wo-tomenaide"), soundSong("僕らの足跡～はじめのいっぽ～", "2012.09.05", "bokura-no-ashiato"), soundSong("スマイル", "2012.09.05", "smile-sound-schedule"), soundSong("銀河ステーション", "2014.09.17", "ginga-station"), soundSong("フリーハンド", "2014.09.17", "free-hand"), soundSong("ミラクル", "2014.09.17", "miracle-sound-schedule"), soundSong("目隠し鬼", "2014.09.17", "mekakushi-oni"), soundSong("ありがとう", "2014.09.17", "arigatou-sound-schedule"), soundSong("タイムマシーン", "2016.09", "time-machine", { note: "会場限定シングル『TIME MACHINE』表題曲。" }), soundSong("あさがお", "2016.09", "asagao"),
+
+  { group: "Sound Schedule", type: "映像", date: "2005.08.24", title: "SS FILMS “The Clips of Singles”", slug: "ss-films" },
+  { group: "Sound Schedule", type: "映像", date: "2006.02.08", title: "SS LIVES 〜Sound Schedule Live Tour \"you can't beat that.\"〜", slug: "ss-lives", isLive: true },
+  {
+    group: "Sound Schedule", type: "映像", date: "2020.03.25", title: "Sound Schedule Live Tour \"PLACE2019\" LIQUIDROOM", slug: "place-2019-live", isLive: true, description: "結成20周年ツアーの追加公演として2020年1月3日にLIQUIDROOMで行われたライブを収録。",
+    setlist: [{ title: "IQ兄弟", slug: "iq-kyoudai" }, { title: "世直しブッダ", slug: "yonaoshi-buddha" }, { title: "グッドタイムコミュニケーション", slug: "good-time-communication" }, { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" }, { title: "幼なじみ", slug: "osananajimi" }, { title: "スペシャルナンバー", slug: "special-number" }, { title: "運命の人へ", slug: "unmei-no-hito-e" }, { title: "フリーハンド", slug: "free-hand" }, { title: "わけあり", slug: "wakeari" }, { title: "愛のかたち", slug: "ai-no-katachi" }, { title: "シチューが飲みたくなる唄", slug: "stew-ga-nomitaku-naru-uta" }, { title: "言葉以上に", slug: "kotoba-ijou-ni" }, { title: "君という花", slug: "kimi-to-iu-hana" }, { title: "コンパス", slug: "compass-sound-schedule" }, { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" }, { title: "今ココにあるもの", slug: "ima-koko-ni-aru-mono" }, { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" }, { title: "アンサー", slug: "answer-sound-schedule" }, { title: "ことばさがし", slug: "kotoba-sagashi" }],
+  },
 
   // --- 大石昌良(ソロ) ---
   {
