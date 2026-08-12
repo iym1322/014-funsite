@@ -39,23 +39,55 @@ const { track } = Astro.props;
         </section>
       )}
 
-      <section class="links">
-        <h2>各種リンク</h2>
-        <ul>
-          {track.youtube && (
-            <li><a href={track.youtube} target="_blank" rel="noopener noreferrer">YouTube で見る</a></li>
+      {track.type === "アルバム" && (
+        <section class="tracklist">
+          <h2>収録曲</h2>
+          {track.tracklist && track.tracklist.length > 0 ? (
+            <ol>
+              {track.tracklist.map((t) => (
+                <li>{t.slug ? <a href={`/works/${t.slug}`}>{t.title}</a> : t.title}</li>
+              ))}
+            </ol>
+          ) : (
+            <p class="pending">収録曲情報は準備中です。</p>
           )}
-          {track.appleMusic && (
-            <li><a href={track.appleMusic} target="_blank" rel="noopener noreferrer">Apple Music で聴く</a></li>
+        </section>
+      )}
+
+      {track.type === "映像" && track.isLive && (
+        <section class="tracklist">
+          <h2>セットリスト</h2>
+          {track.setlist && track.setlist.length > 0 ? (
+            <ol>
+              {track.setlist.map((t) => (
+                <li>{t.slug ? <a href={`/works/${t.slug}`}>{t.title}</a> : t.title}</li>
+              ))}
+            </ol>
+          ) : (
+            <p class="pending">セットリストは準備中です。</p>
           )}
-          {track.spotify && (
-            <li><a href={track.spotify} target="_blank" rel="noopener noreferrer">Spotify で聴く</a></li>
-          )}
-          {!track.youtube && !track.appleMusic && !track.spotify && (
-            <li class="no-link">リンク準備中</li>
-          )}
-        </ul>
-      </section>
+        </section>
+      )}
+
+      {track.type === "シングル" && (
+        <section class="links">
+          <h2>各種リンク</h2>
+          <ul>
+            {track.youtube && (
+              <li><a href={track.youtube} target="_blank" rel="noopener noreferrer">YouTube で見る</a></li>
+            )}
+            {track.appleMusic && (
+              <li><a href={track.appleMusic} target="_blank" rel="noopener noreferrer">Apple Music で聴く</a></li>
+            )}
+            {track.spotify && (
+              <li><a href={track.spotify} target="_blank" rel="noopener noreferrer">Spotify で聴く</a></li>
+            )}
+            {!track.youtube && !track.appleMusic && !track.spotify && (
+              <li class="no-link">リンク準備中</li>
+            )}
+          </ul>
+        </section>
+      )}
     </div>
   </article>
 </Layout>
@@ -114,6 +146,7 @@ const { track } = Astro.props;
   }
 
   .description h2,
+  .tracklist h2,
   .links h2 {
     font-size: 1rem;
     color: var(--color-text-muted);
@@ -122,6 +155,25 @@ const { track } = Astro.props;
 
   .description p {
     line-height: 1.9;
+  }
+
+  .tracklist ol {
+    margin: 0;
+    padding-left: 1.4rem;
+    line-height: 2;
+  }
+
+  .tracklist a {
+    color: var(--color-text);
+  }
+
+  .tracklist a:hover {
+    color: var(--color-accent);
+  }
+
+  .pending {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
   }
 
   .links ul {

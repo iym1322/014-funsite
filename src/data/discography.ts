@@ -3,6 +3,11 @@
 // youtube/appleMusic/spotify は確認できたものだけ設定し、未確認のものは undefined のままにする
 // (実在しないURLを書かないため)。sortDate は並べ替え用に日付が不明な部分を補って正規化したもの。
 
+// アルバムの収録曲・ライブ映像のセットリストの1項目。
+// slugを指定すると、既にディスコグラフィーにある曲の個別ページへリンクされる
+// (該当曲がまだ登録されていない場合はslugを省略し、曲名のみのプレーンテキスト表示にする)。
+export type TrackRef = { title: string; slug?: string };
+
 export type Track = {
   title: string;
   group: "Sound Schedule" | "大石昌良" | "オーイシマサヨシ" | "OxT" | "楽曲提供";
@@ -20,6 +25,9 @@ export type Track = {
   slug?: string; // 個別ページ(/works/[slug])を持つ曲にのみ設定
   image?: string; // public/images/works/ 配下のファイル名(自分で用意した画像のみ使用)
   description?: string; // 楽曲紹介文
+  tracklist?: TrackRef[]; // アルバムの収録曲(判明分のみ。未調査なら省略=個別ページで「準備中」表示)
+  isLive?: boolean; // 映像作品がライブ映像かどうか(true の場合のみセットリストを表示)
+  setlist?: TrackRef[]; // ライブ映像のセットリスト(判明分のみ。未調査なら省略=個別ページで「準備中」表示)
 };
 
 const toSortDate = (date: string): string => {
@@ -53,8 +61,8 @@ const raw: Omit<Track, "sortDate">[] = [
   { group: "Sound Schedule", type: "シングル", date: "2005.01", title: "アンサー", tieIn: "NHK-BS2「週刊なびTV」エンディング" },
   { group: "Sound Schedule", type: "シングル", date: "2016.09", title: "TIME MACHINE", caution: true },
   { group: "Sound Schedule", type: "映像", date: "2005.08", title: "SS FILMS 〜8 Clips of Singles〜" },
-  { group: "Sound Schedule", type: "映像", date: "2006.02", title: "SS LIVES 〜Live Tour \"you can't beat that.\"〜" },
-  { group: "Sound Schedule", type: "映像", date: "2020.03", title: "Sound Schedule Live Tour \"PLACE2019\" LIQUIDROOM" },
+  { group: "Sound Schedule", type: "映像", date: "2006.02", title: "SS LIVES 〜Live Tour \"you can't beat that.\"〜", isLive: true },
+  { group: "Sound Schedule", type: "映像", date: "2020.03", title: "Sound Schedule Live Tour \"PLACE2019\" LIQUIDROOM", isLive: true },
 
   // --- 大石昌良(ソロ) ---
   { group: "大石昌良", type: "アルバム", date: "2008.11", title: "あの街この街" },
@@ -73,10 +81,10 @@ const raw: Omit<Track, "sortDate">[] = [
   { group: "大石昌良", type: "シングル", date: "2018.03", title: "パラレルワールド" },
   { group: "大石昌良", type: "シングル", date: "2018.11", title: "ボーダーライン" },
   { group: "大石昌良", type: "映像", date: "2010.03", title: "G.D.アトラクション(映像盤)" },
-  { group: "大石昌良", type: "映像", date: "2013.09", title: "MAGICAL MUSIC TOUR THE LIVE @ SHIBUYA" },
-  { group: "大石昌良", type: "映像", date: "2016.04", title: "大石昌良の弾き語りラボツアー2015 東京公演" },
+  { group: "大石昌良", type: "映像", date: "2013.09", title: "MAGICAL MUSIC TOUR THE LIVE @ SHIBUYA", isLive: true },
+  { group: "大石昌良", type: "映像", date: "2016.04", title: "大石昌良の弾き語りラボツアー2015 東京公演", isLive: true },
   { group: "大石昌良", type: "映像", date: "2016.09", title: "耳の聞こえなくなった恋人とそのうたうたい" },
-  { group: "大石昌良", type: "映像", date: "2019.05", title: "大石昌良の弾き語りラボ〜10th Anniversary \"One Man\" Show〜" },
+  { group: "大石昌良", type: "映像", date: "2019.05", title: "大石昌良の弾き語りラボ〜10th Anniversary \"One Man\" Show〜", isLive: true },
 
   // --- オーイシマサヨシ ---
   { group: "オーイシマサヨシ", type: "アルバム", date: "2017.07", title: "仮歌", note: "カバーアルバム" },
@@ -308,9 +316,9 @@ const raw: Omit<Track, "sortDate">[] = [
     caution: true,
     description: "2026年8月リリースの新曲。発売が新しく、タイアップ情報など詳細を確認できる情報源がまだ少ないため、判明次第追記予定。",
   },
-  { group: "オーイシマサヨシ", type: "映像", date: "2017.12", title: "仮歌ツアー" },
-  { group: "オーイシマサヨシ", type: "映像", date: "2019.11", title: "仮歌ツアー2019" },
-  { group: "オーイシマサヨシ", type: "映像", date: "2022.03", title: "オーイシマサヨシ ワンマンライブ「エンターテイナー」" },
+  { group: "オーイシマサヨシ", type: "映像", date: "2017.12", title: "仮歌ツアー", isLive: true },
+  { group: "オーイシマサヨシ", type: "映像", date: "2019.11", title: "仮歌ツアー2019", isLive: true },
+  { group: "オーイシマサヨシ", type: "映像", date: "2022.03", title: "オーイシマサヨシ ワンマンライブ「エンターテイナー」", isLive: true },
   {
     group: "オーイシマサヨシ",
     type: "映像",
@@ -319,6 +327,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "oishi-budokan",
     image: "oishi-budokan",
     description: "2024年に日本武道館で行われた、オーイシマサヨシ名義として初のワンマンライブを収めた映像作品。アニメ・ゲーム主題歌の数々を自身のバンドで再構築して披露した。",
+    isLive: true,
   },
   {
     group: "オーイシマサヨシ",
@@ -329,6 +338,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "oishi-ssa",
     image: "oishi-ssa",
     description: "さいたまスーパーアリーナで行われたワンマンライブを収めた映像作品。日本武道館公演に続く、より大規模な会場でのライブとなった。",
+    isLive: true,
   },
   {
     group: "オーイシマサヨシ",
@@ -339,6 +349,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "oishi-budokan-vol2",
     image: "oishi-budokan-vol2",
     description: "2024年の初回公演に続く、日本武道館での2度目のワンマンライブを収めた映像作品。",
+    isLive: true,
   },
 
   // --- OxT ---

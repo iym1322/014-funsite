@@ -49,6 +49,20 @@ const updateLog = getUpdateLog(6);
   </section>
 
   <section>
+    <h2>コンテンツ</h2>
+    <ul class="content-grid">
+      {mainContents.map((item) => (
+        <li>
+          <a href={item.href}>
+            <h3>{item.label}</h3>
+            <p>{item.desc}</p>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section>
     <h2>最新情報</h2>
     {updateLog.length > 0 ? (
       <ul class="update-log">
@@ -62,20 +76,6 @@ const updateLog = getUpdateLog(6);
     ) : (
       <p class="placeholder">準備中です。</p>
     )}
-  </section>
-
-  <section>
-    <h2>コンテンツ</h2>
-    <ul class="content-grid">
-      {mainContents.map((item) => (
-        <li>
-          <a href={item.href}>
-            <h3>{item.label}</h3>
-            <p>{item.desc}</p>
-          </a>
-        </li>
-      ))}
-    </ul>
   </section>
 </Layout>
 
