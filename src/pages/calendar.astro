@@ -25,6 +25,50 @@ function eventsOnDay(day: number) {
 }
 
 const typeLabels = { release: "リリース", live: "ライブ", event: "イベント" };
+
+// 外部カレンダーへの追加(書き込み不要・静的生成のままで実現できるためCONTENTS_PLAN 2-5の中でも先行実装)。
+function toCompactDate(dateStr: string) {
+  return dateStr.replaceAll("-", "");
+}
+
+function addDays(dateStr: string, days: number) {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function googleCalendarUrl(e: (typeof schedule)[number]) {
+  const start = toCompactDate(e.date);
+  const end = toCompactDate(addDays(e.date, 1)); // Googleの終日イベントは終了日を翌日指定
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: e.title,
+    dates: `${start}/${end}`,
+  });
+  if (e.note) params.set("location", e.note);
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function icsDataUrl(e: (typeof schedule)[number]) {
+  const start = toCompactDate(e.date);
+  const end = toCompactDate(addDays(e.date, 1));
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//oishimasayoshi-funsite//calendar//JA",
+    "BEGIN:VEVENT",
+    `UID:${e.date}-${e.title}@014-funsite`,
+    `DTSTART;VALUE=DATE:${start}`,
+    `DTEND;VALUE=DATE:${end}`,
+    `SUMMARY:${e.title}`,
+    e.note ? `LOCATION:${e.note}` : "",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ]
+    .filter(Boolean)
+    .join("\r\n");
+  return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
+}
 ---
 
 <Layout title="カレンダー | オーイシマサヨシ非公式ファンサイト">
@@ -48,6 +92,11 @@ const typeLabels = { release: "リリース", live: "ライブ", event: "イベ�
                 <li class={`event-${e.type}`}>
                   {e.href ? <a href={e.href}>{e.title}</a> : <span>{e.title}</span>}
                   {e.note && <span class="event-note">{e.note}</span>}
+                  <span class="add-to-calendar">
+                    <a href={googleCalendarUrl(e)} target="_blank" rel="noopener noreferrer">Googleカレンダー</a>
+                    ・
+                    <a href={icsDataUrl(e)} download={`${e.date}-${e.title}.ics`}>ICS</a>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -134,6 +183,20 @@ const typeLabels = { release: "リリース", live: "ライブ", event: "イベ�
   .event-note {
     display: block;
     color: var(--color-text-muted);
+  }
+
+  .add-to-calendar {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.65rem;
+  }
+
+  .add-to-calendar a {
+    color: var(--color-text-muted);
+  }
+
+  .add-to-calendar a:hover {
+    color: var(--color-accent);
   }
 
   .event-release {

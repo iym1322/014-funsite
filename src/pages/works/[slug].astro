@@ -4,6 +4,7 @@
 import Layout from "../../layouts/Layout.astro";
 import TrackCover from "../../components/TrackCover.astro";
 import { tracks } from "../../data/discography";
+import { favoritePosts } from "../../data/favorites";
 
 export function getStaticPaths() {
   return tracks
@@ -32,6 +33,9 @@ const nextTrack = currentIndex >= 0 && currentIndex < navigable.length - 1 ? nav
 const relatedLives = tracks.filter(
   (t) => t.type === "映像" && t.isLive && t.setlist?.some((s) => s.slug === track.slug)
 );
+
+// この曲への推し曲コーナー投稿を逆引きする(現状はサンプル投稿のみ)。
+const relatedFavorites = favoritePosts.filter((p) => p.trackSlug === track.slug);
 ---
 
 <Layout title={`${track.title} | ディスコグラフィー | オーイシマサヨシ非公式ファンサイト`}>
@@ -120,6 +124,32 @@ const relatedLives = tracks.filter(
         </section>
       )}
 
+      <section class="favorites-preview">
+        <h2>みんなの推しコメント</h2>
+        {relatedFavorites.length > 0 ? (
+          <ul>
+            {relatedFavorites.map((post) => (
+              <li>
+                <p class="favorite-body">{post.body}</p>
+                <p class="favorite-author">
+                  {post.author}
+                  {post.isSample && <span class="sample-badge">サンプル</span>}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="pending">この曲へのコメントはまだありません。</p>
+        )}
+        <a class="favorites-cta" href="/favorites">推し曲コーナーを見る →</a>
+      </section>
+
+      <section class="vote-preview">
+        <h2>この曲に投票する</h2>
+        <p class="pending-note">投票機能は準備中です。人気ランキングは今後追加予定です。</p>
+        <button class="vote-button" type="button">👍 投票する(準備中)</button>
+      </section>
+
       {youtubeId && (
         <section class="video">
           <h2>MV</h2>
@@ -152,6 +182,12 @@ const relatedLives = tracks.filter(
     ) : <span />}
   </nav>
 </Layout>
+
+<script>
+  document.querySelector(".vote-button")?.addEventListener("click", () => {
+    alert("投票機能は準備中です。もうしばらくお待ちください。");
+  });
+</script>
 
 <style>
   .back-link {
@@ -301,6 +337,78 @@ const relatedLives = tracks.filter(
   }
 
   .related-lives a:hover {
+    color: var(--color-accent);
+  }
+
+  .favorites-preview h2,
+  .vote-preview h2 {
+    font-size: 1rem;
+    color: var(--color-text-muted);
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  .favorites-preview ul {
+    list-style: none;
+    margin: 0 0 0.75rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .favorites-preview li {
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+  }
+
+  .favorite-body {
+    margin: 0 0 0.4rem;
+    line-height: 1.7;
+  }
+
+  .favorite-author {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .sample-badge {
+    font-size: 0.7rem;
+    background: #f4e8de;
+    color: #a3663f;
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+  }
+
+  .favorites-cta {
+    color: var(--color-accent);
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+
+  .pending-note {
+    color: var(--color-accent);
+    font-size: 0.85rem;
+    margin: 0 0 0.75rem;
+  }
+
+  .vote-button {
+    padding: 0.6rem 1.2rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
+  .vote-button:hover {
+    border-color: var(--color-accent);
     color: var(--color-accent);
   }
 
