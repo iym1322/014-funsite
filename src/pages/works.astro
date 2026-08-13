@@ -4,7 +4,7 @@
 // (24件/ページ、Vanilla JS)に対応している。
 import Layout from "../layouts/Layout.astro";
 import TrackCover from "../components/TrackCover.astro";
-import { tracks, groups, types } from "../data/discography";
+import { tracks, groups, types, getAlbumCoverImage } from "../data/discography";
 
 const showcased = tracks.filter((t) => t.slug);
 const sorted = [...showcased].sort((a, b) => b.sortDate.localeCompare(a.sortDate));
@@ -63,7 +63,7 @@ const sorted = [...showcased].sort((a, b) => b.sortDate.localeCompare(a.sortDate
           data-tiein={track.tieIn ? "1" : "0"}
           data-search={searchText}
         >
-          <TrackCover image={track.image} title={track.title} />
+          <TrackCover image={track.image} fallbackImage={getAlbumCoverImage(track)} title={track.title} />
           <div class="card-body">
             <p class="card-title">{track.title}</p>
             <p class="card-meta">{track.group} ・ {track.date}</p>

@@ -3,7 +3,7 @@
 // (design確認のため、現時点ではslugを設定した3曲のみが対象)
 import Layout from "../../layouts/Layout.astro";
 import TrackCover from "../../components/TrackCover.astro";
-import { tracks } from "../../data/discography";
+import { tracks, getAlbumCoverImage } from "../../data/discography";
 import { rankingQuestions, resolveRankingChoices } from "../../data/ranking";
 
 export function getStaticPaths() {
@@ -63,7 +63,7 @@ const relatedRankingQuestionsForClient = relatedRankingQuestions.map((q) => ({
 
   <article class="track-detail">
     <div class="cover-col">
-      <TrackCover image={track.image} title={track.title} />
+      <TrackCover image={track.image} fallbackImage={getAlbumCoverImage(track)} title={track.title} />
     </div>
 
     <div class="info-col">

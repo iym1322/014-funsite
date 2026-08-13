@@ -2676,5 +2676,17 @@ const raw: Omit<Track, "sortDate">[] = [
 
 export const tracks: Track[] = raw.map((t) => ({ ...t, sortDate: toSortDate(t.date || "0000") }));
 
+// 楽曲自身に画像がない場合に使う、収録アルバムの画像を返す。
+// 同じ楽曲を複数作品が収録している場合は、データ上で最初の画像付きアルバムを優先する。
+export function getAlbumCoverImage(track: Track): string | undefined {
+  if (!track.slug || track.type !== "シングル") return undefined;
+  return tracks.find(
+    (album) =>
+      album.type === "アルバム" &&
+      album.image &&
+      album.tracklist?.some((item) => item.slug === track.slug)
+  )?.image;
+}
+
 export const groups = ["Sound Schedule", "大石昌良", "オーイシマサヨシ", "OxT", "楽曲提供"] as const;
 export const types = ["アルバム", "シングル", "映像", "提供曲"] as const;

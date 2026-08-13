@@ -9,11 +9,12 @@ import path from "node:path";
 
 interface Props {
   image?: string;
+  fallbackImage?: string;
   title: string;
   aspect?: "square" | "wide";
 }
 
-const { image, title, aspect = "square" } = Astro.props;
+const { image, fallbackImage, title, aspect = "square" } = Astro.props;
 
 const extensions = ["jpg", "jpeg", "png", "webp"];
 const worksDir = path.join(process.cwd(), "public", "images", "works");
@@ -51,6 +52,17 @@ if (!resolvedSrc && fs.existsSync(worksDir)) {
 
   if (matchingFile) {
     resolvedSrc = `/images/works/${encodeURIComponent(matchingFile)}`;
+  }
+}
+
+// 楽曲自身の画像がない場合に限り、収録アルバムの画像を使用する。
+if (!resolvedSrc && fallbackImage) {
+  for (const ext of extensions) {
+    const candidate = path.join(worksDir, `${fallbackImage}.${ext}`);
+    if (fs.existsSync(candidate)) {
+      resolvedSrc = `/images/works/${encodeURIComponent(`${fallbackImage}.${ext}`)}`;
+      break;
+    }
   }
 }
 ---

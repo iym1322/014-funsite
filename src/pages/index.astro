@@ -7,7 +7,7 @@
 import { execSync } from "node:child_process";
 import Layout from "../layouts/Layout.astro";
 import TrackCover from "../components/TrackCover.astro";
-import { tracks } from "../data/discography";
+import { tracks, getAlbumCoverImage } from "../data/discography";
 import { rankingQuestions, resolveRankingChoices } from "../data/ranking";
 import { schedule } from "../data/schedule";
 
@@ -121,7 +121,7 @@ const formatEventDate = (date: string) => {
       </div>
     </div>
     <a class="hero-cover" href={`/works/${featuredSong.slug}`} aria-label={`${featuredSong.title}の楽曲ページを見る`}>
-      <TrackCover image={featuredSong.image} title={featuredSong.title} />
+      <TrackCover image={featuredSong.image} fallbackImage={getAlbumCoverImage(featuredSong)} title={featuredSong.title} />
     </a>
   </section>
 
@@ -136,7 +136,7 @@ const formatEventDate = (date: string) => {
     <div class="song-rail" aria-label="新着楽曲一覧">
       {latestSongs.map((track) => (
         <a class="song-card" href={`/works/${track.slug}`}>
-          <TrackCover image={track.image} title={track.title} />
+          <TrackCover image={track.image} fallbackImage={getAlbumCoverImage(track)} title={track.title} />
           <strong>{track.title}</strong>
           <span>{track.group} ・ {track.date}</span>
         </a>
