@@ -6,9 +6,9 @@
 // タイムスタンプ付きURLで紹介してもらい、クリックで再生できる埋め込みプレイヤーを表示する。
 import Layout from "../layouts/Layout.astro";
 import ScrollToFormButton from "../components/ScrollToFormButton.astro";
-import { fetchLatestVideos } from "../lib/youtube";
+import { fetchLatestVideos, channelSources } from "../lib/youtube";
 
-const channelOptions = ["公式チャンネル", "弾き語りラボ", "ピザラジ", "でしょでしょ(でしょラジ)"];
+const channelOptions = ["公式チャンネル", "弾き語りラボ", "ピザラジ", "でしょでしょ(でしょラジ)", "ヤンタン"];
 
 // ビルド時にYouTube Data API v3で取得(src/lib/youtube.ts)。取得失敗時は空配列。
 const latestVideos = await fetchLatestVideos();
@@ -119,6 +119,17 @@ const latestVideos = await fetchLatestVideos();
     </form>
   </section>
 
+  <section class="channel-links">
+    <h2>配信元リンク</h2>
+    <ul>
+      {channelSources.map((c) => (
+        <li>
+          <a href={c.channelUrl} target="_blank" rel="noopener noreferrer">{c.source} →</a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
   <ScrollToFormButton label="名場面を投稿する" />
 </Layout>
 
@@ -140,7 +151,7 @@ const latestVideos = await fetchLatestVideos();
   });
 
   if (slides.length > 1) {
-    setInterval(() => showSlide((current + 1) % slides.length), 5000);
+    setInterval(() => showSlide((current + 1) % slides.length), 8000);
   }
 </script>
 
@@ -489,6 +500,36 @@ const latestVideos = await fetchLatestVideos();
     .latest-carousel {
       aspect-ratio: 16 / 10;
     }
+  }
+
+  .channel-links {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .channel-links ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .channel-links a {
+    display: inline-block;
+    padding: 0.5rem 1.1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    color: var(--color-text);
+    text-decoration: none;
+    font-size: 0.85rem;
+  }
+
+  .channel-links a:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
   }
 
   .post-form {

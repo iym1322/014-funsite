@@ -47,13 +47,27 @@ const sources: SourceDef[] = [
   },
 ];
 
-async function fetchLatestFromPlaylist(playlistId: string) {
+// "PT1M23S" のようなISO8601形式の動画尺を秒数に変換する。
+function parseDurationSeconds(iso: string): number {
+  const match = iso.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
+  if (!match) return 0;
+  const h = parseInt(match[1] ?? "0", 10);
+  const m = parseInt(match[2] ?? "0", 10);
+  const s = parseInt(match[3] ?? "0", 10);
+  return h * 3600 + m * 60 + s;
+}
+
+// YouTube Data APIにはショート動画かどうかを示す項目がないため、
+// 60秒以下の動画をショートとみなして除外する簡易的な判定。
+const SHORT_MAX_SECONDS = 60;
+
+async function fetchLatestFromPlaylist(playlistId: string, excludeShorts: boolean) {
   try {
     const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${playlistId}&maxResults=10&key=${YOUTUBE_API_KEY}`;
     const res = await fetch(url);
     if (!res.ok) return null;
     const data = await res.json();
-    const items = (data.items ?? []).filter(
+    let items = (data.items ?? []).filter(
       (item: any) =>
         item.contentDetails?.videoPublishedAt &&
         item.snippet?.title !== "Private video" &&
@@ -67,6 +81,25 @@ async function fetchLatestFromPlaylist(playlistId: string) {
         new Date(b.contentDetails.videoPublishedAt).getTime() -
         new Date(a.contentDetails.videoPublishedAt).getTime()
     );
+
+    if (excludeShorts) {
+      const ids = items.map((item: any) => item.contentDetails.videoId).join(",");
+      const durationRes = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ids}&key=${YOUTUBE_API_KEY}`
+      );
+      if (durationRes.ok) {
+        const durationData = await durationRes.json();
+        const durations = new Map<string, number>(
+          (durationData.items ?? []).map((v: any) => [v.id, parseDurationSeconds(v.contentDetails.duration)])
+        );
+        const longEnough = items.filter(
+          (item: any) => (durations.get(item.contentDetails.videoId) ?? Infinity) > SHORT_MAX_SECONDS
+        );
+        // 直近の候補が全部ショートだった場合は、除外せず元の並びにフォールバックする。
+        if (longEnough.length > 0) items = longEnough;
+      }
+    }
+
     const latest = items[0];
     return {
       videoId: latest.contentDetails.videoId as string,
@@ -84,7 +117,7 @@ export async function fetchLatestVideos(): Promise<LatestVideo[]> {
 
   const results = await Promise.all(
     sources.map(async (s) => {
-      const latest = await fetchLatestFromPlaylist(s.playlistId);
+      const latest = await fetchLatestFromPlaylist(s.playlistId, true);
       if (!latest) return null;
       return { source: s.source, channelUrl: s.channelUrl, ...latest };
     })
@@ -92,3 +125,10 @@ export async function fetchLatestVideos(): Promise<LatestVideo[]> {
 
   return results.filter((r): r is LatestVideo => r !== null);
 }
+
+// ページ最下部の配信元リンク一覧用。APIの取得結果に関係なく常に表示できるよう、
+// 静的なチャンネル情報だけを切り出して公開する。
+export const channelSources: { source: string; channelUrl: string }[] = sources.map((s) => ({
+  source: s.source,
+  channelUrl: s.channelUrl,
+}));
