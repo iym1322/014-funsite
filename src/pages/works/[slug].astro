@@ -295,7 +295,9 @@ const relatedRankingQuestions = rankingQuestions.filter((q) =>
   loadFavorites();
 </script>
 
-<style>
+<style is:global>
+  /* is:global: 「みんなの推しコメント」等をブラウザ側JSで動的生成しているため、
+     Astroのスコープ付きCSSでは動的要素に適用されない(data-astro-cid-*が付与されないため)。 */
   .back-link {
     display: inline-block;
     margin-bottom: 1.5rem;

@@ -328,7 +328,9 @@ const formatEventDate = (date: string) => {
   loadRankingPreview();
 </script>
 
-<style>
+<style is:global>
+  /* is:global: 推し曲・ランキングのプレビューをブラウザ側JSで動的生成しているため、
+     Astroのスコープ付きCSSでは動的要素に適用されない(data-astro-cid-*が付与されないため)。 */
   .intro {
     padding: clamp(1.5rem, 4vw, 3rem) 0;
   }

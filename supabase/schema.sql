@@ -49,6 +49,18 @@ $$;
 
 grant execute on function public.increment_favorite_likes(uuid) to anon;
 
+-- いいね取り消し用(0未満にはならないようGREATESTでガード)。
+create or replace function public.decrement_favorite_likes(post_id uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.favorite_posts set likes = greatest(likes - 1, 0) where id = post_id;
+$$;
+
+grant execute on function public.decrement_favorite_likes(uuid) to anon;
+
 -- =========================================
 -- イベントレポート投稿
 -- =========================================

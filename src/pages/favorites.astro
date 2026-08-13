@@ -7,8 +7,9 @@
 import Layout from "../layouts/Layout.astro";
 import { tracks } from "../data/discography";
 
+// 推し曲の投稿対象はシングル曲のみ(アルバム・映像・提供曲は対象外)。
 const trackOptions = tracks
-  .filter((t) => t.slug)
+  .filter((t) => t.slug && t.type === "シングル")
   .map((t) => ({ slug: t.slug as string, title: t.title, image: t.image ?? "" }))
   .sort((a, b) => a.title.localeCompare(b.title, "ja"));
 ---
@@ -25,11 +26,18 @@ const trackOptions = tracks
     <h2>推し曲を投稿する</h2>
     <form id="favorite-form">
       <label>
-        曲名
-        <select name="trackSlug" id="track-select" required>
-          <option value="" disabled selected>曲を選んでください</option>
-          {trackOptions.map((t) => <option value={t.slug}>{t.title}</option>)}
-        </select>
+        曲名(シングルのみ)
+        <div class="track-picker">
+          <input
+            type="text"
+            id="track-search"
+            placeholder="曲名を入力して検索"
+            autocomplete="off"
+            required
+          />
+          <input type="hidden" name="trackSlug" id="track-slug-input" />
+          <ul class="track-suggestions" id="track-suggestions" hidden></ul>
+        </div>
       </label>
       <label>
         お名前(ニックネーム可)
@@ -77,7 +85,9 @@ const trackOptions = tracks
   const trackMap = new Map(trackOptionsData.map((t) => [t.slug, t]));
 
   const form = document.getElementById("favorite-form") as HTMLFormElement;
-  const trackSelect = document.getElementById("track-select") as HTMLSelectElement;
+  const trackSearchInput = document.getElementById("track-search") as HTMLInputElement;
+  const trackSlugInput = document.getElementById("track-slug-input") as HTMLInputElement;
+  const trackSuggestions = document.getElementById("track-suggestions") as HTMLUListElement;
   const authorInput = document.getElementById("author-input") as HTMLInputElement;
   const bodyInput = document.getElementById("body-input") as HTMLTextAreaElement;
   const websiteInput = document.getElementById("website-input") as HTMLInputElement;
@@ -85,6 +95,51 @@ const trackOptions = tracks
   const formMessage = document.getElementById("form-message") as HTMLParagraphElement;
   const postList = document.getElementById("post-list") as HTMLUListElement;
   const loadingMessage = document.getElementById("loading-message") as HTMLParagraphElement;
+
+  // 曲名の検索式セレクター(候補が多いため、入力にあわせて絞り込み表示する)。
+  function showSuggestions(query: string) {
+    const q = query.trim().toLowerCase();
+    trackSuggestions.innerHTML = "";
+    if (!q) {
+      trackSuggestions.hidden = true;
+      return;
+    }
+    const matches = trackOptionsData.filter((t) => t.title.toLowerCase().includes(q)).slice(0, 20);
+    if (matches.length === 0) {
+      const li = document.createElement("li");
+      li.className = "no-match";
+      li.textContent = "一致する曲が見つかりません";
+      trackSuggestions.appendChild(li);
+      trackSuggestions.hidden = false;
+      return;
+    }
+    for (const t of matches) {
+      const li = document.createElement("li");
+      li.textContent = t.title;
+      li.addEventListener("mousedown", (event) => {
+        // blurより先に発火させて選択を確定させる
+        event.preventDefault();
+        trackSearchInput.value = t.title;
+        trackSlugInput.value = t.slug;
+        trackSuggestions.hidden = true;
+      });
+      trackSuggestions.appendChild(li);
+    }
+    trackSuggestions.hidden = false;
+  }
+
+  trackSearchInput.addEventListener("input", () => {
+    trackSlugInput.value = "";
+    showSuggestions(trackSearchInput.value);
+  });
+  trackSearchInput.addEventListener("focus", () => {
+    if (trackSearchInput.value) showSuggestions(trackSearchInput.value);
+  });
+  trackSearchInput.addEventListener("blur", () => {
+    setTimeout(() => {
+      trackSuggestions.hidden = true;
+    }, 150);
+  });
 
   function renderPost(post: FavoritePost) {
     const track = trackMap.get(post.track_slug);
@@ -116,25 +171,32 @@ const trackOptions = tracks
     (body.querySelector(".post-author") as HTMLElement).textContent = post.author;
     (body.querySelector(".post-text") as HTMLElement).textContent = post.body;
 
+    // いいねはもう一度押すと取り消せるトグル式。
     const likedKey = `funsite-liked-${post.id}`;
     const likeButton = body.querySelector(".like-button") as HTMLButtonElement;
     if (localStorage.getItem(likedKey)) {
-      likeButton.disabled = true;
       likeButton.classList.add("liked");
     }
     likeButton.addEventListener("click", async () => {
-      if (localStorage.getItem(likedKey)) return;
       likeButton.disabled = true;
-      const { error } = await supabase.rpc("increment_favorite_likes", { post_id: post.id });
+      const countEl = likeButton.querySelector(".like-count") as HTMLElement;
+      const isLiked = Boolean(localStorage.getItem(likedKey));
+      const rpcName = isLiked ? "decrement_favorite_likes" : "increment_favorite_likes";
+      const { error } = await supabase.rpc(rpcName, { post_id: post.id });
+      likeButton.disabled = false;
       if (error) {
-        likeButton.disabled = false;
-        alert("いいねに失敗しました。時間をおいて再度お試しください。");
+        alert("処理に失敗しました。時間をおいて再度お試しください。");
         return;
       }
-      localStorage.setItem(likedKey, "1");
-      likeButton.classList.add("liked");
-      const countEl = likeButton.querySelector(".like-count") as HTMLElement;
-      countEl.textContent = String(Number(countEl.textContent) + 1);
+      if (isLiked) {
+        localStorage.removeItem(likedKey);
+        likeButton.classList.remove("liked");
+        countEl.textContent = String(Math.max(Number(countEl.textContent) - 1, 0));
+      } else {
+        localStorage.setItem(likedKey, "1");
+        likeButton.classList.add("liked");
+        countEl.textContent = String(Number(countEl.textContent) + 1);
+      }
     });
 
     li.appendChild(trackLink);
@@ -178,12 +240,16 @@ const trackOptions = tracks
       return;
     }
 
-    const trackSlug = trackSelect.value;
+    const trackSlug = trackSlugInput.value;
     const author = authorInput.value.trim();
     const body = bodyInput.value.trim();
 
-    if (!trackSlug || !author || !body) {
-      formMessage.textContent = "曲・お名前・コメントをすべて入力してください。";
+    if (!trackSlug || !trackMap.has(trackSlug)) {
+      formMessage.textContent = "候補一覧から曲を選択してください。";
+      return;
+    }
+    if (!author || !body) {
+      formMessage.textContent = "お名前・コメントを入力してください。";
       return;
     }
 
@@ -211,7 +277,9 @@ const trackOptions = tracks
   loadPosts();
 </script>
 
-<style>
+<style is:global>
+  /* is:global にしている理由: 投稿一覧・曲候補などをブラウザ側のJSで動的生成しているため、
+     Astroの自動スコープ(data-astro-cid-*)が付かない要素にもスタイルを当てる必要がある。 */
   .note {
     color: var(--color-text-muted);
     font-size: 0.9rem;
@@ -253,6 +321,49 @@ const trackOptions = tracks
     background: var(--color-bg);
     color: var(--color-text);
     resize: vertical;
+  }
+
+  .track-picker {
+    position: relative;
+  }
+
+  .track-suggestions {
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + 0.25rem);
+    left: 0;
+    right: 0;
+    max-height: 14rem;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.25rem 0;
+    list-style: none;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-surface);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .track-suggestions li {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    color: var(--color-text);
+    cursor: pointer;
+  }
+
+  .track-suggestions li:hover {
+    background: var(--color-bg);
+    color: var(--color-accent);
+  }
+
+  .track-suggestions li.no-match {
+    color: var(--color-text-muted);
+    cursor: default;
+  }
+
+  .track-suggestions li.no-match:hover {
+    background: none;
+    color: var(--color-text-muted);
   }
 
   .honeypot {
@@ -301,8 +412,8 @@ const trackOptions = tracks
 
   .post-card {
     display: grid;
-    grid-template-columns: 6rem 1fr;
-    gap: 1rem;
+    grid-template-columns: 3.5rem 1fr;
+    gap: 0.85rem;
     border: 1px solid var(--color-border);
     border-radius: 8px;
     padding: 1rem;
@@ -378,8 +489,8 @@ const trackOptions = tracks
 
   .like-button.liked {
     border-color: var(--color-accent);
-    color: var(--color-accent);
-    cursor: default;
+    background: var(--color-accent);
+    color: var(--color-surface);
   }
 
   .like-button:disabled {

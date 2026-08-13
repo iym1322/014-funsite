@@ -167,7 +167,9 @@ const questionsForClient = rankingQuestions.map((q) => ({
   renderQuestions();
 </script>
 
-<style>
+<style is:global>
+  /* is:global: お題・ランキング項目をブラウザ側JSで動的生成しているため、
+     Astroのスコープ付きCSSでは動的要素に適用されない(data-astro-cid-*が付与されないため)。 */
   .note {
     color: var(--color-text-muted);
     font-size: 0.9rem;
