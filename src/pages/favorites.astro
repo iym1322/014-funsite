@@ -6,12 +6,17 @@
 // 投稿内容だけはブラウザ側でSupabaseから取得する(即時反映のため)。
 import Layout from "../layouts/Layout.astro";
 import ScrollToFormButton from "../components/ScrollToFormButton.astro";
-import { tracks } from "../data/discography";
+import { tracks, getAlbumCoverImages } from "../data/discography";
+import { resolveTrackCoverSrc } from "../lib/trackCover";
 
 // 推し曲の投稿対象はシングル曲のみ(アルバム・映像・提供曲は対象外)。
 const trackOptions = tracks
   .filter((t) => t.slug && t.type === "シングル")
-  .map((t) => ({ slug: t.slug as string, title: t.title, image: t.image ?? "" }))
+  .map((t) => ({
+    slug: t.slug as string,
+    title: t.title,
+    coverSrc: resolveTrackCoverSrc(t.image, t.title, getAlbumCoverImages(t)),
+  }))
   .sort((a, b) => a.title.localeCompare(b.title, "ja"));
 ---
 
@@ -80,7 +85,7 @@ const trackOptions = tracks
     likes: number;
     created_at: string;
   };
-  type TrackOption = { slug: string; title: string; image: string };
+  type TrackOption = { slug: string; title: string; coverSrc: string | null };
 
   const trackOptionsData: TrackOption[] = JSON.parse(
     document.getElementById("track-options-data")!.textContent!
@@ -158,11 +163,17 @@ const trackOptions = tracks
     trackLink.className = "post-track";
     trackLink.href = track ? `/works/${track.slug}` : "#";
 
-    const cover = document.createElement("div");
-    cover.className = "cover placeholder";
-    cover.setAttribute("aria-hidden", "true");
-    cover.innerHTML =
-      '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="1.5"/></svg>';
+    const cover = document.createElement(track?.coverSrc ? "img" : "div");
+    cover.className = track?.coverSrc ? "cover" : "cover placeholder";
+    if (track?.coverSrc && cover instanceof HTMLImageElement) {
+      cover.src = track.coverSrc;
+      cover.alt = track.title;
+      cover.loading = "lazy";
+    } else {
+      cover.setAttribute("aria-hidden", "true");
+      cover.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="1.5"/></svg>';
+    }
     trackLink.appendChild(cover);
 
     const trackTitle = document.createElement("span");
@@ -446,6 +457,14 @@ const trackOptions = tracks
 
   .post-track:hover {
     color: var(--color-accent);
+  }
+
+  .post-track .cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    object-fit: cover;
   }
 
   .cover.placeholder {

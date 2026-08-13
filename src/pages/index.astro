@@ -10,6 +10,7 @@ import TrackCover from "../components/TrackCover.astro";
 import { tracks, getAlbumCoverImages } from "../data/discography";
 import { rankingQuestions, resolveRankingChoices } from "../data/ranking";
 import { schedule } from "../data/schedule";
+import { resolveTrackCoverSrc } from "../lib/trackCover";
 
 const mainContents = [
   { href: "/profile", label: "プロフィール", desc: "経歴・活動年表など基本情報" },
@@ -73,7 +74,11 @@ const rankingCandidates = resolveRankingChoices(activeRanking)
 // (実際の投稿一覧・得票数はSupabaseからブラウザ側で取得する。ビルド時には分からないため)。
 const trackTitleLookup = tracks
   .filter((t) => t.slug)
-  .map((t) => ({ slug: t.slug as string, title: t.title }));
+  .map((t) => ({
+    slug: t.slug as string,
+    title: t.title,
+    coverSrc: resolveTrackCoverSrc(t.image, t.title, getAlbumCoverImages(t)),
+  }));
 
 const today = new Date().toISOString().slice(0, 10);
 const nextEvents = [...schedule]
@@ -252,14 +257,14 @@ const formatEventDate = (date: string) => {
 <script>
   import { supabase } from "../lib/supabase";
 
-  type TrackTitleLookup = { slug: string; title: string };
+  type TrackTitleLookup = { slug: string; title: string; coverSrc: string | null };
   type FavoritePost = { id: string; track_slug: string; author: string; body: string; likes: number };
   type RankingCandidate = { slug: string; title: string };
 
   const trackTitleLookup: TrackTitleLookup[] = JSON.parse(
     document.getElementById("track-title-lookup-data")!.textContent!
   );
-  const trackMap = new Map(trackTitleLookup.map((t) => [t.slug, t.title]));
+  const trackMap = new Map(trackTitleLookup.map((t) => [t.slug, t]));
 
   const rankingPreviewData: { id: string; candidates: RankingCandidate[] } = JSON.parse(
     document.getElementById("ranking-preview-data")!.textContent!
@@ -289,13 +294,23 @@ const formatEventDate = (date: string) => {
 
     grid.innerHTML = "";
     for (const post of data as FavoritePost[]) {
-      const title = trackMap.get(post.track_slug) ?? post.track_slug;
+      const track = trackMap.get(post.track_slug);
+      const title = track?.title ?? post.track_slug;
       const article = document.createElement("article");
       article.className = "favorite-card";
       const cover = document.createElement("a");
       cover.className = "favorite-cover";
       cover.href = `/works/${post.track_slug}`;
-      cover.appendChild(coverEl());
+      if (track?.coverSrc) {
+        const image = document.createElement("img");
+        image.className = "favorite-image";
+        image.src = track.coverSrc;
+        image.alt = track.title;
+        image.loading = "lazy";
+        cover.appendChild(image);
+      } else {
+        cover.appendChild(coverEl());
+      }
       article.appendChild(cover);
 
       const body = document.createElement("div");
@@ -561,6 +576,14 @@ const formatEventDate = (date: string) => {
   .favorite-card h3 a {
     color: var(--color-text);
     text-decoration: none;
+  }
+
+  .favorite-image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    object-fit: cover;
   }
 
   .cover.placeholder {

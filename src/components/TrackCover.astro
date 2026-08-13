@@ -4,8 +4,7 @@
 // 無ければプレースホルダー(グラデーション+音符アイコン)を表示する。
 // ビルド時にNode の fs でファイルの有無を確認しているため、実在しない画像パスを
 // <img src> に書いてしまうことがない。
-import fs from "node:fs";
-import path from "node:path";
+import { resolveTrackCoverSrc } from "../lib/trackCover";
 
 interface Props {
   image?: string;
@@ -16,60 +15,7 @@ interface Props {
 
 const { image, fallbackImages = [], title, aspect = "square" } = Astro.props;
 
-const extensions = ["jpg", "jpeg", "png", "webp"];
-const worksDir = path.join(process.cwd(), "public", "images", "works");
-
-// 空白・記号・大文字小文字・全角半角の違いを吸収して比較する。
-// 例: `Hollow Hunger.jpg` とタイトル `Hollow Hunger`、
-//     `オトモダチフィルム.jpg` とタイトル `オトモダチフィルム`。
-function normalizeName(value: string) {
-  return value
-    .normalize("NFKC")
-    .toLocaleLowerCase("ja")
-    .replace(/[^\p{L}\p{N}]/gu, "");
-}
-
-let resolvedSrc: string | null = null;
-if (image) {
-  for (const ext of extensions) {
-    const candidate = path.join(worksDir, `${image}.${ext}`);
-    if (fs.existsSync(candidate)) {
-      resolvedSrc = `/images/works/${image}.${ext}`;
-      break;
-    }
-  }
-}
-
-// imageフィールドに対応するファイルがない場合は、画像のファイル名と
-// 楽曲・作品タイトルが一致するものを自動的に使用する。
-if (!resolvedSrc && fs.existsSync(worksDir)) {
-  const normalizedTitle = normalizeName(title);
-  const matchingFile = fs.readdirSync(worksDir).find((file) => {
-    const extension = path.extname(file).slice(1).toLowerCase();
-    if (!extensions.includes(extension)) return false;
-    return normalizeName(path.parse(file).name) === normalizedTitle;
-  });
-
-  if (matchingFile) {
-    resolvedSrc = `/images/works/${encodeURIComponent(matchingFile)}`;
-  }
-}
-
-// 楽曲自身の画像がない場合に限り、収録アルバムの画像を使用する。
-if (!resolvedSrc && fs.existsSync(worksDir)) {
-  const files = fs.readdirSync(worksDir);
-  for (const fallbackImage of fallbackImages) {
-    const normalizedFallback = normalizeName(fallbackImage);
-    const matchingFile = files.find((file) => {
-      const extension = path.extname(file).slice(1).toLowerCase();
-      return extensions.includes(extension) && normalizeName(path.parse(file).name) === normalizedFallback;
-    });
-    if (matchingFile) {
-      resolvedSrc = `/images/works/${encodeURIComponent(matchingFile)}`;
-      break;
-    }
-  }
-}
+const resolvedSrc = resolveTrackCoverSrc(image, title, fallbackImages);
 ---
 
 {resolvedSrc ? (
