@@ -15,7 +15,10 @@ const navItems = [
 <header class="site-header">
   <div class="container">
     <nav>
-      <a class="site-title" href="/">オーイシマサヨシ非公式ファンサイト</a>
+      <a class="site-title" href="/">
+        <span class="brand">014 BASE</span>
+        <span class="brand-sub">オーイシマサヨシ非公式ファンサイト</span>
+      </a>
       <ul>
         {navItems.map((item) => (
           <li><a href={item.href}>{item.label}</a></li>
