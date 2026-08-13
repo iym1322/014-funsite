@@ -144,6 +144,11 @@ const trackOptions = tracks
     }, 150);
   });
 
+  // 高評価は月ごとにリセットする("YYYY-MM"が変われば再度いいね可能)。
+  function currentMonthKey(): string {
+    return new Date().toISOString().slice(0, 7);
+  }
+
   function renderPost(post: FavoritePost) {
     const track = trackMap.get(post.track_slug);
     const li = document.createElement("li");
@@ -174,16 +179,16 @@ const trackOptions = tracks
     (body.querySelector(".post-author") as HTMLElement).textContent = post.author;
     (body.querySelector(".post-text") as HTMLElement).textContent = post.body;
 
-    // いいねはもう一度押すと取り消せるトグル式。
+    // いいねはもう一度押すと取り消せるトグル式。ただし月が変わると再度いいね可能になる。
     const likedKey = `funsite-liked-${post.id}`;
     const likeButton = body.querySelector(".like-button") as HTMLButtonElement;
-    if (localStorage.getItem(likedKey)) {
+    if (localStorage.getItem(likedKey) === currentMonthKey()) {
       likeButton.classList.add("liked");
     }
     likeButton.addEventListener("click", async () => {
       likeButton.disabled = true;
       const countEl = likeButton.querySelector(".like-count") as HTMLElement;
-      const isLiked = Boolean(localStorage.getItem(likedKey));
+      const isLiked = localStorage.getItem(likedKey) === currentMonthKey();
       const rpcName = isLiked ? "decrement_favorite_likes" : "increment_favorite_likes";
       const { error } = await supabase.rpc(rpcName, { post_id: post.id });
       likeButton.disabled = false;
@@ -196,7 +201,7 @@ const trackOptions = tracks
         likeButton.classList.remove("liked");
         countEl.textContent = String(Math.max(Number(countEl.textContent) - 1, 0));
       } else {
-        localStorage.setItem(likedKey, "1");
+        localStorage.setItem(likedKey, currentMonthKey());
         likeButton.classList.add("liked");
         countEl.textContent = String(Number(countEl.textContent) + 1);
       }

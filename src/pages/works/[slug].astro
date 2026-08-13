@@ -251,6 +251,11 @@ const relatedRankingQuestionsForClient = relatedRankingQuestions.map((q) => ({
   const loading = document.getElementById("favorites-loading") as HTMLParagraphElement;
   const list = document.getElementById("favorites-list") as HTMLUListElement;
 
+  // 高評価は月ごとにリセットする("YYYY-MM"が変われば再度いいね可能)。
+  function currentMonthKey(): string {
+    return new Date().toISOString().slice(0, 7);
+  }
+
   function renderPost(post: FavoritePost) {
     const li = document.createElement("li");
     li.innerHTML = `
@@ -263,19 +268,19 @@ const relatedRankingQuestionsForClient = relatedRankingQuestions.map((q) => ({
 
     const likedKey = `funsite-liked-${post.id}`;
     const likeButton = li.querySelector(".like-button") as HTMLButtonElement;
-    if (localStorage.getItem(likedKey)) {
+    if (localStorage.getItem(likedKey) === currentMonthKey()) {
       likeButton.disabled = true;
       likeButton.classList.add("liked");
     }
     likeButton.addEventListener("click", async () => {
-      if (localStorage.getItem(likedKey)) return;
+      if (localStorage.getItem(likedKey) === currentMonthKey()) return;
       likeButton.disabled = true;
       const { error } = await supabase.rpc("increment_favorite_likes", { post_id: post.id });
       if (error) {
         likeButton.disabled = false;
         return;
       }
-      localStorage.setItem(likedKey, "1");
+      localStorage.setItem(likedKey, currentMonthKey());
       likeButton.classList.add("liked");
       const countEl = likeButton.querySelector(".like-count") as HTMLElement;
       countEl.textContent = String(Number(countEl.textContent) + 1);

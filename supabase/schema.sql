@@ -91,16 +91,19 @@ grant select, insert on public.live_reports to anon;
 -- =========================================
 -- 勝手にランキング 投票
 -- =========================================
--- 1行 = 1票。question_id + voter_token の組で一意にし、
--- 同じブラウザ(localStorageのトークン)からの同一お題への重複投票を防ぐ
--- (厳密な不正防止ではなく簡易的なもの)。
+-- 1行 = 1票。question_id + voter_token + vote_month の組で一意にし、
+-- 同じブラウザ(localStorageのトークン)からの同一お題への同月内の重複投票を防ぐ
+-- (厳密な不正防止ではなく簡易的なもの)。vote_month はクライアントから渡さず、
+-- DB側でinsert時点の年月を自動設定する(改ざん防止のため)。月が変われば
+-- 別レコードとして投票できるようになり、投票権が毎月リセットされる。
 create table if not exists public.ranking_votes (
   id uuid primary key default gen_random_uuid(),
   question_id text not null,
   track_slug text not null,
   voter_token text not null,
+  vote_month text not null default to_char(now(), 'YYYY-MM'),
   created_at timestamptz not null default now(),
-  unique (question_id, voter_token)
+  unique (question_id, voter_token, vote_month)
 );
 
 alter table public.ranking_votes enable row level security;

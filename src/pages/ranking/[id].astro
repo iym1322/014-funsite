@@ -28,7 +28,7 @@ const choicesForClient = resolveRankingChoices(question)
 
   <h1>{question.question}</h1>
   <p class="note">
-    どなたでも投票できます(同じお題への投票は1ブラウザにつき1回までです)。
+    どなたでも投票できます(同じお題への投票は1ブラウザにつき月1回までです。毎月また投票できます)。
   </p>
 
   {choicesForClient.length > 8 && (
@@ -67,6 +67,11 @@ const choicesForClient = resolveRankingChoices(question)
   type RankedChoice = Choice & { votes: number; rank: number };
   let currentRanked: RankedChoice[] = [];
   let alreadyVoted = false;
+
+  // 投票権は月ごとにリセットする("YYYY-MM"が変われば再投票可能)。
+  function currentMonthKey(): string {
+    return new Date().toISOString().slice(0, 7);
+  }
 
   function coverEl(): HTMLDivElement {
     const cover = document.createElement("div");
@@ -135,7 +140,7 @@ const choicesForClient = resolveRankingChoices(question)
       const voteButton = document.createElement("button");
       voteButton.className = "vote-button";
       voteButton.type = "button";
-      voteButton.textContent = alreadyVoted ? "投票済み" : "投票する";
+      voteButton.textContent = alreadyVoted ? "投票済み(来月また投票できます)" : "投票する";
       voteButton.disabled = alreadyVoted;
       voteButton.addEventListener("click", async () => {
         voteButton.disabled = true;
@@ -146,17 +151,17 @@ const choicesForClient = resolveRankingChoices(question)
           voter_token: getVoterToken(),
         });
         if (error) {
-          // unique制約違反 = このブラウザは既にこのお題に投票済み
+          // unique制約違反 = このブラウザは今月すでにこのお題に投票済み
           if (error.code === "23505") {
-            localStorage.setItem(votedKey, "1");
-            alert("このお題にはすでに投票済みです。");
+            localStorage.setItem(votedKey, currentMonthKey());
+            alert("このお題には今月すでに投票済みです。来月また投票できます。");
           } else {
             voteButton.disabled = false;
             alert("投票に失敗しました。時間をおいて再度お試しください。");
             return;
           }
         } else {
-          localStorage.setItem(votedKey, "1");
+          localStorage.setItem(votedKey, currentMonthKey());
         }
         await renderRanking();
       });
@@ -180,7 +185,7 @@ const choicesForClient = resolveRankingChoices(question)
     totalVotesEl.textContent = `総投票数: ${totalVotes}票`;
 
     const votedKey = `funsite-voted-${questionData.id}`;
-    alreadyVoted = Boolean(localStorage.getItem(votedKey));
+    alreadyVoted = localStorage.getItem(votedKey) === currentMonthKey();
 
     renderList(searchInput?.value ?? "");
   }
