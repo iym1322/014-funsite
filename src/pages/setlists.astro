@@ -9,8 +9,9 @@ import Layout from "../layouts/Layout.astro";
 import ScrollToFormButton from "../components/ScrollToFormButton.astro";
 import { tracks } from "../data/discography";
 
+// セットリストに追加できる曲はシングルのみ(アルバム・映像・提供曲は対象外)。
 const trackOptions = tracks
-  .filter((t) => t.slug)
+  .filter((t) => t.slug && t.type === "シングル")
   .map((t) => ({
     slug: t.slug as string,
     title: t.title,
@@ -64,7 +65,7 @@ const MAX_TRACKS = 20;
         ></textarea>
       </label>
       <label>
-        曲を追加({MIN_TRACKS}〜{MAX_TRACKS}曲)
+        曲を追加(シングルのみ、{MIN_TRACKS}〜{MAX_TRACKS}曲)
         <div class="track-picker">
           <input
             type="text"
