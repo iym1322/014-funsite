@@ -1,80 +1,214 @@
 ---
 // 推し曲コーナー(CONTENTS_PLAN.md 2-3)。
-// 訪問者投稿・高評価機能はデザイン確認のためUIのみ用意している段階。
-// バックエンド(投稿の保存先)が未整備なため、投稿フォーム送信・いいねボタンは
-// 実際には保存されず、「準備中です」という案内を表示するだけになっている
-// (押しても何も起きないふりをするのではなく、はっきり伝える設計)。
+// Supabase(favorite_postsテーブル)に接続し、実際に投稿・閲覧・いいねができる。
+// 投稿は承認なしの即時公開(CONTENTS_PLAN.md 5章の方針)。
+// 曲リストと画像は discography.ts(ビルド時に確定するデータ)から、
+// 投稿内容だけはブラウザ側でSupabaseから取得する(即時反映のため)。
 import Layout from "../layouts/Layout.astro";
-import TrackCover from "../components/TrackCover.astro";
-import { favoritePosts, trackFor } from "../data/favorites";
+import { tracks } from "../data/discography";
+
+const trackOptions = tracks
+  .filter((t) => t.slug)
+  .map((t) => ({ slug: t.slug as string, title: t.title, image: t.image ?? "" }))
+  .sort((a, b) => a.title.localeCompare(b.title, "ja"));
 ---
 
 <Layout title="推し曲コーナー | オーイシマサヨシ非公式ファンサイト">
   <h1>推し曲コーナー</h1>
   <p class="note">
-    好きな曲の魅力を自分の言葉で紹介するコーナーです。将来的には、サイトに訪れた方も
-    投稿・高評価できるようにしたいと考えています。現在表示されている投稿は
-    <strong>デザイン確認用のサンプル</strong>で、実際の投稿ではありません。
+    好きな曲の魅力を自分の言葉で紹介するコーナーです。どなたでも投稿できます。
+    投稿は承認なしですぐに公開されるため、歌詞の転載や誹謗中傷など不適切な内容は
+    お控えください(発見次第、運営が削除します)。
   </p>
 
   <section class="post-form">
     <h2>推し曲を投稿する</h2>
-    <p class="pending-note">投稿機能は準備中です。公開まで今しばらくお待ちください。</p>
     <form id="favorite-form">
       <label>
         曲名
-        <input type="text" placeholder="例: 君じゃなきゃダメみたい" disabled />
+        <select name="trackSlug" id="track-select" required>
+          <option value="" disabled selected>曲を選んでください</option>
+          {trackOptions.map((t) => <option value={t.slug}>{t.title}</option>)}
+        </select>
+      </label>
+      <label>
+        お名前(ニックネーム可)
+        <input type="text" name="author" id="author-input" maxlength="50" required placeholder="例: 014ファン" />
       </label>
       <label>
         コメント
-        <textarea rows="3" placeholder="好きな理由を自由に書いてください(歌詞の転載はご遠慮ください)" disabled></textarea>
+        <textarea name="body" id="body-input" rows="3" maxlength="500" required placeholder="好きな理由を自由に書いてください(歌詞の転載はご遠慮ください)"></textarea>
       </label>
-      <button type="submit">投稿する</button>
+      <!-- ハニーポット: 通常は非表示。ボットが埋めてしまう欄なので、値が入っていたら投稿を弾く -->
+      <label class="honeypot" aria-hidden="true">
+        Webサイト
+        <input type="text" name="website" id="website-input" tabindex="-1" autocomplete="off" />
+      </label>
+      <button type="submit" id="submit-button">投稿する</button>
+      <p class="form-message" id="form-message" role="status"></p>
     </form>
   </section>
 
   <section class="post-list">
-    <h2>投稿一覧(サンプル)</h2>
-    <ul>
-      {favoritePosts.map((post) => {
-        const track = trackFor(post.trackSlug);
-        return (
-          <li class="post-card">
-            {track && (
-              <a class="post-track" href={`/works/${track.slug}`}>
-                <TrackCover image={track.image} title={track.title} />
-                <span>{track.title}</span>
-              </a>
-            )}
-            <div class="post-body">
-              <p class="post-author">
-                {post.author}
-                {post.isSample && <span class="sample-badge">サンプル</span>}
-              </p>
-              <p class="post-text">{post.body}</p>
-              <button class="like-button" type="button" data-count={post.likes}>
-                👍 <span class="like-count">{post.likes}</span>
-              </button>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+    <h2>投稿一覧</h2>
+    <p class="loading-message" id="loading-message">読み込み中...</p>
+    <ul id="post-list"></ul>
   </section>
+
+  <script type="application/json" id="track-options-data" set:html={JSON.stringify(trackOptions)} />
 </Layout>
 
 <script>
+  import { supabase } from "../lib/supabase";
+
+  type FavoritePost = {
+    id: string;
+    track_slug: string;
+    author: string;
+    body: string;
+    likes: number;
+    created_at: string;
+  };
+  type TrackOption = { slug: string; title: string; image: string };
+
+  const trackOptionsData: TrackOption[] = JSON.parse(
+    document.getElementById("track-options-data")!.textContent!
+  );
+  const trackMap = new Map(trackOptionsData.map((t) => [t.slug, t]));
+
   const form = document.getElementById("favorite-form") as HTMLFormElement;
-  form?.addEventListener("submit", (event) => {
+  const trackSelect = document.getElementById("track-select") as HTMLSelectElement;
+  const authorInput = document.getElementById("author-input") as HTMLInputElement;
+  const bodyInput = document.getElementById("body-input") as HTMLTextAreaElement;
+  const websiteInput = document.getElementById("website-input") as HTMLInputElement;
+  const submitButton = document.getElementById("submit-button") as HTMLButtonElement;
+  const formMessage = document.getElementById("form-message") as HTMLParagraphElement;
+  const postList = document.getElementById("post-list") as HTMLUListElement;
+  const loadingMessage = document.getElementById("loading-message") as HTMLParagraphElement;
+
+  function renderPost(post: FavoritePost) {
+    const track = trackMap.get(post.track_slug);
+    const li = document.createElement("li");
+    li.className = "post-card";
+
+    const trackLink = document.createElement("a");
+    trackLink.className = "post-track";
+    trackLink.href = track ? `/works/${track.slug}` : "#";
+
+    const cover = document.createElement("div");
+    cover.className = "cover placeholder";
+    cover.setAttribute("aria-hidden", "true");
+    cover.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="1.5"/></svg>';
+    trackLink.appendChild(cover);
+
+    const trackTitle = document.createElement("span");
+    trackTitle.textContent = track ? track.title : post.track_slug;
+    trackLink.appendChild(trackTitle);
+
+    const body = document.createElement("div");
+    body.className = "post-body";
+    body.innerHTML = `
+      <p class="post-author"></p>
+      <p class="post-text"></p>
+      <button class="like-button" type="button">👍 <span class="like-count">${post.likes}</span></button>
+    `;
+    (body.querySelector(".post-author") as HTMLElement).textContent = post.author;
+    (body.querySelector(".post-text") as HTMLElement).textContent = post.body;
+
+    const likedKey = `funsite-liked-${post.id}`;
+    const likeButton = body.querySelector(".like-button") as HTMLButtonElement;
+    if (localStorage.getItem(likedKey)) {
+      likeButton.disabled = true;
+      likeButton.classList.add("liked");
+    }
+    likeButton.addEventListener("click", async () => {
+      if (localStorage.getItem(likedKey)) return;
+      likeButton.disabled = true;
+      const { error } = await supabase.rpc("increment_favorite_likes", { post_id: post.id });
+      if (error) {
+        likeButton.disabled = false;
+        alert("いいねに失敗しました。時間をおいて再度お試しください。");
+        return;
+      }
+      localStorage.setItem(likedKey, "1");
+      likeButton.classList.add("liked");
+      const countEl = likeButton.querySelector(".like-count") as HTMLElement;
+      countEl.textContent = String(Number(countEl.textContent) + 1);
+    });
+
+    li.appendChild(trackLink);
+    li.appendChild(body);
+    return li;
+  }
+
+  async function loadPosts() {
+    loadingMessage.style.display = "";
+    const { data, error } = await supabase
+      .from("favorite_posts")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    loadingMessage.style.display = "none";
+
+    if (error) {
+      loadingMessage.textContent = "投稿の読み込みに失敗しました。時間をおいて再度お試しください。";
+      loadingMessage.style.display = "";
+      return;
+    }
+
+    postList.innerHTML = "";
+    if (!data || data.length === 0) {
+      const empty = document.createElement("li");
+      empty.className = "loading-message empty-message";
+      empty.textContent = "まだ投稿がありません。最初の推し曲を投稿してみませんか?";
+      postList.appendChild(empty);
+      return;
+    }
+    for (const post of data as FavoritePost[]) {
+      postList.appendChild(renderPost(post));
+    }
+  }
+
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    alert("投稿機能は準備中です。もうしばらくお待ちください。");
+
+    if (websiteInput.value.trim() !== "") {
+      // ハニーポットに入力があったら何もせず終了(ボット対策)。
+      return;
+    }
+
+    const trackSlug = trackSelect.value;
+    const author = authorInput.value.trim();
+    const body = bodyInput.value.trim();
+
+    if (!trackSlug || !author || !body) {
+      formMessage.textContent = "曲・お名前・コメントをすべて入力してください。";
+      return;
+    }
+
+    submitButton.disabled = true;
+    formMessage.textContent = "";
+
+    const { error } = await supabase.from("favorite_posts").insert({
+      track_slug: trackSlug,
+      author,
+      body,
+    });
+
+    submitButton.disabled = false;
+
+    if (error) {
+      formMessage.textContent = "投稿に失敗しました。時間をおいて再度お試しください。";
+      return;
+    }
+
+    form.reset();
+    formMessage.textContent = "投稿しました。ありがとうございます!";
+    await loadPosts();
   });
 
-  for (const btn of document.querySelectorAll<HTMLButtonElement>(".like-button")) {
-    btn.addEventListener("click", () => {
-      alert("評価機能は準備中です。もうしばらくお待ちください。");
-    });
-  }
+  loadPosts();
 </script>
 
 <style>
@@ -95,12 +229,6 @@ import { favoritePosts, trackFor } from "../data/favorites";
     background: var(--color-surface);
   }
 
-  .pending-note {
-    color: var(--color-accent);
-    font-size: 0.85rem;
-    margin: 0 0 1rem;
-  }
-
   .post-form form {
     display: flex;
     flex-direction: column;
@@ -116,6 +244,7 @@ import { favoritePosts, trackFor } from "../data/favorites";
   }
 
   .post-form input,
+  .post-form select,
   .post-form textarea {
     font-family: inherit;
     padding: 0.6rem 0.75rem;
@@ -124,6 +253,14 @@ import { favoritePosts, trackFor } from "../data/favorites";
     background: var(--color-bg);
     color: var(--color-text);
     resize: vertical;
+  }
+
+  .honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
   }
 
   .post-form button[type="submit"] {
@@ -135,6 +272,22 @@ import { favoritePosts, trackFor } from "../data/favorites";
     color: var(--color-surface);
     font-family: inherit;
     cursor: pointer;
+  }
+
+  .post-form button[type="submit"]:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .form-message {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-accent);
+  }
+
+  .loading-message {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
   }
 
   .post-list ul {
@@ -176,26 +329,32 @@ import { favoritePosts, trackFor } from "../data/favorites";
     color: var(--color-accent);
   }
 
+  .cover.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #e5ded3, #cfc3af);
+    color: var(--color-surface);
+  }
+
+  .cover.placeholder svg {
+    width: 30%;
+    height: 30%;
+    opacity: 0.7;
+  }
+
   .post-author {
     margin: 0 0 0.4rem;
     font-size: 0.85rem;
     color: var(--color-text-muted);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .sample-badge {
-    font-size: 0.7rem;
-    background: #f4e8de;
-    color: #a3663f;
-    border-radius: 4px;
-    padding: 0.1rem 0.4rem;
   }
 
   .post-text {
     margin: 0 0 0.75rem;
     line-height: 1.8;
+    white-space: pre-wrap;
   }
 
   .like-button {
@@ -215,5 +374,15 @@ import { favoritePosts, trackFor } from "../data/favorites";
   .like-button:hover {
     border-color: var(--color-accent);
     color: var(--color-accent);
+  }
+
+  .like-button.liked {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    cursor: default;
+  }
+
+  .like-button:disabled {
+    opacity: 0.7;
   }
 </style>
