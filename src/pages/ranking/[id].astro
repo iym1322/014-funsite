@@ -1,0 +1,285 @@
+---
+// 勝手にランキング 詳細ページ(CONTENTS_PLAN.md 2-6)。
+// お題ごとの全順位表示と投票はこのページで行う(一覧ページはTOP3のみ)。
+import Layout from "../../layouts/Layout.astro";
+import { rankingQuestions } from "../../data/ranking";
+import { tracks } from "../../data/discography";
+
+export function getStaticPaths() {
+  return rankingQuestions.map((q) => ({ params: { id: q.id }, props: { question: q } }));
+}
+
+function trackFor(slug: string) {
+  return tracks.find((t) => t.slug === slug);
+}
+
+const { question } = Astro.props;
+
+const choicesForClient = question.choices
+  .map((c) => {
+    const track = trackFor(c.trackSlug);
+    return track ? { trackSlug: c.trackSlug, title: track.title } : null;
+  })
+  .filter((c): c is { trackSlug: string; title: string } => c !== null);
+---
+
+<Layout title={`${question.question} | 勝手にランキング | オーイシマサヨシ非公式ファンサイト`}>
+  <a class="back-link" href="/ranking">← ランキング一覧に戻る</a>
+
+  <h1>{question.question}</h1>
+  <p class="note">
+    どなたでも投票できます(同じお題への投票は1ブラウザにつき1回までです)。
+  </p>
+
+  <p class="total-votes" id="total-votes">読み込み中...</p>
+  <ol class="rank-list" id="rank-list"></ol>
+
+  <script
+    type="application/json"
+    id="question-data"
+    set:html={JSON.stringify({ id: question.id, choices: choicesForClient })}
+  />
+</Layout>
+
+<script>
+  import { supabase, getVoterToken } from "../../lib/supabase";
+
+  type Choice = { trackSlug: string; title: string };
+  type QuestionData = { id: string; choices: Choice[] };
+
+  const questionData: QuestionData = JSON.parse(document.getElementById("question-data")!.textContent!);
+  const totalVotesEl = document.getElementById("total-votes") as HTMLParagraphElement;
+  const list = document.getElementById("rank-list") as HTMLOListElement;
+  const rankMedals = ["🥇", "🥈", "🥉"];
+
+  function coverEl(): HTMLDivElement {
+    const cover = document.createElement("div");
+    cover.className = "cover placeholder";
+    cover.setAttribute("aria-hidden", "true");
+    cover.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="1.5"/></svg>';
+    return cover;
+  }
+
+  async function fetchVoteCounts(): Promise<Map<string, number>> {
+    const { data, error } = await supabase
+      .from("ranking_results")
+      .select("*")
+      .eq("question_id", questionData.id);
+
+    const counts = new Map<string, number>();
+    if (error || !data) return counts;
+    for (const row of data as { track_slug: string; votes: number }[]) {
+      counts.set(row.track_slug, row.votes);
+    }
+    return counts;
+  }
+
+  async function renderRanking() {
+    list.innerHTML = "";
+    totalVotesEl.textContent = "読み込み中...";
+    const counts = await fetchVoteCounts();
+    const ranked = [...questionData.choices]
+      .map((c) => ({ ...c, votes: counts.get(c.trackSlug) ?? 0 }))
+      .sort((a, b) => b.votes - a.votes);
+    const totalVotes = ranked.reduce((sum, c) => sum + c.votes, 0);
+    totalVotesEl.textContent = `総投票数: ${totalVotes}票`;
+
+    const votedKey = `funsite-voted-${questionData.id}`;
+    const alreadyVoted = Boolean(localStorage.getItem(votedKey));
+
+    ranked.forEach((choice, index) => {
+      const li = document.createElement("li");
+      li.className = "rank-item";
+
+      const medal = document.createElement("span");
+      medal.className = "rank-medal";
+      medal.textContent = rankMedals[index] ?? `${index + 1}位`;
+      li.appendChild(medal);
+
+      const trackLink = document.createElement("a");
+      trackLink.className = "rank-track";
+      trackLink.href = `/works/${choice.trackSlug}`;
+      trackLink.appendChild(coverEl());
+      li.appendChild(trackLink);
+
+      const bodyDiv = document.createElement("div");
+      bodyDiv.className = "rank-body";
+      const titleLink = document.createElement("a");
+      titleLink.className = "rank-title";
+      titleLink.href = `/works/${choice.trackSlug}`;
+      titleLink.textContent = choice.title;
+      bodyDiv.appendChild(titleLink);
+      const votesP = document.createElement("p");
+      votesP.className = "rank-votes";
+      votesP.textContent = `${choice.votes}票`;
+      bodyDiv.appendChild(votesP);
+      li.appendChild(bodyDiv);
+
+      const voteButton = document.createElement("button");
+      voteButton.className = "vote-button";
+      voteButton.type = "button";
+      voteButton.textContent = alreadyVoted ? "投票済み" : "投票する";
+      voteButton.disabled = alreadyVoted;
+      voteButton.addEventListener("click", async () => {
+        voteButton.disabled = true;
+        const { error } = await supabase.from("ranking_votes").insert({
+          question_id: questionData.id,
+          track_slug: choice.trackSlug,
+          voter_token: getVoterToken(),
+        });
+        if (error) {
+          // unique制約違反 = このブラウザは既にこのお題に投票済み
+          if (error.code === "23505") {
+            localStorage.setItem(votedKey, "1");
+            alert("このお題にはすでに投票済みです。");
+          } else {
+            voteButton.disabled = false;
+            alert("投票に失敗しました。時間をおいて再度お試しください。");
+            return;
+          }
+        } else {
+          localStorage.setItem(votedKey, "1");
+        }
+        await renderRanking();
+      });
+      li.appendChild(voteButton);
+
+      list.appendChild(li);
+    });
+  }
+
+  renderRanking();
+</script>
+
+<style is:global>
+  /* is:global: ランキング項目をブラウザ側JSで動的生成しているため、
+     Astroのスコープ付きCSSでは動的要素に適用されない(data-astro-cid-*が付与されないため)。 */
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    color: var(--color-accent);
+  }
+
+  .note {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .total-votes {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    margin: 1rem 0;
+  }
+
+  .rank-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .rank-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    background: var(--color-surface);
+  }
+
+  .rank-medal {
+    flex: none;
+    width: 2.5rem;
+    text-align: center;
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+  }
+
+  .rank-track {
+    flex: none;
+    width: 3.5rem;
+    display: block;
+  }
+
+  .cover.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #e5ded3, #cfc3af);
+    color: var(--color-surface);
+  }
+
+  .cover.placeholder svg {
+    width: 40%;
+    height: 40%;
+    opacity: 0.7;
+  }
+
+  .rank-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rank-title {
+    display: block;
+    font-weight: 700;
+    color: var(--color-text);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rank-title:hover {
+    color: var(--color-accent);
+  }
+
+  .rank-votes {
+    margin: 0.15rem 0 0;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .vote-button {
+    flex: none;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .vote-button:hover:not(:disabled) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .vote-button:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  @media (max-width: 480px) {
+    .rank-item {
+      flex-wrap: wrap;
+    }
+    .vote-button {
+      margin-left: calc(2.5rem + 1rem + 3.5rem + 1rem);
+    }
+  }
+</style>

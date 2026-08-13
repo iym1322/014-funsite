@@ -51,6 +51,11 @@ const relatedAlbums = tracks.filter(
 const relatedRankingQuestions = rankingQuestions.filter((q) =>
   q.choices.some((c) => c.trackSlug === track.slug)
 );
+const relatedRankingQuestionsForClient = relatedRankingQuestions.map((q) => ({
+  id: q.id,
+  question: q.question,
+  choiceSlugs: q.choices.map((c) => c.trackSlug),
+}));
 ---
 
 <Layout title={`${track.title} | ディスコグラフィー | オーイシマサヨシ非公式ファンサイト`}>
@@ -70,6 +75,8 @@ const relatedRankingQuestions = rankingQuestions.filter((q) =>
       )}
 
       {track.note && <p class="note">{track.note}</p>}
+
+      <ul class="rank-badges" id="rank-badges" hidden></ul>
 
       {track.description && (
         <section class="description">
@@ -181,11 +188,17 @@ const relatedRankingQuestions = rankingQuestions.filter((q) =>
           <h2>関連するランキング</h2>
           <ul class="ranking-links">
             {relatedRankingQuestions.map((q) => (
-              <li><a href={`/ranking#${q.id}`}>「{q.question}」に投票する →</a></li>
+              <li><a href={`/ranking/${q.id}`}>「{q.question}」に投票する →</a></li>
             ))}
           </ul>
         </section>
       )}
+
+      <script
+        type="application/json"
+        id="ranking-questions-data"
+        set:html={JSON.stringify(relatedRankingQuestionsForClient)}
+      />
 
       {youtubeId && (
         <section class="video">
@@ -293,6 +306,58 @@ const relatedRankingQuestions = rankingQuestions.filter((q) =>
   }
 
   loadFavorites();
+
+  type RelatedRankingQuestion = { id: string; question: string; choiceSlugs: string[] };
+
+  const relatedRankingQuestions: RelatedRankingQuestion[] = JSON.parse(
+    document.getElementById("ranking-questions-data")!.textContent!
+  );
+  const rankBadgesEl = document.getElementById("rank-badges") as HTMLUListElement;
+
+  async function loadRankBadges() {
+    if (relatedRankingQuestions.length === 0) return;
+
+    const { data } = await supabase
+      .from("ranking_results")
+      .select("*")
+      .in("question_id", relatedRankingQuestions.map((q) => q.id));
+
+    const countsByQuestion = new Map<string, Map<string, number>>();
+    for (const row of (data ?? []) as { question_id: string; track_slug: string; votes: number }[]) {
+      if (!countsByQuestion.has(row.question_id)) countsByQuestion.set(row.question_id, new Map());
+      countsByQuestion.get(row.question_id)!.set(row.track_slug, row.votes);
+    }
+
+    const rankMedals = ["🥇", "🥈", "🥉"];
+    const badges: { id: string; question: string; rank: number; votes: number }[] = [];
+
+    for (const q of relatedRankingQuestions) {
+      const counts = countsByQuestion.get(q.id) ?? new Map<string, number>();
+      const ranked = q.choiceSlugs
+        .map((slug) => ({ slug, votes: counts.get(slug) ?? 0 }))
+        .sort((a, b) => b.votes - a.votes);
+      const index = ranked.findIndex((r) => r.slug === trackSlug);
+      if (index === -1 || index >= 3) continue;
+      const votes = ranked[index].votes;
+      if (votes <= 0) continue;
+      badges.push({ id: q.id, question: q.question, rank: index + 1, votes });
+    }
+
+    if (badges.length === 0) return;
+
+    rankBadgesEl.innerHTML = "";
+    for (const badge of badges) {
+      const li = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = `/ranking/${badge.id}`;
+      link.textContent = `${rankMedals[badge.rank - 1] ?? `${badge.rank}位`} 「${badge.question}」${badge.rank}位(${badge.votes}票)`;
+      li.appendChild(link);
+      rankBadgesEl.appendChild(li);
+    }
+    rankBadgesEl.hidden = false;
+  }
+
+  loadRankBadges();
 </script>
 
 <style is:global>
@@ -348,6 +413,32 @@ const relatedRankingQuestions = rankingQuestions.filter((q) =>
     color: var(--color-text-muted);
     font-size: 0.9rem;
     margin: 0 0 1.5rem;
+  }
+
+  .rank-badges {
+    list-style: none;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .rank-badges a {
+    display: inline-block;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--color-accent);
+    border-radius: 999px;
+    background: #fbf3ea;
+    color: var(--color-accent);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .rank-badges a:hover {
+    background: var(--color-accent);
+    color: var(--color-surface);
   }
 
   .video h2,

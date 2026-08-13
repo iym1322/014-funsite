@@ -1,10 +1,10 @@
 ---
-// 勝手にランキング(CONTENTS_PLAN.md 2-6)。
-// Supabase(ranking_votesテーブル/ranking_resultsビュー)に接続し、実際に投票できる。
-// 1ブラウザにつき同じお題への投票は1回まで(localStorageのトークン+DB側のunique制約)。
-import Layout from "../layouts/Layout.astro";
-import { rankingQuestions } from "../data/ranking";
-import { tracks } from "../data/discography";
+// 勝手にランキング 一覧ページ(CONTENTS_PLAN.md 2-6)。
+// ここではお題ごとのTOP3だけを表示し、投票および全順位の閲覧は
+// 詳細ページ(/ranking/[id])で行う。
+import Layout from "../../layouts/Layout.astro";
+import { rankingQuestions } from "../../data/ranking";
+import { tracks } from "../../data/discography";
 
 function trackFor(slug: string) {
   return tracks.find((t) => t.slug === slug);
@@ -16,17 +16,17 @@ const questionsForClient = rankingQuestions.map((q) => ({
   choices: q.choices
     .map((c) => {
       const track = trackFor(c.trackSlug);
-      return track ? { trackSlug: c.trackSlug, title: track.title, image: track.image ?? "" } : null;
+      return track ? { trackSlug: c.trackSlug, title: track.title } : null;
     })
-    .filter((c): c is { trackSlug: string; title: string; image: string } => c !== null),
+    .filter((c): c is { trackSlug: string; title: string } => c !== null),
 }));
 ---
 
 <Layout title="勝手にランキング | オーイシマサヨシ非公式ファンサイト">
   <h1>勝手にランキング</h1>
   <p class="note">
-    運営が用意したお題に投票して、みんなのランキングを見られるコーナーです。
-    どなたでも投票できます(同じお題への投票は1ブラウザにつき1回までです)。
+    運営が用意したお題の投票結果をTOP3まで見られる一覧です。
+    投票や全順位の確認は、各お題の詳細ページから行えます。
   </p>
 
   <div id="questions"></div>
@@ -35,9 +35,9 @@ const questionsForClient = rankingQuestions.map((q) => ({
 </Layout>
 
 <script>
-  import { supabase, getVoterToken } from "../lib/supabase";
+  import { supabase } from "../../lib/supabase";
 
-  type Choice = { trackSlug: string; title: string; image: string };
+  type Choice = { trackSlug: string; title: string };
   type Question = { id: string; question: string; choices: Choice[] };
 
   const questions: Question[] = JSON.parse(document.getElementById("questions-data")!.textContent!);
@@ -77,12 +77,12 @@ const questionsForClient = rankingQuestions.map((q) => ({
       const counts = voteCounts.get(q.id) ?? new Map<string, number>();
       const ranked = [...q.choices]
         .map((c) => ({ ...c, votes: counts.get(c.trackSlug) ?? 0 }))
-        .sort((a, b) => b.votes - a.votes);
-      const totalVotes = ranked.reduce((sum, c) => sum + c.votes, 0);
+        .sort((a, b) => b.votes - a.votes)
+        .slice(0, 3);
+      const totalVotes = [...counts.values()].reduce((sum, v) => sum + v, 0);
 
       const section = document.createElement("section");
       section.className = "question";
-      section.id = q.id;
 
       const heading = document.createElement("h2");
       heading.textContent = q.question;
@@ -95,9 +95,6 @@ const questionsForClient = rankingQuestions.map((q) => ({
 
       const list = document.createElement("ol");
       list.className = "rank-list";
-
-      const votedKey = `funsite-voted-${q.id}`;
-      const alreadyVoted = Boolean(localStorage.getItem(votedKey));
 
       ranked.forEach((choice, index) => {
         const li = document.createElement("li");
@@ -127,39 +124,17 @@ const questionsForClient = rankingQuestions.map((q) => ({
         bodyDiv.appendChild(votesP);
         li.appendChild(bodyDiv);
 
-        const voteButton = document.createElement("button");
-        voteButton.className = "vote-button";
-        voteButton.type = "button";
-        voteButton.textContent = alreadyVoted ? "投票済み" : "投票する";
-        voteButton.disabled = alreadyVoted;
-        voteButton.addEventListener("click", async () => {
-          voteButton.disabled = true;
-          const { error } = await supabase.from("ranking_votes").insert({
-            question_id: q.id,
-            track_slug: choice.trackSlug,
-            voter_token: getVoterToken(),
-          });
-          if (error) {
-            // unique制約違反 = このブラウザは既にこのお題に投票済み
-            if (error.code === "23505") {
-              localStorage.setItem(votedKey, "1");
-              alert("このお題にはすでに投票済みです。");
-            } else {
-              voteButton.disabled = false;
-              alert("投票に失敗しました。時間をおいて再度お試しください。");
-              return;
-            }
-          } else {
-            localStorage.setItem(votedKey, "1");
-          }
-          await renderQuestions();
-        });
-        li.appendChild(voteButton);
-
         list.appendChild(li);
       });
 
       section.appendChild(list);
+
+      const detailLink = document.createElement("a");
+      detailLink.className = "detail-link";
+      detailLink.href = `/ranking/${q.id}`;
+      detailLink.textContent = "全順位を見る・投票する →";
+      section.appendChild(detailLink);
+
       container.appendChild(section);
     }
   }
@@ -268,34 +243,15 @@ const questionsForClient = rankingQuestions.map((q) => ({
     color: var(--color-text-muted);
   }
 
-  .vote-button {
-    flex: none;
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
-    background: var(--color-bg);
-    color: var(--color-text);
-    font-family: inherit;
-    font-size: 0.8rem;
-    cursor: pointer;
-  }
-
-  .vote-button:hover:not(:disabled) {
-    border-color: var(--color-accent);
+  .detail-link {
+    display: inline-block;
+    margin-top: 1rem;
     color: var(--color-accent);
+    text-decoration: none;
+    font-size: 0.9rem;
   }
 
-  .vote-button:disabled {
-    opacity: 0.6;
-    cursor: default;
-  }
-
-  @media (max-width: 480px) {
-    .rank-item {
-      flex-wrap: wrap;
-    }
-    .vote-button {
-      margin-left: calc(2.5rem + 1rem + 3.5rem + 1rem);
-    }
+  .detail-link:hover {
+    text-decoration: underline;
   }
 </style>
