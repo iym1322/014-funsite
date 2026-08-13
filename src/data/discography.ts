@@ -2397,8 +2397,8 @@ const raw: Omit<Track, "sortDate">[] = [
     type: "映像",
     date: "2024.08",
     title: "オーイシ武道館 〜オーイシマサヨシ ワンマンライブ at 日本武道館〜",
+    image: "オーイシ武道館",
     slug: "oishi-budokan",
-    image: "oishi-budokan",
     description: "2024年3月2日に日本武道館で行われた、オーイシマサヨシ名義として初のワンマンライブを収めた映像作品。アニメ・ゲーム主題歌の数々を自身のバンドで再構築して披露した。",
     isLive: true,
     setlist: [
@@ -2495,8 +2495,8 @@ const raw: Omit<Track, "sortDate">[] = [
     type: "映像",
     date: "2025.08",
     title: "オーイシ武道館 Vol.2 〜オーイシマサヨシ ワンマンライブ at 日本武道館〜",
+    image: "オーイシ武道館 vol2",
     slug: "oishi-budokan-vol2",
-    image: "oishi-budokan-vol2",
     description: "2025年3月29日に日本武道館で行われた、2度目のワンマンライブを収めた映像作品。配信先行(2025年8月)ののち、円盤として2026年3月に発売されている。",
     isLive: true,
     setlist: [
