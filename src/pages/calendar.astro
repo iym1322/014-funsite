@@ -1,257 +1,192 @@
 ---
-// カレンダーページ(CONTENTS_PLAN.md 2-5)。
-// まずは静的な月表示から着手し、対象は2026年8月のみ(スケジュールデータが
-// 揃い次第、他の月にも拡張する想定)。日付計算はタイムゾーン起因のズレを
-// 避けるため常にUTCベースで行う。
 import Layout from "../layouts/Layout.astro";
-import { schedule } from "../data/schedule";
+import { schedule, type ScheduleEvent } from "../data/schedule";
 
 const year = 2026;
-const month = 8; // 1-indexed
-
-const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
-const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay(); // 0=日曜
-
-const cells: (number | null)[] = [];
-for (let i = 0; i < firstWeekday; i++) cells.push(null);
-for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-while (cells.length % 7 !== 0) cells.push(null);
-
+const months = Array.from({ length: 12 }, (_, index) => index + 1);
 const weekdayLabels = ["日", "月", "火", "水", "木", "金", "土"];
-
-function eventsOnDay(day: number) {
-  const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-  return schedule.filter((e) => e.date === dateStr);
-}
-
 const typeLabels = { release: "リリース", live: "ライブ", event: "イベント" };
 
-// 外部カレンダーへの追加(書き込み不要・静的生成のままで実現できるためCONTENTS_PLAN 2-5の中でも先行実装)。
-function toCompactDate(dateStr: string) {
-  return dateStr.replaceAll("-", "");
+function calendarCells(month: number) {
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+  const cells: (number | null)[] = Array(firstWeekday).fill(null);
+  for (let day = 1; day <= daysInMonth; day++) cells.push(day);
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
 }
 
-function addDays(dateStr: string, days: number) {
-  const d = new Date(`${dateStr}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
+function eventsOnDay(month: number, day: number) {
+  const date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  return schedule.filter((event) => event.date === date);
 }
 
-function googleCalendarUrl(e: (typeof schedule)[number]) {
-  const start = toCompactDate(e.date);
-  const end = toCompactDate(addDays(e.date, 1)); // Googleの終日イベントは終了日を翌日指定
+function toCompactDate(date: string) {
+  return date.replaceAll("-", "");
+}
+
+function addDays(date: string, days: number) {
+  const value = new Date(`${date}T00:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+
+function googleCalendarUrl(event: ScheduleEvent) {
   const params = new URLSearchParams({
     action: "TEMPLATE",
-    text: e.title,
-    dates: `${start}/${end}`,
+    text: event.title,
+    dates: `${toCompactDate(event.date)}/${toCompactDate(addDays(event.date, 1))}`,
   });
-  if (e.note) params.set("location", e.note);
+  if (event.note) params.set("location", event.note);
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-function icsDataUrl(e: (typeof schedule)[number]) {
-  const start = toCompactDate(e.date);
-  const end = toCompactDate(addDays(e.date, 1));
-  const ics = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//oishimasayoshi-funsite//calendar//JA",
-    "BEGIN:VEVENT",
-    `UID:${e.date}-${e.title}@014-funsite`,
-    `DTSTART;VALUE=DATE:${start}`,
-    `DTEND;VALUE=DATE:${end}`,
-    `SUMMARY:${e.title}`,
-    e.note ? `LOCATION:${e.note}` : "",
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ]
-    .filter(Boolean)
-    .join("\r\n");
-  return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
+function icsDataUrl(event: ScheduleEvent) {
+  const lines = [
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//014-base//calendar//JA", "BEGIN:VEVENT",
+    `UID:${event.date}-${encodeURIComponent(event.title)}@014-base`,
+    `DTSTART;VALUE=DATE:${toCompactDate(event.date)}`,
+    `DTEND;VALUE=DATE:${toCompactDate(addDays(event.date, 1))}`,
+    `SUMMARY:${event.title.replaceAll(",", "\\,")}`,
+    event.note ? `LOCATION:${event.note.replaceAll(",", "\\,")}` : "",
+    event.sourceUrl ? `URL:${event.sourceUrl}` : "",
+    "END:VEVENT", "END:VCALENDAR",
+  ].filter(Boolean);
+  return `data:text/calendar;charset=utf-8,${encodeURIComponent(lines.join("\r\n"))}`;
 }
 ---
 
 <Layout title="カレンダー | 014 BASE">
-  <h1>カレンダー</h1>
-  <p class="note">
-    リリース・ライブ・イベントの予定をまとめています。まだ2026年8月分のみの掲載です。
-    公開情報をもとにしていますが、最新情報は公式サイト・公式SNSをご確認ください。
-  </p>
+  <header class="calendar-intro">
+    <p class="eyebrow">SCHEDULE 2026</p>
+    <h1>カレンダー</h1>
+    <p>2026年の主要リリース、ライブ、イベントを月ごとに確認できます。</p>
+    <p class="note">公開情報をもとに掲載しています。変更・追加の可能性があるため、参加前に必ず公式情報をご確認ください。</p>
+  </header>
 
-  <h2 class="month-title">{year}年{month}月</h2>
+  <nav class="month-nav" aria-label="月を選択">
+    {months.map((month) => <button type="button" data-month-button={month}>{month}月</button>)}
+  </nav>
 
-  <div class="calendar">
-    {weekdayLabels.map((w) => <div class="weekday">{w}</div>)}
-    {cells.map((day) => (
-      <div class={`cell ${day === null ? "empty" : ""}`}>
-        {day !== null && (
-          <>
-            <span class="day-number">{day}</span>
-            <ul class="day-events">
-              {eventsOnDay(day).map((e) => (
-                <li class={`event-${e.type}`}>
-                  {e.href ? <a href={e.href}>{e.title}</a> : <span>{e.title}</span>}
-                  {e.note && <span class="event-note">{e.note}</span>}
-                  <span class="add-to-calendar">
-                    <a href={googleCalendarUrl(e)} target="_blank" rel="noopener noreferrer">Googleカレンダー</a>
-                    ・
-                    <a href={icsDataUrl(e)} download={`${e.date}-${e.title}.ics`}>ICS</a>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
+  {months.map((month) => (
+    <section class="month-panel" data-month-panel={month} hidden>
+      <div class="month-heading">
+        <button class="month-arrow" type="button" data-month-move="-1" disabled={month === 1} aria-label="前の月">←</button>
+        <h2>{year}年{month}月</h2>
+        <button class="month-arrow" type="button" data-month-move="1" disabled={month === 12} aria-label="次の月">→</button>
       </div>
-    ))}
-  </div>
+
+      <div class="calendar" role="grid" aria-label={`${year}年${month}月`}>
+        {weekdayLabels.map((weekday) => <div class="weekday" role="columnheader">{weekday}</div>)}
+        {calendarCells(month).map((day) => (
+          <div class:list={["cell", { empty: day === null, "has-events": day !== null && eventsOnDay(month, day).length > 0 }]} role="gridcell">
+            {day !== null && <>
+              <span class="day-number">{day}</span>
+              <ul class="day-events">
+                {eventsOnDay(month, day).map((event) => (
+                  <li class={`event-${event.type}`}>
+                    <span class="event-kind">{typeLabels[event.type]}</span>
+                    {event.href ? <a class="event-title" href={event.href}>{event.title}</a> : <span class="event-title">{event.title}</span>}
+                    {event.note && <span class="event-note">{event.note}</span>}
+                    <span class="event-actions">
+                      {event.sourceUrl && <a href={event.sourceUrl} target="_blank" rel="noopener noreferrer">公式情報</a>}
+                      <a href={googleCalendarUrl(event)} target="_blank" rel="noopener noreferrer">Google</a>
+                      <a href={icsDataUrl(event)} download={`${event.date}-${event.title}.ics`}>ICS</a>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>}
+          </div>
+        ))}
+      </div>
+
+      {schedule.every((event) => !event.date.startsWith(`${year}-${String(month).padStart(2, "0")}`)) &&
+        <p class="empty-month">現在、掲載予定はありません。</p>}
+    </section>
+  ))}
 
   <ul class="legend">
-    {Object.entries(typeLabels).map(([key, label]) => (
-      <li><span class={`dot event-${key}`}></span>{label}</li>
-    ))}
+    {Object.entries(typeLabels).map(([key, label]) => <li><span class={`dot event-${key}`}></span>{label}</li>)}
   </ul>
 </Layout>
 
+<script>
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>("[data-month-button]")];
+  const panels = [...document.querySelectorAll<HTMLElement>("[data-month-panel]")];
+  const currentYear = new Date().getFullYear();
+  const initialMonth = currentYear === 2026 ? new Date().getMonth() + 1 : 1;
+
+  function showMonth(month: number) {
+    const safeMonth = Math.min(12, Math.max(1, month));
+    panels.forEach((panel) => { panel.hidden = Number(panel.dataset.monthPanel) !== safeMonth; });
+    buttons.forEach((button) => {
+      const active = Number(button.dataset.monthButton) === safeMonth;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-current", active ? "date" : "false");
+    });
+    history.replaceState(null, "", `#month-${safeMonth}`);
+  }
+
+  buttons.forEach((button) => button.addEventListener("click", () => showMonth(Number(button.dataset.monthButton))));
+  document.querySelectorAll<HTMLButtonElement>("[data-month-move]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const panel = button.closest<HTMLElement>("[data-month-panel]");
+      showMonth(Number(panel?.dataset.monthPanel) + Number(button.dataset.monthMove));
+    });
+  });
+
+  const hashMonth = Number(location.hash.replace("#month-", ""));
+  showMonth(hashMonth >= 1 && hashMonth <= 12 ? hashMonth : initialMonth);
+</script>
+
 <style>
-  .note {
-    color: var(--color-text-muted);
-    font-size: 0.9rem;
-  }
-
-  .month-title {
-    margin: 2rem 0 1rem;
-  }
-
-  .calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 1px;
-    background: var(--color-border);
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .weekday {
-    background: var(--color-surface);
-    text-align: center;
-    padding: 0.5rem 0;
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
-  }
-
-  .cell {
-    background: var(--color-surface);
-    min-height: 6rem;
-    padding: 0.4rem;
-  }
-
-  .cell.empty {
-    background: var(--color-bg);
-  }
-
-  .day-number {
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
-  }
-
-  .day-events {
-    list-style: none;
-    margin: 0.3rem 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .day-events li {
-    font-size: 0.75rem;
-    line-height: 1.4;
-    border-left: 3px solid var(--color-accent);
-    padding-left: 0.4rem;
-  }
-
-  .day-events a {
-    color: var(--color-text);
-  }
-
-  .day-events a:hover {
-    color: var(--color-accent);
-  }
-
-  .event-note {
-    display: block;
-    color: var(--color-text-muted);
-  }
-
-  .add-to-calendar {
-    display: block;
-    margin-top: 0.15rem;
-    font-size: 0.65rem;
-  }
-
-  .add-to-calendar a {
-    color: var(--color-text-muted);
-  }
-
-  .add-to-calendar a:hover {
-    color: var(--color-accent);
-  }
-
-  .event-release {
-    border-left-color: #8a6d5c;
-  }
-
-  .event-live {
-    border-left-color: #5c7a8a;
-  }
-
-  .event-event {
-    border-left-color: #8a8a5c;
-  }
-
-  .legend {
-    display: flex;
-    gap: 1.5rem;
-    list-style: none;
-    margin: 1.5rem 0 0;
-    padding: 0;
-    font-size: 0.85rem;
-    color: var(--color-text-muted);
-  }
-
-  .legend li {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-
-  .dot {
-    display: inline-block;
-    width: 0.6rem;
-    height: 0.6rem;
-    border-radius: 999px;
-  }
-
-  .dot.event-release {
-    background: #8a6d5c;
-  }
-
-  .dot.event-live {
-    background: #5c7a8a;
-  }
-
-  .dot.event-event {
-    background: #8a8a5c;
-  }
-
-  @media (max-width: 640px) {
-    .cell {
-      min-height: 4rem;
-    }
-    .day-events li {
-      font-size: 0.65rem;
-    }
+  .calendar-intro { margin-bottom: 1.5rem; }
+  .calendar-intro h1 { margin: 0.15rem 0 0.7rem; }
+  .eyebrow { margin: 0; color: var(--color-accent); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.15em; }
+  .note { color: var(--color-text-muted); font-size: 0.88rem; }
+  .month-nav { display: flex; gap: 0.35rem; overflow-x: auto; padding: 0.25rem 0 0.75rem; scrollbar-width: thin; }
+  .month-nav button { flex: 0 0 auto; min-width: 3.5rem; border: 1px solid var(--color-border); border-radius: 999px; padding: 0.5rem 0.8rem; background: var(--color-surface); color: var(--color-text); cursor: pointer; }
+  .month-nav button.active { border-color: var(--color-accent); background: var(--color-accent); color: white; }
+  .month-heading { display: grid; grid-template-columns: 2.5rem 1fr 2.5rem; align-items: center; margin: 1rem 0; }
+  .month-heading h2 { margin: 0; text-align: center; }
+  .month-arrow { border: 1px solid var(--color-border); border-radius: 50%; width: 2.25rem; height: 2.25rem; background: var(--color-surface); color: var(--color-text); cursor: pointer; }
+  .month-arrow:disabled { opacity: 0.3; cursor: default; }
+  .calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; background: var(--color-border); border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden; }
+  .weekday { background: var(--color-surface); text-align: center; padding: 0.55rem 0; font-size: 0.78rem; color: var(--color-text-muted); }
+  .weekday:first-child { color: #a45c5c; }
+  .weekday:nth-child(7) { color: #4f7185; }
+  .cell { background: var(--color-surface); min-height: 7rem; padding: 0.45rem; }
+  .cell.empty { background: var(--color-bg); }
+  .cell.has-events { background: color-mix(in srgb, var(--color-surface) 94%, var(--color-accent)); }
+  .day-number { font-size: 0.78rem; color: var(--color-text-muted); }
+  .day-events { list-style: none; margin: 0.3rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+  .day-events li { border-left: 3px solid var(--color-accent); padding-left: 0.4rem; font-size: 0.72rem; line-height: 1.35; }
+  .event-kind { display: block; margin-bottom: 0.1rem; color: var(--color-text-muted); font-size: 0.6rem; }
+  .event-title { display: block; color: var(--color-text); font-weight: 600; text-decoration: none; }
+  a.event-title:hover { color: var(--color-accent); }
+  .event-note { display: block; color: var(--color-text-muted); }
+  .event-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.2rem; font-size: 0.62rem; }
+  .event-actions a { color: var(--color-text-muted); }
+  .event-actions a:hover { color: var(--color-accent); }
+  .event-release { border-left-color: #9a664f !important; }
+  .event-live { border-left-color: #4f788e !important; }
+  .event-event { border-left-color: #85854d !important; }
+  .empty-month { text-align: center; color: var(--color-text-muted); margin: 1rem 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: 1.25rem; list-style: none; margin: 1.25rem 0 0; padding: 0; font-size: 0.82rem; color: var(--color-text-muted); }
+  .legend li { display: flex; align-items: center; gap: 0.35rem; }
+  .dot { display: inline-block; width: 0.65rem; height: 0.65rem; border-radius: 50%; }
+  .dot.event-release { background: #9a664f; }
+  .dot.event-live { background: #4f788e; }
+  .dot.event-event { background: #85854d; }
+  @media (max-width: 720px) {
+    .calendar { display: block; border-radius: 8px; }
+    .weekday, .cell.empty, .cell:not(.has-events) { display: none; }
+    .cell.has-events { min-height: 0; padding: 0.75rem; border-bottom: 1px solid var(--color-border); }
+    .cell.has-events:last-child { border-bottom: 0; }
+    .day-number { display: block; margin-bottom: 0.35rem; font-size: 0.95rem; font-weight: 700; color: var(--color-text); }
+    .day-number::after { content: "日"; }
+    .day-events li { font-size: 0.82rem; }
+    .event-actions { font-size: 0.72rem; }
   }
 </style>
