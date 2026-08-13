@@ -1,65 +1,214 @@
 ---
 // イベントレポート(CONTENTS_PLAN.md 2-4)。
-// 推し曲コーナーと同じ方針で、投稿機能はデザイン確認用のUIのみ用意している段階。
+// Supabase(live_reportsテーブル)に接続し、実際に投稿・閲覧ができる。
+// 投稿は承認なしの即時公開(CONTENTS_PLAN.md 5章の方針)。
 import Layout from "../layouts/Layout.astro";
-import { liveReports } from "../data/live-reports";
 import { schedule } from "../data/schedule";
+
+const scheduleOptions = schedule
+  .filter((e) => e.type === "live" || e.type === "event")
+  .map((e) => ({ date: e.date, title: e.title, note: e.note ?? "" }));
 ---
 
 <Layout title="イベントレポート | オーイシマサヨシ非公式ファンサイト">
   <h1>イベントレポート</h1>
   <p class="note">
-    参戦したライブ・イベントの感想を記録するコーナーです。将来的には、サイトに訪れた方も
-    レポートを共有できるようにしたいと考えています。現在表示されているレポートは
-    <strong>デザイン確認用のサンプル</strong>で、実際の投稿ではありません。
+    参戦したライブ・イベントの感想を記録するコーナーです。どなたでも投稿できます。
+    投稿は承認なしですぐに公開されるため、セトリの丸写しや誹謗中傷など不適切な内容は
+    お控えください(発見次第、運営が削除します)。
   </p>
 
   <section class="post-form">
     <h2>レポートを投稿する</h2>
-    <p class="pending-note">投稿機能は準備中です。公開まで今しばらくお待ちください。</p>
     <form id="report-form">
       <label>
+        イベント(カレンダーの予定から選ぶ、または自由入力)
+        <select id="event-select">
+          <option value="">カレンダーの予定から選ぶ(任意)</option>
+          {scheduleOptions.map((e) => (
+            <option value={`${e.date}|${e.title}|${e.note}`}>{e.date} {e.title}</option>
+          ))}
+        </select>
+      </label>
+      <label>
         イベント名
-        <input type="text" placeholder="例: オーイシ武道館 Vol.2" disabled />
+        <input type="text" name="eventTitle" id="event-title-input" maxlength="100" required placeholder="例: オーイシ武道館 Vol.2" />
+      </label>
+      <label>
+        会場(任意)
+        <input type="text" name="venue" id="venue-input" maxlength="100" placeholder="例: 日本武道館" />
+      </label>
+      <label>
+        お名前(ニックネーム可)
+        <input type="text" name="author" id="author-input" maxlength="50" required placeholder="例: 014ファン" />
       </label>
       <label>
         感想
-        <textarea rows="3" placeholder="参戦した感想を自由に書いてください(セトリの丸写しはご遠慮ください)" disabled></textarea>
+        <textarea name="body" id="body-input" rows="4" maxlength="800" required placeholder="参戦した感想を自由に書いてください(セトリの丸写しはご遠慮ください)"></textarea>
       </label>
-      <button type="submit">投稿する</button>
+      <!-- ハニーポット: ボット対策 -->
+      <label class="honeypot" aria-hidden="true">
+        Webサイト
+        <input type="text" name="website" id="website-input" tabindex="-1" autocomplete="off" />
+      </label>
+      <button type="submit" id="submit-button">投稿する</button>
+      <p class="form-message" id="form-message" role="status"></p>
     </form>
   </section>
 
   <section class="post-list">
-    <h2>レポート一覧(サンプル)</h2>
-    <ul>
-      {liveReports.map((report) => {
-        const scheduleEvent = report.scheduleDate ? schedule.find((e) => e.date === report.scheduleDate) : undefined;
-        return (
-          <li class="report-card">
-            <p class="report-title">{report.eventTitle}</p>
-            <p class="report-meta">
-              {report.venue && <span>{report.venue}</span>}
-              {scheduleEvent && <a class="calendar-link" href="/calendar">カレンダーで見る →</a>}
-            </p>
-            <p class="report-author">
-              {report.author}
-              {report.isSample && <span class="sample-badge">サンプル</span>}
-            </p>
-            <p class="report-text">{report.body}</p>
-          </li>
-        );
-      })}
-    </ul>
+    <h2>レポート一覧</h2>
+    <p class="loading-message" id="loading-message">読み込み中...</p>
+    <ul id="post-list"></ul>
   </section>
 </Layout>
 
 <script>
+  import { supabase } from "../lib/supabase";
+
+  type LiveReport = {
+    id: string;
+    event_title: string;
+    schedule_date: string | null;
+    venue: string | null;
+    author: string;
+    body: string;
+    created_at: string;
+  };
+
+  const eventSelect = document.getElementById("event-select") as HTMLSelectElement;
+  const eventTitleInput = document.getElementById("event-title-input") as HTMLInputElement;
+  const venueInput = document.getElementById("venue-input") as HTMLInputElement;
   const form = document.getElementById("report-form") as HTMLFormElement;
-  form?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    alert("投稿機能は準備中です。もうしばらくお待ちください。");
+  const authorInput = document.getElementById("author-input") as HTMLInputElement;
+  const bodyInput = document.getElementById("body-input") as HTMLTextAreaElement;
+  const websiteInput = document.getElementById("website-input") as HTMLInputElement;
+  const submitButton = document.getElementById("submit-button") as HTMLButtonElement;
+  const formMessage = document.getElementById("form-message") as HTMLParagraphElement;
+  const postList = document.getElementById("post-list") as HTMLUListElement;
+  const loadingMessage = document.getElementById("loading-message") as HTMLParagraphElement;
+
+  let selectedScheduleDate = "";
+
+  eventSelect.addEventListener("change", () => {
+    if (!eventSelect.value) {
+      selectedScheduleDate = "";
+      return;
+    }
+    const [date, title, note] = eventSelect.value.split("|");
+    selectedScheduleDate = date;
+    eventTitleInput.value = title;
+    if (note) venueInput.value = note;
   });
+
+  function renderReport(report: LiveReport) {
+    const li = document.createElement("li");
+    li.className = "report-card";
+
+    const title = document.createElement("p");
+    title.className = "report-title";
+    title.textContent = report.event_title;
+    li.appendChild(title);
+
+    const meta = document.createElement("p");
+    meta.className = "report-meta";
+    if (report.venue) {
+      const venueSpan = document.createElement("span");
+      venueSpan.textContent = report.venue;
+      meta.appendChild(venueSpan);
+    }
+    if (report.schedule_date) {
+      const link = document.createElement("a");
+      link.className = "calendar-link";
+      link.href = "/calendar";
+      link.textContent = "カレンダーで見る →";
+      meta.appendChild(link);
+    }
+    li.appendChild(meta);
+
+    const author = document.createElement("p");
+    author.className = "report-author";
+    author.textContent = report.author;
+    li.appendChild(author);
+
+    const body = document.createElement("p");
+    body.className = "report-text";
+    body.textContent = report.body;
+    li.appendChild(body);
+
+    return li;
+  }
+
+  async function loadReports() {
+    loadingMessage.style.display = "";
+    const { data, error } = await supabase
+      .from("live_reports")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    loadingMessage.style.display = "none";
+
+    if (error) {
+      loadingMessage.textContent = "レポートの読み込みに失敗しました。時間をおいて再度お試しください。";
+      loadingMessage.style.display = "";
+      return;
+    }
+
+    postList.innerHTML = "";
+    if (!data || data.length === 0) {
+      const empty = document.createElement("li");
+      empty.className = "loading-message empty-message";
+      empty.textContent = "まだレポートがありません。最初のレポートを投稿してみませんか?";
+      postList.appendChild(empty);
+      return;
+    }
+    for (const report of data as LiveReport[]) {
+      postList.appendChild(renderReport(report));
+    }
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (websiteInput.value.trim() !== "") {
+      return;
+    }
+
+    const eventTitle = eventTitleInput.value.trim();
+    const venue = venueInput.value.trim();
+    const author = authorInput.value.trim();
+    const body = bodyInput.value.trim();
+
+    if (!eventTitle || !author || !body) {
+      formMessage.textContent = "イベント名・お名前・感想をすべて入力してください。";
+      return;
+    }
+
+    submitButton.disabled = true;
+    formMessage.textContent = "";
+
+    const { error } = await supabase.from("live_reports").insert({
+      event_title: eventTitle,
+      schedule_date: selectedScheduleDate || null,
+      venue: venue || null,
+      author,
+      body,
+    });
+
+    submitButton.disabled = false;
+
+    if (error) {
+      formMessage.textContent = "投稿に失敗しました。時間をおいて再度お試しください。";
+      return;
+    }
+
+    form.reset();
+    selectedScheduleDate = "";
+    formMessage.textContent = "投稿しました。ありがとうございます!";
+    await loadReports();
+  });
+
+  loadReports();
 </script>
 
 <style>
@@ -80,12 +229,6 @@ import { schedule } from "../data/schedule";
     background: var(--color-surface);
   }
 
-  .pending-note {
-    color: var(--color-accent);
-    font-size: 0.85rem;
-    margin: 0 0 1rem;
-  }
-
   .post-form form {
     display: flex;
     flex-direction: column;
@@ -101,6 +244,7 @@ import { schedule } from "../data/schedule";
   }
 
   .post-form input,
+  .post-form select,
   .post-form textarea {
     font-family: inherit;
     padding: 0.6rem 0.75rem;
@@ -109,6 +253,14 @@ import { schedule } from "../data/schedule";
     background: var(--color-bg);
     color: var(--color-text);
     resize: vertical;
+  }
+
+  .honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
   }
 
   .post-form button[type="submit"] {
@@ -120,6 +272,22 @@ import { schedule } from "../data/schedule";
     color: var(--color-surface);
     font-family: inherit;
     cursor: pointer;
+  }
+
+  .post-form button[type="submit"]:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .form-message {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-accent);
+  }
+
+  .loading-message {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
   }
 
   .post-list ul {
@@ -160,21 +328,11 @@ import { schedule } from "../data/schedule";
     margin: 0 0 0.5rem;
     font-size: 0.85rem;
     color: var(--color-text-muted);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .sample-badge {
-    font-size: 0.7rem;
-    background: #f4e8de;
-    color: #a3663f;
-    border-radius: 4px;
-    padding: 0.1rem 0.4rem;
   }
 
   .report-text {
     margin: 0;
     line-height: 1.8;
+    white-space: pre-wrap;
   }
 </style>
