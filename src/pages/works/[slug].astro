@@ -4,7 +4,7 @@
 import Layout from "../../layouts/Layout.astro";
 import TrackCover from "../../components/TrackCover.astro";
 import { tracks } from "../../data/discography";
-import { rankingQuestions } from "../../data/ranking";
+import { rankingQuestions, resolveRankingChoices } from "../../data/ranking";
 
 export function getStaticPaths() {
   return tracks
@@ -49,12 +49,12 @@ const relatedAlbums = tracks.filter(
 
 // この曲が候補になっている「勝手にランキング」のお題を逆引きする。
 const relatedRankingQuestions = rankingQuestions.filter((q) =>
-  q.choices.some((c) => c.trackSlug === track.slug)
+  resolveRankingChoices(q).some((c) => c.trackSlug === track.slug)
 );
 const relatedRankingQuestionsForClient = relatedRankingQuestions.map((q) => ({
   id: q.id,
   question: q.question,
-  choiceSlugs: q.choices.map((c) => c.trackSlug),
+  choiceSlugs: resolveRankingChoices(q).map((c) => c.trackSlug),
 }));
 ---
 

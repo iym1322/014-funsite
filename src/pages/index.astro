@@ -8,7 +8,7 @@ import { execSync } from "node:child_process";
 import Layout from "../layouts/Layout.astro";
 import TrackCover from "../components/TrackCover.astro";
 import { tracks } from "../data/discography";
-import { rankingQuestions } from "../data/ranking";
+import { rankingQuestions, resolveRankingChoices } from "../data/ranking";
 import { schedule } from "../data/schedule";
 
 const mainContents = [
@@ -50,7 +50,7 @@ const latestSongs = [...songs]
   .sort((a, b) => b.sortDate.localeCompare(a.sortDate))
   .slice(0, 10);
 const activeRanking = rankingQuestions[0];
-const rankingCandidates = activeRanking.choices
+const rankingCandidates = resolveRankingChoices(activeRanking)
   .map((c) => {
     const track = tracks.find((t) => t.slug === c.trackSlug);
     return track ? { slug: c.trackSlug, title: track.title } : null;

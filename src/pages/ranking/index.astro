@@ -3,7 +3,7 @@
 // ここではお題ごとのTOP3だけを表示し、投票および全順位の閲覧は
 // 詳細ページ(/ranking/[id])で行う。
 import Layout from "../../layouts/Layout.astro";
-import { rankingQuestions } from "../../data/ranking";
+import { rankingQuestions, resolveRankingChoices } from "../../data/ranking";
 import { tracks } from "../../data/discography";
 
 function trackFor(slug: string) {
@@ -13,7 +13,7 @@ function trackFor(slug: string) {
 const questionsForClient = rankingQuestions.map((q) => ({
   id: q.id,
   question: q.question,
-  choices: q.choices
+  choices: resolveRankingChoices(q)
     .map((c) => {
       const track = trackFor(c.trackSlug);
       return track ? { trackSlug: c.trackSlug, title: track.title } : null;

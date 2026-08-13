@@ -2,7 +2,7 @@
 // 勝手にランキング 詳細ページ(CONTENTS_PLAN.md 2-6)。
 // お題ごとの全順位表示と投票はこのページで行う(一覧ページはTOP3のみ)。
 import Layout from "../../layouts/Layout.astro";
-import { rankingQuestions } from "../../data/ranking";
+import { rankingQuestions, resolveRankingChoices } from "../../data/ranking";
 import { tracks } from "../../data/discography";
 
 export function getStaticPaths() {
@@ -15,7 +15,7 @@ function trackFor(slug: string) {
 
 const { question } = Astro.props;
 
-const choicesForClient = question.choices
+const choicesForClient = resolveRankingChoices(question)
   .map((c) => {
     const track = trackFor(c.trackSlug);
     return track ? { trackSlug: c.trackSlug, title: track.title } : null;
