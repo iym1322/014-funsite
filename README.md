@@ -1,8 +1,9 @@
-# オーイシマサヨシ非公式ファンサイト
+# オーイシマサヨシ非公式ファンサイト(サイト名: 014 BASE)
 
 ## 1. プロジェクト概要
 
 オーイシマサヨシさんの**非公式**ファンサイトです。個人の学習・趣味目的で制作しています。
+サイトの表示名は「**014 BASE**」(副題として「オーイシマサヨシ非公式ファンサイト」を併記)。
 
 ### 目的
 1. **Claude Codeを活用したサイト開発・運用の学習**
@@ -31,8 +32,9 @@
 - **フレームワーク**: [Astro](https://astro.build/)
 - **言語**: HTML / CSS / JavaScript(必要に応じてTypeScript)
 - **コンテンツ管理**: Markdown(Astro Content Collectionsでブログ記事等を管理)
-- **ホスティング**: [Vercel](https://vercel.com/)
-- **バックエンド/DB**: [Supabase](https://supabase.com/)(推し曲投稿・イベントレポート・投票などユーザー参加型機能用)
+- **ホスティング**: [Vercel](https://vercel.com/)(本番公開済み: https://014-funsite.vercel.app/)
+- **バックエンド/DB**: [Supabase](https://supabase.com/)(推し曲投稿・オーイシ名場面・あなたのセットリスト・イベントレポート・投票などユーザー参加型機能用)
+- **外部API**: [YouTube Data API v3](https://developers.google.com/youtube/v3)(オーイシ名場面ページの「各配信元の最新回」カルーセル用。ビルド時にサーバー側でのみ使用し、APIキーはブラウザに公開しない)
 
 > 当初は静的サイト+GitHub Pagesの構成を想定していたが、訪問者参加型のコンテンツ
 > (投稿・投票など、書き込みを伴う機能)を実装する方針に転換したため、サーバーレス関数と
@@ -50,13 +52,23 @@
 /
 ├── public/              # 画像などの静的アセット
 ├── src/
-│   ├── components/      # 再利用可能なUIコンポーネント
+│   ├── components/      # 再利用可能なUIコンポーネント(Header/Footer/TrackCover/ScrollToFormButton等)
+│   ├── data/            # 全ページ共通のデータソース(discography.ts/ranking.ts/schedule.ts)
+│   ├── lib/             # Supabaseクライアント・YouTube Data API呼び出し等のユーティリティ
 │   ├── layouts/         # ページ共通レイアウト
 │   ├── pages/           # 各ページ(ルーティングは自動生成)
-│   │   ├── index.astro       # トップページ
-│   │   ├── profile.astro     # プロフィール紹介ページ
-│   │   └── works/            # 楽曲・作品紹介
+│   │   ├── index.astro         # トップページ
+│   │   ├── profile.astro       # プロフィール紹介ページ
+│   │   ├── works.astro / works/[slug].astro  # ディスコグラフィー一覧・個別ページ
+│   │   ├── favorites.astro     # 推し曲コーナー(訪問者投稿)
+│   │   ├── moments.astro       # オーイシ名場面(訪問者投稿+YouTube埋め込み)
+│   │   ├── setlists.astro      # あなたのセットリスト(訪問者投稿)
+│   │   ├── live-reports.astro  # イベントレポート(訪問者投稿)
+│   │   ├── ranking/            # 勝手にランキング(一覧+お題ごとの詳細/投票ページ)
+│   │   └── calendar.astro      # カレンダー
 │   └── styles/           # 共通スタイル
+├── supabase/
+│   └── schema.sql        # Supabaseのテーブル・RLSポリシー・RPC関数定義
 ├── astro.config.mjs
 ├── package.json
 └── README.md
@@ -110,10 +122,17 @@ npm run preview
 ```bash
 PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 PUBLIC_SUPABASE_ANON_KEY=xxxxx
+
+# オーイシ名場面ページの「最新回」カルーセルを動かす場合のみ必要
+YOUTUBE_API_KEY=xxxxx
 ```
 
-値はSupabaseダッシュボードの「Project Settings → API」から取得する。
+Supabaseの値はダッシュボードの「Project Settings → API」から取得する。
+`YOUTUBE_API_KEY` はGoogle Cloud Consoleで「YouTube Data API v3」を有効化して発行する
+(無料枠の範囲で足りる想定。`PUBLIC_` を付けない=ビルド時にサーバー側でのみ使用し、
+ブラウザには一切公開しない)。
 `.env` は `.gitignore` 済みのため、リポジトリには絶対に含めないこと。
+本番(Vercel)側は、プロジェクトの Settings → Environment Variables に同じ値を設定する。
 
 ---
 
@@ -127,7 +146,12 @@ PUBLIC_SUPABASE_ANON_KEY=xxxxx
 - [x] 推し曲コーナー・イベントレポート・カレンダー・勝手にランキングのページ作成
 - [x] Supabase接続(推し曲投稿・イベントレポート投稿・投票を実装、動作確認済み)
 - [x] 簡易スパム対策(ハニーポット)の実装
+- [x] Vercelへのデプロイ設定・本番公開(https://014-funsite.vercel.app/)
+- [x] サイト名を「014 BASE」に改称(副題としてオーイシマサヨシ非公式ファンサイトを併記)
+- [x] 勝手にランキングを一覧(TOP3)/詳細(全順位+投票)ページに分割、投票対象をシングル全曲に拡大、候補が多いお題は曲名検索に対応
+- [x] 新コンテンツ「オーイシ名場面」を追加(YouTube動画の名場面をタイムスタンプ付きで紹介、YouTube Data API v3で各配信元の最新回カルーセルも実装)
+- [x] 新コンテンツ「あなたのセットリスト」を追加(妄想のライブセットリストをコンセプト付きで共有、曲順並べ替え対応)
 
 **未着手**
 - [ ] ブログ(学習記録)機能の実装 ※本サイトには含めず別リポジトリで管理する方針(1章参照)
-- [ ] Vercelへのデプロイ設定・本番公開
+- [ ] YouTube Data APIを使った再生回数の取得(ディスコグラフィーのフェーズ2、CONTENTS_PLAN.md 2-2参照)
