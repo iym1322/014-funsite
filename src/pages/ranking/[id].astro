@@ -31,6 +31,17 @@ const choicesForClient = resolveRankingChoices(question)
     どなたでも投票できます(同じお題への投票は1ブラウザにつき1回までです)。
   </p>
 
+  {choicesForClient.length > 8 && (
+    <div class="rank-search">
+      <input
+        type="text"
+        id="rank-search-input"
+        placeholder="曲名で絞り込む"
+        autocomplete="off"
+      />
+    </div>
+  )}
+
   <p class="total-votes" id="total-votes">読み込み中...</p>
   <ol class="rank-list" id="rank-list"></ol>
 
@@ -50,7 +61,12 @@ const choicesForClient = resolveRankingChoices(question)
   const questionData: QuestionData = JSON.parse(document.getElementById("question-data")!.textContent!);
   const totalVotesEl = document.getElementById("total-votes") as HTMLParagraphElement;
   const list = document.getElementById("rank-list") as HTMLOListElement;
+  const searchInput = document.getElementById("rank-search-input") as HTMLInputElement | null;
   const rankMedals = ["🥇", "🥈", "🥉"];
+
+  type RankedChoice = Choice & { votes: number; rank: number };
+  let currentRanked: RankedChoice[] = [];
+  let alreadyVoted = false;
 
   function coverEl(): HTMLDivElement {
     const cover = document.createElement("div");
@@ -75,26 +91,26 @@ const choicesForClient = resolveRankingChoices(question)
     return counts;
   }
 
-  async function renderRanking() {
+  function renderList(query: string) {
+    const q = query.trim().toLowerCase();
+    const items = q ? currentRanked.filter((c) => c.title.toLowerCase().includes(q)) : currentRanked;
+
     list.innerHTML = "";
-    totalVotesEl.textContent = "読み込み中...";
-    const counts = await fetchVoteCounts();
-    const ranked = [...questionData.choices]
-      .map((c) => ({ ...c, votes: counts.get(c.trackSlug) ?? 0 }))
-      .sort((a, b) => b.votes - a.votes);
-    const totalVotes = ranked.reduce((sum, c) => sum + c.votes, 0);
-    totalVotesEl.textContent = `総投票数: ${totalVotes}票`;
+    if (items.length === 0) {
+      const li = document.createElement("li");
+      li.className = "no-match";
+      li.textContent = "一致する曲が見つかりません";
+      list.appendChild(li);
+      return;
+    }
 
-    const votedKey = `funsite-voted-${questionData.id}`;
-    const alreadyVoted = Boolean(localStorage.getItem(votedKey));
-
-    ranked.forEach((choice, index) => {
+    for (const choice of items) {
       const li = document.createElement("li");
       li.className = "rank-item";
 
       const medal = document.createElement("span");
       medal.className = "rank-medal";
-      medal.textContent = rankMedals[index] ?? `${index + 1}位`;
+      medal.textContent = rankMedals[choice.rank] ?? `${choice.rank + 1}位`;
       li.appendChild(medal);
 
       const trackLink = document.createElement("a");
@@ -123,6 +139,7 @@ const choicesForClient = resolveRankingChoices(question)
       voteButton.disabled = alreadyVoted;
       voteButton.addEventListener("click", async () => {
         voteButton.disabled = true;
+        const votedKey = `funsite-voted-${questionData.id}`;
         const { error } = await supabase.from("ranking_votes").insert({
           question_id: questionData.id,
           track_slug: choice.trackSlug,
@@ -146,8 +163,31 @@ const choicesForClient = resolveRankingChoices(question)
       li.appendChild(voteButton);
 
       list.appendChild(li);
-    });
+    }
   }
+
+  async function renderRanking() {
+    totalVotesEl.textContent = "読み込み中...";
+    list.innerHTML = "";
+    const counts = await fetchVoteCounts();
+    const ranked = [...questionData.choices]
+      .map((c) => ({ ...c, votes: counts.get(c.trackSlug) ?? 0 }))
+      .sort((a, b) => b.votes - a.votes)
+      .map((c, index) => ({ ...c, rank: index }));
+    currentRanked = ranked;
+
+    const totalVotes = ranked.reduce((sum, c) => sum + c.votes, 0);
+    totalVotesEl.textContent = `総投票数: ${totalVotes}票`;
+
+    const votedKey = `funsite-voted-${questionData.id}`;
+    alreadyVoted = Boolean(localStorage.getItem(votedKey));
+
+    renderList(searchInput?.value ?? "");
+  }
+
+  searchInput?.addEventListener("input", () => {
+    renderList(searchInput.value);
+  });
 
   renderRanking();
 </script>
@@ -172,10 +212,39 @@ const choicesForClient = resolveRankingChoices(question)
     font-size: 0.9rem;
   }
 
+  .rank-search {
+    margin-top: 1.25rem;
+  }
+
+  .rank-search input {
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.95rem;
+    padding: 0.65rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    box-sizing: border-box;
+  }
+
+  .rank-search input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+
   .total-votes {
     color: var(--color-text-muted);
     font-size: 0.8rem;
     margin: 1rem 0;
+  }
+
+  .no-match {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    padding: 1.5rem;
+    border: 1px dashed var(--color-border);
+    border-radius: 8px;
   }
 
   .rank-list {
