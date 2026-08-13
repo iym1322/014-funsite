@@ -8,7 +8,9 @@ import { schedule } from "../data/schedule";
 
 const scheduleOptions = schedule
   .filter((e) => e.type === "live" || e.type === "event")
-  .map((e) => ({ date: e.date, title: e.title, note: e.note ?? "" }));
+  .map((e) => ({ date: e.date, title: e.title, note: e.note ?? "", type: e.type }));
+
+const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)))];
 ---
 
 <Layout title="イベントレポート | 014 BASE">
@@ -28,15 +30,33 @@ const scheduleOptions = schedule
   <section class="post-form">
     <h2>レポートを投稿する</h2>
     <form id="report-form">
-      <label>
-        イベント(カレンダーの予定から選ぶ、または自由入力)
-        <select id="event-select">
-          <option value="">カレンダーの予定から選ぶ(任意)</option>
-          {scheduleOptions.map((e) => (
-            <option value={`${e.date}|${e.title}|${e.note}`}>{e.date} {e.title}</option>
-          ))}
-        </select>
-      </label>
+      <fieldset class="event-picker">
+        <legend>カレンダーの予定から選ぶ（任意）</legend>
+        <p class="field-help">月やキーワードで絞り込めます。予定にないイベントは、下のイベント名に直接入力してください。</p>
+        <div class="event-filters">
+          <label>
+            開催月
+            <select id="event-month-filter">
+              <option value="">すべての月</option>
+              {scheduleMonths.map((value) => {
+                const [year, month] = value.split("-");
+                return <option value={value}>{year}年{Number(month)}月</option>;
+              })}
+            </select>
+          </label>
+          <label>
+            イベントを検索
+            <input id="event-search-input" type="search" placeholder="例: 武道館、Sound Schedule" autocomplete="off" />
+          </label>
+        </div>
+        <label>
+          絞り込み結果
+          <select id="event-select">
+            <option value="">予定を選択してください</option>
+          </select>
+        </label>
+        <p id="event-result-count" class="field-help" aria-live="polite"></p>
+      </fieldset>
       <label>
         イベント名
         <input type="text" name="eventTitle" id="event-title-input" maxlength="100" required placeholder="例: オーイシ武道館 Vol.2" />
@@ -64,6 +84,7 @@ const scheduleOptions = schedule
   </section>
 
   <ScrollToFormButton label="レポートを投稿する" />
+  <script type="application/json" id="schedule-options-data" set:html={JSON.stringify(scheduleOptions)} />
 </Layout>
 
 <script>
@@ -80,6 +101,15 @@ const scheduleOptions = schedule
   };
 
   const eventSelect = document.getElementById("event-select") as HTMLSelectElement;
+  const eventMonthFilter = document.getElementById("event-month-filter") as HTMLSelectElement;
+  const eventSearchInput = document.getElementById("event-search-input") as HTMLInputElement;
+  const eventResultCount = document.getElementById("event-result-count") as HTMLParagraphElement;
+  const scheduleOptions = JSON.parse(document.getElementById("schedule-options-data")!.textContent!) as Array<{
+    date: string;
+    title: string;
+    note: string;
+    type: "live" | "event";
+  }>;
   const eventTitleInput = document.getElementById("event-title-input") as HTMLInputElement;
   const venueInput = document.getElementById("venue-input") as HTMLInputElement;
   const form = document.getElementById("report-form") as HTMLFormElement;
@@ -93,15 +123,44 @@ const scheduleOptions = schedule
 
   let selectedScheduleDate = "";
 
+  function formatScheduleDate(date: string) {
+    const [, month, day] = date.split("-");
+    return `${Number(month)}月${Number(day)}日`;
+  }
+
+  function updateEventOptions() {
+    const month = eventMonthFilter.value;
+    const query = eventSearchInput.value.trim().toLocaleLowerCase("ja");
+    const currentValue = eventSelect.value;
+    const filtered = scheduleOptions.filter((event) => {
+      const matchesMonth = !month || event.date.startsWith(month);
+      const target = `${event.title} ${event.note}`.toLocaleLowerCase("ja");
+      return matchesMonth && (!query || target.includes(query));
+    });
+
+    eventSelect.replaceChildren(new Option(filtered.length ? "予定を選択してください" : "該当する予定がありません", ""));
+    for (const event of filtered) {
+      const venue = event.note ? `｜${event.note}` : "";
+      const option = new Option(`${formatScheduleDate(event.date)}｜${event.title}${venue}`, JSON.stringify(event));
+      eventSelect.add(option);
+    }
+    if ([...eventSelect.options].some((option) => option.value === currentValue)) eventSelect.value = currentValue;
+    eventResultCount.textContent = `${filtered.length}件の予定を表示しています`;
+  }
+
+  eventMonthFilter.addEventListener("change", updateEventOptions);
+  eventSearchInput.addEventListener("input", updateEventOptions);
+  updateEventOptions();
+
   eventSelect.addEventListener("change", () => {
     if (!eventSelect.value) {
       selectedScheduleDate = "";
       return;
     }
-    const [date, title, note] = eventSelect.value.split("|");
-    selectedScheduleDate = date;
-    eventTitleInput.value = title;
-    if (note) venueInput.value = note;
+    const selected = JSON.parse(eventSelect.value) as { date: string; title: string; note: string };
+    selectedScheduleDate = selected.date;
+    eventTitleInput.value = selected.title;
+    venueInput.value = selected.note;
   });
 
   function renderReport(report: LiveReport) {
@@ -240,6 +299,33 @@ const scheduleOptions = schedule
     gap: 1rem;
   }
 
+  .event-picker {
+    margin: 0;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+  }
+
+  .event-picker legend {
+    padding: 0 0.35rem;
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .event-filters {
+    display: grid;
+    grid-template-columns: minmax(9rem, 0.7fr) minmax(14rem, 1.3fr);
+    gap: 0.75rem;
+    margin: 0.75rem 0;
+  }
+
+  .field-help {
+    margin: 0.35rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+  }
+
   .post-form label {
     display: flex;
     flex-direction: column;
@@ -339,5 +425,11 @@ const scheduleOptions = schedule
     margin: 0;
     line-height: 1.8;
     white-space: pre-wrap;
+  }
+
+  @media (max-width: 640px) {
+    .event-filters {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
