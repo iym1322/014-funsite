@@ -1,0 +1,556 @@
+---
+// オーイシ名場面(CONTENTS_PLAN.md 2-7)。
+// Supabase(momentsテーブル)に接続し、実際に投稿・閲覧・いいねができる。
+// 投稿は承認なしの即時公開(CONTENTS_PLAN.md 5章の方針)。
+// 公式チャンネル・弾き語りラボ・ピザラジ・でしょでしょ等のYouTube動画の「名場面」を
+// タイムスタンプ付きURLで紹介してもらい、クリックで再生できる埋め込みプレイヤーを表示する。
+import Layout from "../layouts/Layout.astro";
+
+const channelOptions = ["公式チャンネル", "弾き語りラボ", "ピザラジ", "でしょでしょ(でしょラジ)"];
+---
+
+<Layout title="オーイシ名場面 | 014 BASE">
+  <h1>オーイシ名場面</h1>
+  <p class="note">
+    公式チャンネル・弾き語りラボ・ピザラジ・でしょでしょ等、YouTube動画の「名場面」を紹介するコーナーです。
+    どなたでも投稿できます。動画のタイムスタンプ付きURLを貼ると、その場面から再生できます
+    (YouTubeで再生中に「その時点の時間から共有」を選ぶとタイムスタンプ付きURLがコピーできます)。
+    投稿は承認なしですぐに公開されるため、誹謗中傷など不適切な内容はお控えください
+    (発見次第、運営が削除します)。
+  </p>
+
+  <section class="post-form">
+    <h2>名場面を投稿する</h2>
+    <form id="moment-form">
+      <label>
+        配信元
+        <select id="channel-select" name="channel" required>
+          {channelOptions.map((c) => <option value={c}>{c}</option>)}
+          <option value="__other__">その他(自由入力)</option>
+        </select>
+      </label>
+      <label id="channel-other-label" hidden>
+        配信元(自由入力)
+        <input type="text" id="channel-other-input" maxlength="50" placeholder="例: ラジオ番組名など" />
+      </label>
+      <label>
+        動画タイトル・回など
+        <input
+          type="text"
+          name="videoTitle"
+          id="video-title-input"
+          maxlength="100"
+          required
+          placeholder="例: ピザラジ #45"
+        />
+      </label>
+      <label>
+        YouTube動画URL(タイムスタンプ付き推奨)
+        <input
+          type="text"
+          name="youtubeUrl"
+          id="youtube-url-input"
+          required
+          placeholder="例: https://youtu.be/xxxxxxxxxxx?t=123"
+        />
+      </label>
+      <label>
+        紹介コメント
+        <textarea
+          name="comment"
+          id="comment-input"
+          rows="3"
+          maxlength="300"
+          required
+          placeholder="どんな名場面か、自由に書いてください"
+        ></textarea>
+      </label>
+      <label>
+        お名前(ニックネーム可)
+        <input type="text" name="author" id="author-input" maxlength="50" required placeholder="例: 014ファン" />
+      </label>
+      <!-- ハニーポット: ボット対策 -->
+      <label class="honeypot" aria-hidden="true">
+        Webサイト
+        <input type="text" name="website" id="website-input" tabindex="-1" autocomplete="off" />
+      </label>
+      <button type="submit" id="submit-button">投稿する</button>
+      <p class="form-message" id="form-message" role="status"></p>
+    </form>
+  </section>
+
+  <section class="post-list">
+    <h2>投稿一覧</h2>
+    <p class="loading-message" id="loading-message">読み込み中...</p>
+    <ul id="post-list"></ul>
+  </section>
+</Layout>
+
+<script>
+  import { supabase } from "../lib/supabase";
+
+  type Moment = {
+    id: string;
+    channel: string;
+    video_title: string;
+    video_id: string;
+    start_seconds: number;
+    source_url: string;
+    comment: string;
+    author: string;
+    likes: number;
+    created_at: string;
+  };
+
+  const channelSelect = document.getElementById("channel-select") as HTMLSelectElement;
+  const channelOtherLabel = document.getElementById("channel-other-label") as HTMLLabelElement;
+  const channelOtherInput = document.getElementById("channel-other-input") as HTMLInputElement;
+  const form = document.getElementById("moment-form") as HTMLFormElement;
+  const videoTitleInput = document.getElementById("video-title-input") as HTMLInputElement;
+  const youtubeUrlInput = document.getElementById("youtube-url-input") as HTMLInputElement;
+  const commentInput = document.getElementById("comment-input") as HTMLTextAreaElement;
+  const authorInput = document.getElementById("author-input") as HTMLInputElement;
+  const websiteInput = document.getElementById("website-input") as HTMLInputElement;
+  const submitButton = document.getElementById("submit-button") as HTMLButtonElement;
+  const formMessage = document.getElementById("form-message") as HTMLParagraphElement;
+  const postList = document.getElementById("post-list") as HTMLUListElement;
+  const loadingMessage = document.getElementById("loading-message") as HTMLParagraphElement;
+
+  channelSelect.addEventListener("change", () => {
+    channelOtherLabel.hidden = channelSelect.value !== "__other__";
+  });
+
+  // "https://youtu.be/xxxxxxxxxxx?t=123" 等のYouTube URLから動画IDと開始秒数を取り出す。
+  // 対応できない形式(YouTube以外のURL等)はnullを返す。
+  function parseYouTubeUrl(raw: string): { videoId: string; start: number } | null {
+    let url: URL;
+    try {
+      url = new URL(raw.trim());
+    } catch {
+      return null;
+    }
+
+    let videoId = "";
+    if (url.hostname === "youtu.be") {
+      videoId = url.pathname.slice(1);
+    } else if (url.hostname.endsWith("youtube.com")) {
+      if (url.pathname === "/watch") {
+        videoId = url.searchParams.get("v") ?? "";
+      } else if (
+        url.pathname.startsWith("/live/") ||
+        url.pathname.startsWith("/shorts/") ||
+        url.pathname.startsWith("/embed/")
+      ) {
+        videoId = url.pathname.split("/")[2] ?? "";
+      }
+    } else {
+      return null;
+    }
+
+    if (!/^[\w-]{11}$/.test(videoId)) return null;
+
+    const tParam = url.searchParams.get("t") ?? url.searchParams.get("start") ?? "0";
+    const start = parseTimeParam(tParam);
+    return { videoId, start };
+  }
+
+  function parseTimeParam(t: string): number {
+    if (/^\d+$/.test(t)) return parseInt(t, 10);
+    const match = t.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/);
+    if (!match) return 0;
+    const h = parseInt(match[1] ?? "0", 10);
+    const m = parseInt(match[2] ?? "0", 10);
+    const s = parseInt(match[3] ?? "0", 10);
+    return h * 3600 + m * 60 + s;
+  }
+
+  function renderMoment(moment: Moment) {
+    const li = document.createElement("li");
+    li.className = "moment-card";
+
+    const videoWrap = document.createElement("div");
+    videoWrap.className = "moment-video";
+    const playButton = document.createElement("button");
+    playButton.className = "moment-play";
+    playButton.type = "button";
+    playButton.setAttribute("aria-label", "動画を再生");
+    playButton.innerHTML = `
+      <img src="https://img.youtube.com/vi/${moment.video_id}/hqdefault.jpg" alt="" loading="lazy" />
+      <span class="play-icon" aria-hidden="true">▶</span>
+    `;
+    playButton.addEventListener("click", () => {
+      videoWrap.innerHTML = `
+        <iframe
+          src="https://www.youtube.com/embed/${moment.video_id}?start=${moment.start_seconds}&autoplay=1"
+          title="${moment.video_title.replace(/"/g, "&quot;")}"
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      `;
+    });
+    videoWrap.appendChild(playButton);
+    li.appendChild(videoWrap);
+
+    const body = document.createElement("div");
+    body.className = "moment-body";
+    body.innerHTML = `
+      <p class="moment-channel"></p>
+      <p class="moment-title"></p>
+      <p class="moment-comment"></p>
+      <p class="moment-author"></p>
+      <div class="moment-actions">
+        <button class="like-button" type="button">👍 <span class="like-count">${moment.likes}</span></button>
+        <a class="moment-link" target="_blank" rel="noopener noreferrer">YouTubeで見る →</a>
+      </div>
+    `;
+    (body.querySelector(".moment-channel") as HTMLElement).textContent = moment.channel;
+    (body.querySelector(".moment-title") as HTMLElement).textContent = moment.video_title;
+    (body.querySelector(".moment-comment") as HTMLElement).textContent = moment.comment;
+    (body.querySelector(".moment-author") as HTMLElement).textContent = moment.author;
+    (body.querySelector(".moment-link") as HTMLAnchorElement).href = moment.source_url;
+
+    // いいねはもう一度押すと取り消せるトグル式(推し曲コーナーと同じ方式)。
+    const likedKey = `funsite-liked-moment-${moment.id}`;
+    const likeButton = body.querySelector(".like-button") as HTMLButtonElement;
+    if (localStorage.getItem(likedKey)) {
+      likeButton.classList.add("liked");
+    }
+    likeButton.addEventListener("click", async () => {
+      likeButton.disabled = true;
+      const countEl = likeButton.querySelector(".like-count") as HTMLElement;
+      const isLiked = Boolean(localStorage.getItem(likedKey));
+      const rpcName = isLiked ? "decrement_moment_likes" : "increment_moment_likes";
+      const { error } = await supabase.rpc(rpcName, { moment_id: moment.id });
+      likeButton.disabled = false;
+      if (error) {
+        alert("処理に失敗しました。時間をおいて再度お試しください。");
+        return;
+      }
+      if (isLiked) {
+        localStorage.removeItem(likedKey);
+        likeButton.classList.remove("liked");
+        countEl.textContent = String(Math.max(Number(countEl.textContent) - 1, 0));
+      } else {
+        localStorage.setItem(likedKey, "1");
+        likeButton.classList.add("liked");
+        countEl.textContent = String(Number(countEl.textContent) + 1);
+      }
+    });
+
+    li.appendChild(body);
+    return li;
+  }
+
+  async function loadMoments() {
+    loadingMessage.style.display = "";
+    const { data, error } = await supabase
+      .from("moments")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    loadingMessage.style.display = "none";
+
+    if (error) {
+      loadingMessage.textContent = "投稿の読み込みに失敗しました。時間をおいて再度お試しください。";
+      loadingMessage.style.display = "";
+      return;
+    }
+
+    postList.innerHTML = "";
+    if (!data || data.length === 0) {
+      const empty = document.createElement("li");
+      empty.className = "loading-message empty-message";
+      empty.textContent = "まだ投稿がありません。最初の名場面を投稿してみませんか?";
+      postList.appendChild(empty);
+      return;
+    }
+    for (const moment of data as Moment[]) {
+      postList.appendChild(renderMoment(moment));
+    }
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (websiteInput.value.trim() !== "") {
+      return;
+    }
+
+    const channel =
+      channelSelect.value === "__other__" ? channelOtherInput.value.trim() : channelSelect.value;
+    const videoTitle = videoTitleInput.value.trim();
+    const comment = commentInput.value.trim();
+    const author = authorInput.value.trim();
+    const parsed = parseYouTubeUrl(youtubeUrlInput.value);
+
+    if (!channel) {
+      formMessage.textContent = "配信元を入力してください。";
+      return;
+    }
+    if (!videoTitle || !comment || !author) {
+      formMessage.textContent = "動画タイトル・コメント・お名前をすべて入力してください。";
+      return;
+    }
+    if (!parsed) {
+      formMessage.textContent = "YouTubeの動画URLを正しく入力してください。";
+      return;
+    }
+
+    submitButton.disabled = true;
+    formMessage.textContent = "";
+
+    const { error } = await supabase.from("moments").insert({
+      channel,
+      video_title: videoTitle,
+      video_id: parsed.videoId,
+      start_seconds: parsed.start,
+      source_url: youtubeUrlInput.value.trim(),
+      comment,
+      author,
+    });
+
+    submitButton.disabled = false;
+
+    if (error) {
+      formMessage.textContent = "投稿に失敗しました。時間をおいて再度お試しください。";
+      return;
+    }
+
+    form.reset();
+    channelOtherLabel.hidden = true;
+    formMessage.textContent = "投稿しました。ありがとうございます!";
+    await loadMoments();
+  });
+
+  loadMoments();
+</script>
+
+<style is:global>
+  /* is:global: 投稿一覧をブラウザ側JSで動的生成しているため、
+     Astroのスコープ付きCSSでは動的要素に適用されない(data-astro-cid-*が付与されないため)。 */
+  .note {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  h2 {
+    font-size: 1.1rem;
+    margin: 2rem 0 1rem;
+  }
+
+  .post-form {
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    background: var(--color-surface);
+  }
+
+  .post-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .post-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  .post-form input,
+  .post-form select,
+  .post-form textarea {
+    font-family: inherit;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    resize: vertical;
+  }
+
+  .honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .post-form button[type="submit"] {
+    align-self: flex-start;
+    padding: 0.6rem 1.5rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: var(--color-surface);
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .post-form button[type="submit"]:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .form-message {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-accent);
+  }
+
+  .loading-message {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .post-list ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  #post-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .moment-card {
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--color-surface);
+  }
+
+  .moment-video {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+  }
+
+  .moment-video iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .moment-play {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+
+  .moment-play img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .moment-play .play-icon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .moment-play:hover .play-icon {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .moment-body {
+    padding: 1rem;
+  }
+
+  .moment-channel {
+    display: inline-block;
+    margin: 0 0 0.4rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    background: #f4e8de;
+    color: #a3663f;
+    font-size: 0.7rem;
+  }
+
+  .moment-title {
+    margin: 0 0 0.4rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  .moment-comment {
+    margin: 0 0 0.75rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    font-size: 0.9rem;
+  }
+
+  .moment-author {
+    margin: 0 0 0.75rem;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .moment-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .moment-link {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+
+  .moment-link:hover {
+    color: var(--color-accent);
+  }
+
+  .like-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .like-button:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .like-button.liked {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-surface);
+  }
+
+  .like-button:disabled {
+    opacity: 0.7;
+  }
+</style>

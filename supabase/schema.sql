@@ -124,3 +124,58 @@ from public.ranking_votes
 group by question_id, track_slug;
 
 grant select on public.ranking_results to anon;
+
+-- =========================================
+-- オーイシ名場面投稿
+-- =========================================
+-- video_id/start_seconds は投稿されたYouTube URLをブラウザ側で解析した結果を保存する
+-- (表示時に毎回URLを再パースしなくて済むようにするため)。source_url は元のURLをそのまま保持し、
+-- 「YouTubeで見る」リンクに使う。
+create table if not exists public.moments (
+  id uuid primary key default gen_random_uuid(),
+  channel text not null check (char_length(channel) between 1 and 50),
+  video_title text not null check (char_length(video_title) between 1 and 100),
+  video_id text not null check (char_length(video_id) = 11),
+  start_seconds integer not null default 0 check (start_seconds >= 0),
+  source_url text not null check (char_length(source_url) <= 300),
+  comment text not null check (char_length(comment) between 1 and 300),
+  author text not null check (char_length(author) between 1 and 50),
+  likes integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table public.moments enable row level security;
+
+create policy "moments_select_all"
+  on public.moments for select
+  to anon
+  using (true);
+
+create policy "moments_insert_public"
+  on public.moments for insert
+  to anon
+  with check (true);
+
+grant select, insert on public.moments to anon;
+
+create or replace function public.increment_moment_likes(moment_id uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.moments set likes = likes + 1 where id = moment_id;
+$$;
+
+grant execute on function public.increment_moment_likes(uuid) to anon;
+
+create or replace function public.decrement_moment_likes(moment_id uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.moments set likes = greatest(likes - 1, 0) where id = moment_id;
+$$;
+
+grant execute on function public.decrement_moment_likes(uuid) to anon;
