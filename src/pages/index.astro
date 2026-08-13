@@ -219,10 +219,11 @@ const formatEventDate = (date: string) => {
       </div>
     </div>
     <ul class="content-grid">
-      {mainContents.map((item) => (
+      {mainContents.map((item, index) => (
         <li>
           <a href={item.href}>
-            <h3>{item.label}<span aria-hidden="true">→</span></h3>
+            <span class="content-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+            <h3>{item.label}<span class="content-arrow" aria-hidden="true">→</span></h3>
             <p>{item.desc}</p>
             {item.note && <p class="content-note">{item.note}</p>}
           </a>
@@ -772,15 +773,31 @@ const formatEventDate = (date: string) => {
   }
 
   .content-grid a {
+    position: relative;
     display: block;
     height: 100%;
-    padding: 1.5rem;
+    padding: 1.75rem 1.5rem 1.5rem;
     border: 1px solid var(--color-border);
-    border-radius: 8px;
-    background: var(--color-surface);
+    border-radius: 14px;
+    background:
+      linear-gradient(90deg, #b88b68, #dac3ab) top / 100% 3px no-repeat,
+      var(--color-surface);
     text-decoration: none;
     color: var(--color-text);
-    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    overflow: hidden;
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .content-grid a::after {
+    content: "";
+    position: absolute;
+    right: -2.5rem;
+    bottom: -3rem;
+    width: 7rem;
+    height: 7rem;
+    border-radius: 50%;
+    background: rgb(184 139 104 / 7%);
+    pointer-events: none;
   }
 
   .content-grid a:hover {
@@ -789,11 +806,40 @@ const formatEventDate = (date: string) => {
     box-shadow: 0 10px 24px rgb(74 55 39 / 8%);
   }
 
+  .content-index {
+    display: block;
+    margin-bottom: 0.7rem;
+    color: #a77b5c;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+  }
+
   .content-grid h3 {
     display: flex;
     justify-content: space-between;
     gap: 1rem;
     margin: 0 0 0.5rem;
+  }
+
+  .content-arrow {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 1.8rem;
+    height: 1.8rem;
+    border: 1px solid #ddc9b8;
+    border-radius: 50%;
+    color: #956d50;
+    font-size: 0.95rem;
+    line-height: 1;
+    transition: transform 180ms ease, color 180ms ease, background 180ms ease;
+  }
+
+  .content-grid a:hover .content-arrow {
+    transform: translateX(3px);
+    color: #fff;
+    background: #a77b5c;
   }
 
   .content-grid p {
