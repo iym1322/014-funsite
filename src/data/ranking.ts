@@ -35,31 +35,16 @@ export const rankingQuestions: RankingQuestion[] = [
   {
     id: "coolest",
     question: "一番かっこいい曲は？",
-    choices: [
-      { trackSlug: "uni-verse-first-take" },
-      { trackSlug: "gambling-hall" },
-      { trackSlug: "koi-wa-explosion" },
-      { trackSlug: "aoi-housougeki" },
-    ],
+    choices: "all-singles",
   },
   {
     id: "memorable",
     question: "一番思い出に残った曲は？",
-    choices: [
-      { trackSlug: "kimi-janakya-dame-mitai" },
-      { trackSlug: "otomodachi-film" },
-      { trackSlug: "sea-of-wonderland" },
-      { trackSlug: "no-7" },
-    ],
+    choices: "all-singles",
   },
   {
     id: "karaoke",
     question: "カラオケで歌うなら？",
-    choices: [
-      { trackSlug: "kagome-kagome" },
-      { trackSlug: "ningen" },
-      { trackSlug: "otomodachi-film" },
-      { trackSlug: "kimi-janakya-dame-mitai" },
-    ],
+    choices: "all-singles",
   },
 ];
