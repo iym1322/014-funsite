@@ -269,14 +269,33 @@ const MAX_TRACKS = 20;
     const li = document.createElement("li");
     li.className = "post-card";
 
-    const header = document.createElement("div");
-    header.innerHTML = `
-      <h3 class="post-title"></h3>
-      <p class="post-concept"></p>
+    const summary = document.createElement("button");
+    summary.type = "button";
+    summary.className = "post-summary";
+    summary.setAttribute("aria-expanded", "false");
+    summary.innerHTML = `
+      <span class="post-summary-text">
+        <span class="post-title"></span>
+        <span class="post-concept"></span>
+      </span>
+      <span class="post-summary-meta">
+        <span class="post-summary-likes">👍 ${post.likes}</span>
+        <span class="post-toggle-icon" aria-hidden="true">▼</span>
+      </span>
     `;
-    (header.querySelector(".post-title") as HTMLElement).textContent = post.title;
-    (header.querySelector(".post-concept") as HTMLElement).textContent = post.concept;
-    li.appendChild(header);
+    (summary.querySelector(".post-title") as HTMLElement).textContent = post.title;
+    (summary.querySelector(".post-concept") as HTMLElement).textContent = post.concept;
+    li.appendChild(summary);
+
+    const details = document.createElement("div");
+    details.className = "post-details";
+    details.hidden = true;
+
+    summary.addEventListener("click", () => {
+      const expanded = summary.getAttribute("aria-expanded") === "true";
+      summary.setAttribute("aria-expanded", String(!expanded));
+      details.hidden = expanded;
+    });
 
     const ol = document.createElement("ol");
     ol.className = "post-tracklist";
@@ -290,7 +309,7 @@ const MAX_TRACKS = 20;
       if (track) trackLi.appendChild(linkRow(track));
       ol.appendChild(trackLi);
     }
-    li.appendChild(ol);
+    details.appendChild(ol);
 
     const footer = document.createElement("div");
     footer.className = "post-footer";
@@ -302,6 +321,7 @@ const MAX_TRACKS = 20;
 
     const likedKey = `funsite-liked-setlist-${post.id}`;
     const likeButton = footer.querySelector(".like-button") as HTMLButtonElement;
+    const summaryLikes = summary.querySelector(".post-summary-likes") as HTMLElement;
     if (localStorage.getItem(likedKey)) {
       likeButton.classList.add("liked");
     }
@@ -325,8 +345,10 @@ const MAX_TRACKS = 20;
         likeButton.classList.add("liked");
         countEl.textContent = String(Number(countEl.textContent) + 1);
       }
+      summaryLikes.textContent = `👍 ${countEl.textContent}`;
     });
-    li.appendChild(footer);
+    details.appendChild(footer);
+    li.appendChild(details);
 
     return li;
   }
@@ -614,25 +636,77 @@ const MAX_TRACKS = 20;
   .post-card {
     border: 1px solid var(--color-border);
     border-radius: 8px;
-    padding: 1.25rem;
     background: var(--color-surface);
+    overflow: hidden;
+  }
+
+  .post-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    padding: 1rem 1.25rem;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .post-summary:hover {
+    background: var(--color-bg);
+  }
+
+  .post-summary-text {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
   }
 
   .post-title {
-    margin: 0 0 0.4rem;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text);
   }
 
   .post-concept {
-    margin: 0 0 1rem;
-    line-height: 1.7;
-    white-space: pre-wrap;
     color: var(--color-text-muted);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .post-summary-meta {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+  }
+
+  .post-toggle-icon {
+    display: inline-block;
+    transition: transform 200ms ease;
+  }
+
+  .post-summary[aria-expanded="true"] .post-toggle-icon {
+    transform: rotate(180deg);
+  }
+
+  .post-details {
+    padding: 0 1.25rem 1.25rem;
+    border-top: 1px solid var(--color-border);
   }
 
   .post-tracklist {
-    margin: 0 0 1rem;
+    margin: 1rem 0;
     padding-left: 1.4rem;
     display: flex;
     flex-direction: column;
