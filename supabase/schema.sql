@@ -179,3 +179,59 @@ as $$
 $$;
 
 grant execute on function public.decrement_moment_likes(uuid) to anon;
+
+-- =========================================
+-- あなたのセットリスト投稿
+-- =========================================
+-- track_slugs は discography.ts の該当曲slugを並び順どおりに並べたJSON配列
+-- (例: ["kimi-janakya-dame-mitai", "uni-verse", ...])。曲同士の関係は
+-- 別テーブルに切り出さず、1カラムのJSON配列で持つ(セットリスト単位でしか
+-- 参照しないため、これで十分シンプルに扱える)。
+create table if not exists public.setlists (
+  id uuid primary key default gen_random_uuid(),
+  title text not null check (char_length(title) between 1 and 100),
+  concept text not null check (char_length(concept) between 1 and 500),
+  track_slugs jsonb not null check (
+    jsonb_typeof(track_slugs) = 'array'
+    and jsonb_array_length(track_slugs) between 3 and 20
+  ),
+  author text not null check (char_length(author) between 1 and 50),
+  likes integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table public.setlists enable row level security;
+
+create policy "setlists_select_all"
+  on public.setlists for select
+  to anon
+  using (true);
+
+create policy "setlists_insert_public"
+  on public.setlists for insert
+  to anon
+  with check (true);
+
+grant select, insert on public.setlists to anon;
+
+create or replace function public.increment_setlist_likes(setlist_id uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.setlists set likes = likes + 1 where id = setlist_id;
+$$;
+
+grant execute on function public.increment_setlist_likes(uuid) to anon;
+
+create or replace function public.decrement_setlist_likes(setlist_id uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.setlists set likes = greatest(likes - 1, 0) where id = setlist_id;
+$$;
+
+grant execute on function public.decrement_setlist_likes(uuid) to anon;
