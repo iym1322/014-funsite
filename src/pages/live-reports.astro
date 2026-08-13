@@ -3,6 +3,7 @@
 // Supabase(live_reportsテーブル)に接続し、実際に投稿・閲覧ができる。
 // 投稿は承認なしの即時公開(CONTENTS_PLAN.md 5章の方針)。
 import Layout from "../layouts/Layout.astro";
+import ScrollToFormButton from "../components/ScrollToFormButton.astro";
 import { schedule } from "../data/schedule";
 
 const scheduleOptions = schedule
@@ -17,6 +18,12 @@ const scheduleOptions = schedule
     投稿は承認なしですぐに公開されるため、セトリの丸写しや誹謗中傷など不適切な内容は
     お控えください(発見次第、運営が削除します)。
   </p>
+
+  <section class="post-list">
+    <h2>レポート一覧</h2>
+    <p class="loading-message" id="loading-message">読み込み中...</p>
+    <ul id="post-list"></ul>
+  </section>
 
   <section class="post-form">
     <h2>レポートを投稿する</h2>
@@ -56,11 +63,7 @@ const scheduleOptions = schedule
     </form>
   </section>
 
-  <section class="post-list">
-    <h2>レポート一覧</h2>
-    <p class="loading-message" id="loading-message">読み込み中...</p>
-    <ul id="post-list"></ul>
-  </section>
+  <ScrollToFormButton label="レポートを投稿する" />
 </Layout>
 
 <script>

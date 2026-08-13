@@ -1,0 +1,52 @@
+---
+// 投稿一覧を上・投稿フォームを下に配置したページ用の「投稿する」ジャンプボタン。
+// クリックすると、そのページの .post-form セクションまで滑らかにスクロールする。
+interface Props {
+  label?: string;
+}
+const { label = "投稿する" } = Astro.props;
+---
+
+<button type="button" class="scroll-to-form-button">
+  {label} ↓
+</button>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>(".scroll-to-form-button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelector(".post-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+</script>
+
+<style>
+  .scroll-to-form-button {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 50;
+    padding: 0.7rem 1.2rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: var(--color-surface);
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(74, 55, 39, 0.25);
+  }
+
+  .scroll-to-form-button:hover {
+    filter: brightness(1.05);
+  }
+
+  @media (max-width: 640px) {
+    .scroll-to-form-button {
+      right: 1rem;
+      bottom: 1rem;
+      padding: 0.6rem 1rem;
+      font-size: 0.8rem;
+    }
+  }
+</style>

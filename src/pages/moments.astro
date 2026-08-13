@@ -5,6 +5,7 @@
 // 公式チャンネル・弾き語りラボ・ピザラジ・でしょでしょ等のYouTube動画の「名場面」を
 // タイムスタンプ付きURLで紹介してもらい、クリックで再生できる埋め込みプレイヤーを表示する。
 import Layout from "../layouts/Layout.astro";
+import ScrollToFormButton from "../components/ScrollToFormButton.astro";
 
 const channelOptions = ["公式チャンネル", "弾き語りラボ", "ピザラジ", "でしょでしょ(でしょラジ)"];
 ---
@@ -18,6 +19,12 @@ const channelOptions = ["公式チャンネル", "弾き語りラボ", "ピザ�
     投稿は承認なしですぐに公開されるため、誹謗中傷など不適切な内容はお控えください
     (発見次第、運営が削除します)。
   </p>
+
+  <section class="post-list">
+    <h2>投稿一覧</h2>
+    <p class="loading-message" id="loading-message">読み込み中...</p>
+    <ul id="post-list"></ul>
+  </section>
 
   <section class="post-form">
     <h2>名場面を投稿する</h2>
@@ -79,11 +86,7 @@ const channelOptions = ["公式チャンネル", "弾き語りラボ", "ピザ�
     </form>
   </section>
 
-  <section class="post-list">
-    <h2>投稿一覧</h2>
-    <p class="loading-message" id="loading-message">読み込み中...</p>
-    <ul id="post-list"></ul>
-  </section>
+  <ScrollToFormButton label="名場面を投稿する" />
 </Layout>
 
 <script>

@@ -5,6 +5,7 @@
 // 曲リストと画像は discography.ts(ビルド時に確定するデータ)から、
 // 投稿内容だけはブラウザ側でSupabaseから取得する(即時反映のため)。
 import Layout from "../layouts/Layout.astro";
+import ScrollToFormButton from "../components/ScrollToFormButton.astro";
 import { tracks } from "../data/discography";
 
 // 推し曲の投稿対象はシングル曲のみ(アルバム・映像・提供曲は対象外)。
@@ -21,6 +22,12 @@ const trackOptions = tracks
     投稿は承認なしですぐに公開されるため、歌詞の転載や誹謗中傷など不適切な内容は
     お控えください(発見次第、運営が削除します)。
   </p>
+
+  <section class="post-list">
+    <h2>投稿一覧</h2>
+    <p class="loading-message" id="loading-message">読み込み中...</p>
+    <ul id="post-list"></ul>
+  </section>
 
   <section class="post-form">
     <h2>推し曲を投稿する</h2>
@@ -57,11 +64,7 @@ const trackOptions = tracks
     </form>
   </section>
 
-  <section class="post-list">
-    <h2>投稿一覧</h2>
-    <p class="loading-message" id="loading-message">読み込み中...</p>
-    <ul id="post-list"></ul>
-  </section>
+  <ScrollToFormButton label="推し曲を投稿する" />
 
   <script type="application/json" id="track-options-data" set:html={JSON.stringify(trackOptions)} />
 </Layout>
