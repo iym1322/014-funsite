@@ -2,12 +2,12 @@
 import Layout from "../layouts/Layout.astro";
 import { schedule, type ScheduleEvent } from "../data/schedule";
 
-const year = 2026;
+const years = [2025, 2026, 2027];
 const months = Array.from({ length: 12 }, (_, index) => index + 1);
 const weekdayLabels = ["日", "月", "火", "水", "木", "金", "土"];
 const typeLabels = { release: "リリース", live: "ライブ", event: "イベント" };
 
-function calendarCells(month: number) {
+function calendarCells(year: number, month: number) {
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
   const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
   const cells: (number | null)[] = Array(firstWeekday).fill(null);
@@ -16,7 +16,7 @@ function calendarCells(month: number) {
   return cells;
 }
 
-function eventsOnDay(month: number, day: number) {
+function eventsOnDay(year: number, month: number, day: number) {
   const date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   return schedule.filter((event) => event.date === date);
 }
@@ -58,18 +58,22 @@ function icsDataUrl(event: ScheduleEvent) {
 
 <Layout title="カレンダー | 014 BASE">
   <header class="calendar-intro">
-    <p class="eyebrow">SCHEDULE 2026</p>
+    <p class="eyebrow">SCHEDULE 2025–2027</p>
     <h1>カレンダー</h1>
-    <p>2026年の主要リリース、ライブ、イベントを月ごとに確認できます。</p>
+    <p>2025年から2027年までの主要リリース、ライブ、イベントを月ごとに確認できます。</p>
     <p class="note">公開情報をもとに掲載しています。変更・追加の可能性があるため、参加前に必ず公式情報をご確認ください。</p>
   </header>
+
+  <nav class="year-nav" aria-label="年を選択">
+    {years.map((year) => <button type="button" data-year-button={year}>{year}年</button>)}
+  </nav>
 
   <nav class="month-nav" aria-label="月を選択">
     {months.map((month) => <button type="button" data-month-button={month}>{month}月</button>)}
   </nav>
 
-  {months.map((month) => (
-    <section class="month-panel" data-month-panel={month} hidden>
+  {years.flatMap((year) => months.map((month) => (
+    <section class="month-panel" data-year-panel={year} data-month-panel={month} hidden>
       <div class="month-heading">
         <button class="month-arrow" type="button" data-month-move="-1" disabled={month === 1} aria-label="前の月">←</button>
         <h2>{year}年{month}月</h2>
@@ -78,12 +82,12 @@ function icsDataUrl(event: ScheduleEvent) {
 
       <div class="calendar" role="grid" aria-label={`${year}年${month}月`}>
         {weekdayLabels.map((weekday) => <div class="weekday" role="columnheader">{weekday}</div>)}
-        {calendarCells(month).map((day) => (
-          <div class:list={["cell", { empty: day === null, "has-events": day !== null && eventsOnDay(month, day).length > 0 }]} role="gridcell">
+        {calendarCells(year, month).map((day) => (
+          <div class:list={["cell", { empty: day === null, "has-events": day !== null && eventsOnDay(year, month, day).length > 0 }]} role="gridcell">
             {day !== null && <>
               <span class="day-number">{day}</span>
               <ul class="day-events">
-                {eventsOnDay(month, day).map((event) => (
+                {eventsOnDay(year, month, day).map((event) => (
                   <li class={`event-${event.type}`}>
                     <span class="event-kind">{typeLabels[event.type]}</span>
                     {event.href ? <a class="event-title" href={event.href}>{event.title}</a> : <span class="event-title">{event.title}</span>}
@@ -104,7 +108,7 @@ function icsDataUrl(event: ScheduleEvent) {
       {schedule.every((event) => !event.date.startsWith(`${year}-${String(month).padStart(2, "0")}`)) &&
         <p class="empty-month">現在、掲載予定はありません。</p>}
     </section>
-  ))}
+  )))}
 
   <ul class="legend">
     {Object.entries(typeLabels).map(([key, label]) => <li><span class={`dot event-${key}`}></span>{label}</li>)}
@@ -112,32 +116,48 @@ function icsDataUrl(event: ScheduleEvent) {
 </Layout>
 
 <script>
-  const buttons = [...document.querySelectorAll<HTMLButtonElement>("[data-month-button]")];
+  const yearButtons = [...document.querySelectorAll<HTMLButtonElement>("[data-year-button]")];
+  const monthButtons = [...document.querySelectorAll<HTMLButtonElement>("[data-month-button]")];
   const panels = [...document.querySelectorAll<HTMLElement>("[data-month-panel]")];
   const currentYear = new Date().getFullYear();
-  const initialMonth = currentYear === 2026 ? new Date().getMonth() + 1 : 1;
+  let selectedYear = currentYear >= 2025 && currentYear <= 2027 ? currentYear : 2026;
+  let selectedMonth = currentYear === selectedYear ? new Date().getMonth() + 1 : 1;
 
-  function showMonth(month: number) {
+  function showDate(year: number, month: number) {
+    selectedYear = Math.min(2027, Math.max(2025, year));
     const safeMonth = Math.min(12, Math.max(1, month));
-    panels.forEach((panel) => { panel.hidden = Number(panel.dataset.monthPanel) !== safeMonth; });
-    buttons.forEach((button) => {
+    selectedMonth = safeMonth;
+    panels.forEach((panel) => {
+      panel.hidden = Number(panel.dataset.yearPanel) !== selectedYear || Number(panel.dataset.monthPanel) !== safeMonth;
+    });
+    yearButtons.forEach((button) => {
+      const active = Number(button.dataset.yearButton) === selectedYear;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-current", active ? "date" : "false");
+    });
+    monthButtons.forEach((button) => {
       const active = Number(button.dataset.monthButton) === safeMonth;
       button.classList.toggle("active", active);
       button.setAttribute("aria-current", active ? "date" : "false");
     });
-    history.replaceState(null, "", `#month-${safeMonth}`);
+    history.replaceState(null, "", `#${selectedYear}-${safeMonth}`);
   }
 
-  buttons.forEach((button) => button.addEventListener("click", () => showMonth(Number(button.dataset.monthButton))));
+  yearButtons.forEach((button) => button.addEventListener("click", () => showDate(Number(button.dataset.yearButton), selectedMonth)));
+  monthButtons.forEach((button) => button.addEventListener("click", () => showDate(selectedYear, Number(button.dataset.monthButton))));
   document.querySelectorAll<HTMLButtonElement>("[data-month-move]").forEach((button) => {
     button.addEventListener("click", () => {
       const panel = button.closest<HTMLElement>("[data-month-panel]");
-      showMonth(Number(panel?.dataset.monthPanel) + Number(button.dataset.monthMove));
+      showDate(Number(panel?.dataset.yearPanel), Number(panel?.dataset.monthPanel) + Number(button.dataset.monthMove));
     });
   });
 
-  const hashMonth = Number(location.hash.replace("#month-", ""));
-  showMonth(hashMonth >= 1 && hashMonth <= 12 ? hashMonth : initialMonth);
+  const hashMatch = location.hash.match(/^#(2025|2026|2027)-(\d{1,2})$/);
+  if (hashMatch) {
+    selectedYear = Number(hashMatch[1]);
+    selectedMonth = Number(hashMatch[2]);
+  }
+  showDate(selectedYear, selectedMonth);
 </script>
 
 <style>
@@ -145,9 +165,13 @@ function icsDataUrl(event: ScheduleEvent) {
   .calendar-intro h1 { margin: 0.15rem 0 0.7rem; }
   .eyebrow { margin: 0; color: var(--color-accent); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.15em; }
   .note { color: var(--color-text-muted); font-size: 0.88rem; }
-  .month-nav { display: flex; gap: 0.35rem; overflow-x: auto; padding: 0.25rem 0 0.75rem; scrollbar-width: thin; }
-  .month-nav button { flex: 0 0 auto; min-width: 3.5rem; border: 1px solid var(--color-border); border-radius: 999px; padding: 0.5rem 0.8rem; background: var(--color-surface); color: var(--color-text); cursor: pointer; }
-  .month-nav button.active { border-color: var(--color-accent); background: var(--color-accent); color: white; }
+  .year-nav, .month-nav { display: flex; gap: 0.35rem; overflow-x: auto; scrollbar-width: thin; }
+  .year-nav { margin-bottom: .65rem; }
+  .month-nav { padding: 0.25rem 0 0.75rem; }
+  .year-nav button, .month-nav button { flex: 0 0 auto; border: 1px solid var(--color-border); border-radius: 999px; padding: 0.5rem 0.8rem; background: var(--color-surface); color: var(--color-text); cursor: pointer; }
+  .year-nav button { min-width: 5.5rem; font-weight: 700; }
+  .month-nav button { min-width: 3.5rem; }
+  .year-nav button.active, .month-nav button.active { border-color: var(--color-accent); background: var(--color-accent); color: white; }
   .month-heading { display: grid; grid-template-columns: 2.5rem 1fr 2.5rem; align-items: center; margin: 1rem 0; }
   .month-heading h2 { margin: 0; text-align: center; }
   .month-arrow { border: 1px solid var(--color-border); border-radius: 50%; width: 2.25rem; height: 2.25rem; background: var(--color-surface); color: var(--color-text); cursor: pointer; }
