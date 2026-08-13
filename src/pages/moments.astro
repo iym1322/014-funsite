@@ -6,8 +6,12 @@
 // タイムスタンプ付きURLで紹介してもらい、クリックで再生できる埋め込みプレイヤーを表示する。
 import Layout from "../layouts/Layout.astro";
 import ScrollToFormButton from "../components/ScrollToFormButton.astro";
+import { fetchLatestVideos } from "../lib/youtube";
 
 const channelOptions = ["公式チャンネル", "弾き語りラボ", "ピザラジ", "でしょでしょ(でしょラジ)"];
+
+// ビルド時にYouTube Data API v3で取得(src/lib/youtube.ts)。取得失敗時は空配列。
+const latestVideos = await fetchLatestVideos();
 ---
 
 <Layout title="オーイシ名場面 | 014 BASE">
@@ -19,6 +23,35 @@ const channelOptions = ["公式チャンネル", "弾き語りラボ", "ピザ�
     投稿は承認なしですぐに公開されるため、誹謗中傷など不適切な内容はお控えください
     (発見次第、運営が削除します)。
   </p>
+
+  {latestVideos.length > 0 && (
+    <section class="latest-videos">
+      <h2>各配信元の最新回</h2>
+      <div class="latest-carousel">
+        {latestVideos.map((v, i) => (
+          <a
+            class={`latest-slide ${i === 0 ? "active" : ""}`}
+            href={`https://www.youtube.com/watch?v=${v.videoId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img src={v.thumbnail} alt="" loading={i === 0 ? "eager" : "lazy"} />
+            <div class="latest-slide-body">
+              <span class="latest-source">{v.source}</span>
+              <p class="latest-title">{v.title}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+      {latestVideos.length > 1 && (
+        <div class="latest-dots">
+          {latestVideos.map((_, i) => (
+            <button type="button" class={`dot ${i === 0 ? "active" : ""}`} aria-label={`${i + 1}番目を表示`}></button>
+          ))}
+        </div>
+      )}
+    </section>
+  )}
 
   <section class="post-list">
     <h2>投稿一覧</h2>
@@ -88,6 +121,28 @@ const channelOptions = ["公式チャンネル", "弾き語りラボ", "ピザ�
 
   <ScrollToFormButton label="名場面を投稿する" />
 </Layout>
+
+<script>
+  // 「各配信元の最新回」カルーセル。ビルド時に確定済みの静的な要素を
+  // 一定時間ごとに切り替えるだけなので、DOM生成は行わない(is:global不要)。
+  const slides = document.querySelectorAll<HTMLAnchorElement>(".latest-slide");
+  const dots = document.querySelectorAll<HTMLButtonElement>(".latest-dots .dot");
+  let current = 0;
+
+  function showSlide(index: number) {
+    slides.forEach((slide, i) => slide.classList.toggle("active", i === index));
+    dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
+    current = index;
+  }
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener("click", () => showSlide(i));
+  });
+
+  if (slides.length > 1) {
+    setInterval(() => showSlide((current + 1) % slides.length), 5000);
+  }
+</script>
 
 <script>
   import { supabase } from "../lib/supabase";
@@ -341,6 +396,99 @@ const channelOptions = ["公式チャンネル", "弾き語りラボ", "ピザ�
   h2 {
     font-size: 1.1rem;
     margin: 2rem 0 1rem;
+  }
+
+  .latest-videos {
+    margin-top: 1.5rem;
+  }
+
+  .latest-carousel {
+    position: relative;
+    aspect-ratio: 16 / 7;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .latest-slide {
+    position: absolute;
+    inset: 0;
+    display: block;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 500ms ease;
+    text-decoration: none;
+    color: #fff;
+  }
+
+  .latest-slide.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .latest-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .latest-slide-body {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0) 100%);
+  }
+
+  .latest-source {
+    display: inline-block;
+    margin-bottom: 0.4rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: var(--color-surface);
+    font-size: 0.7rem;
+  }
+
+  .latest-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .latest-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .latest-dots .dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: var(--color-border);
+    cursor: pointer;
+  }
+
+  .latest-dots .dot.active {
+    background: var(--color-accent);
+  }
+
+  @media (max-width: 640px) {
+    .latest-carousel {
+      aspect-ratio: 16 / 10;
+    }
   }
 
   .post-form {
