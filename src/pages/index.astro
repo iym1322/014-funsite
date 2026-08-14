@@ -134,6 +134,8 @@ const formatEventDate = (date: string) => {
     <div class="featured-carousel" id="featured-carousel">
       <p class="placeholder">読み込み中...</p>
     </div>
+    <button type="button" class="featured-arrow prev" id="featured-prev" aria-label="前の曲" hidden>‹</button>
+    <button type="button" class="featured-arrow next" id="featured-next" aria-label="次の曲" hidden>›</button>
     <div class="featured-dots" id="featured-dots" hidden></div>
   </section>
 
@@ -368,6 +370,22 @@ const formatEventDate = (date: string) => {
   }
 
   let featuredIndex = 0;
+  let featuredTimer: ReturnType<typeof setInterval> | null = null;
+
+  function restartFeaturedAutoRotate() {
+    if (featuredTimer !== null) clearInterval(featuredTimer);
+    if (featuredSongs.length > 1) {
+      featuredTimer = setInterval(
+        () => showFeaturedSlide((featuredIndex + 1) % featuredSongs.length),
+        10000
+      );
+    }
+  }
+
+  function goToFeaturedSlide(index: number) {
+    showFeaturedSlide(index);
+    restartFeaturedAutoRotate();
+  }
 
   carousel.innerHTML = "";
   featuredSongs.forEach((song, i) => carousel.appendChild(renderSlide(song, i)));
@@ -379,10 +397,22 @@ const formatEventDate = (date: string) => {
       dot.type = "button";
       dot.className = "dot" + (i === 0 ? " active" : "");
       dot.setAttribute("aria-label", `${song.group}を表示`);
-      dot.addEventListener("click", () => showFeaturedSlide(i));
+      dot.addEventListener("click", () => goToFeaturedSlide(i));
       dotsContainer.appendChild(dot);
     });
-    setInterval(() => showFeaturedSlide((featuredIndex + 1) % featuredSongs.length), 8000);
+
+    const prevButton = document.getElementById("featured-prev") as HTMLButtonElement;
+    const nextButton = document.getElementById("featured-next") as HTMLButtonElement;
+    prevButton.hidden = false;
+    nextButton.hidden = false;
+    prevButton.addEventListener("click", () => {
+      goToFeaturedSlide((featuredIndex - 1 + featuredSongs.length) % featuredSongs.length);
+    });
+    nextButton.addEventListener("click", () => {
+      goToFeaturedSlide((featuredIndex + 1) % featuredSongs.length);
+    });
+
+    restartFeaturedAutoRotate();
   }
 </script>
 
@@ -584,12 +614,43 @@ const formatEventDate = (date: string) => {
     padding-bottom: clamp(3.25rem, 7vw, 6rem);
     opacity: 0;
     visibility: hidden;
-    transition: opacity 600ms ease;
+    transition: opacity 1000ms ease;
   }
 
   .featured-slide.active {
     opacity: 1;
     visibility: visible;
+  }
+
+  .featured-arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    transform: translateY(-50%);
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 70%);
+    color: var(--color-text);
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 160ms ease;
+  }
+
+  .featured-arrow:hover {
+    background: rgb(255 255 255 / 95%);
+    color: var(--color-accent);
+  }
+
+  .featured-arrow.prev {
+    left: clamp(0.5rem, 2vw, 1.25rem);
+  }
+
+  .featured-arrow.next {
+    right: clamp(0.5rem, 2vw, 1.25rem);
   }
 
   .featured-dots {
