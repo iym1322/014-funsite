@@ -57,18 +57,27 @@ function getUpdateLog(limit: number): UpdateLogEntry[] {
 const updateLog = getUpdateLog(6);
 
 const songs = tracks.filter((track) => track.slug && track.type === "シングル");
-const dayNumber = Math.floor(Date.now() / 86_400_000);
 
 // 今日の1曲は名義ごとに1曲ずつ選び、トップページでカルーセル表示する。
-// 選出自体は「日付に応じて機械的に決まる」形(ビルド時点の日付が基準)。
+// 「その日の日付」はビルド時点ではなく訪問者のブラウザ側で判定したいので、
+// ここでは候補プール(名義ごとの曲一覧)だけをビルド時に用意して渡し、
+// 実際にどの曲を選ぶかはクライアント側スクリプトで計算する。
 const featuredGroups = ["Sound Schedule", "大石昌良", "オーイシマサヨシ", "OxT"] as const;
-const featuredSongs = featuredGroups
-  .map((group) => {
-    const groupSongs = songs.filter((t) => t.group === group);
-    if (groupSongs.length === 0) return null;
-    return groupSongs[dayNumber % groupSongs.length];
-  })
-  .filter((s): s is NonNullable<typeof s> => s !== null);
+const featuredPool = featuredGroups
+  .map((group) => ({
+    group,
+    songs: songs
+      .filter((t) => t.group === group)
+      .map((t) => ({
+        slug: t.slug as string,
+        title: t.title,
+        group: t.group,
+        date: t.date,
+        description: t.description ?? t.tieIn ?? null,
+        coverSrc: resolveTrackCoverSrc(t.image, t.title, getAlbumCoverImages(t)),
+      })),
+  }))
+  .filter((g) => g.songs.length > 0);
 const latestSongs = [...songs]
   .sort((a, b) => b.sortDate.localeCompare(a.sortDate))
   .slice(0, 10);
@@ -121,35 +130,14 @@ const formatEventDate = (date: string) => {
     </div>
   </section>
 
-  <section class="featured">
-    {featuredSongs.map((song, i) => (
-      <div class={`featured-slide ${i === 0 ? "active" : ""}`}>
-        <div class="hero-copy">
-          <p class="eyebrow">TODAY'S PICK・{song.group}</p>
-          <p class="hero-label">今日の1曲</p>
-          <h1>{song.title}</h1>
-          <p class="hero-meta">{song.group} ・ {song.date}</p>
-          <p class="lead">
-            {song.description ?? song.tieIn ?? "今日はこの曲から、オーイシさんの音楽をたどってみませんか。"}
-          </p>
-          <div class="hero-actions">
-            <a class="cta" href={`/works/${song.slug}`}>楽曲ページを見る</a>
-            <a class="text-link" href="/works">楽曲を探す →</a>
-          </div>
-        </div>
-        <a class="hero-cover" href={`/works/${song.slug}`} aria-label={`${song.title}の楽曲ページを見る`}>
-          <TrackCover image={song.image} fallbackImages={getAlbumCoverImages(song)} title={song.title} />
-        </a>
-      </div>
-    ))}
-    {featuredSongs.length > 1 && (
-      <div class="featured-dots">
-        {featuredSongs.map((song, i) => (
-          <button type="button" class={`dot ${i === 0 ? "active" : ""}`} aria-label={`${song.group}を表示`}></button>
-        ))}
-      </div>
-    )}
+  <section class="featured" id="featured-section">
+    <div class="featured-carousel" id="featured-carousel">
+      <p class="placeholder">読み込み中...</p>
+    </div>
+    <div class="featured-dots" id="featured-dots" hidden></div>
   </section>
+
+  <script type="application/json" id="featured-pool-data" set:html={JSON.stringify(featuredPool)} />
 
   <section class="latest-section">
     <div class="section-heading">
@@ -276,24 +264,125 @@ const formatEventDate = (date: string) => {
 </Layout>
 
 <script>
-  // 「今日の1曲」カルーセル。ビルド時に確定済みの静的な要素を
-  // 一定時間ごとに切り替えるだけなので、DOM生成は行わない。
-  const featuredSlides = document.querySelectorAll<HTMLElement>(".featured-slide");
-  const featuredDots = document.querySelectorAll<HTMLButtonElement>(".featured-dots .dot");
-  let featuredIndex = 0;
+  // 「今日の1曲」カルーセル。どの曲を選ぶかは訪問者のブラウザ側の「今日」の日付を
+  // 使って計算する(ビルド時点の日付固定だと、再デプロイしない限り切り替わらないため)。
+  type FeaturedSong = {
+    slug: string;
+    title: string;
+    group: string;
+    date: string;
+    description: string | null;
+    coverSrc: string | null;
+  };
+  type FeaturedGroupPool = { group: string; songs: FeaturedSong[] };
+
+  const featuredPool: FeaturedGroupPool[] = JSON.parse(
+    document.getElementById("featured-pool-data")!.textContent!
+  );
+  const dayNumber = Math.floor(Date.now() / 86_400_000);
+  const featuredSongs = featuredPool.map((g) => g.songs[dayNumber % g.songs.length]);
+
+  const carousel = document.getElementById("featured-carousel") as HTMLDivElement;
+  const dotsContainer = document.getElementById("featured-dots") as HTMLDivElement;
+
+  function coverEl(song: FeaturedSong): HTMLElement {
+    if (song.coverSrc) {
+      const img = document.createElement("img");
+      img.className = "cover square";
+      img.src = song.coverSrc;
+      img.alt = song.title;
+      img.loading = "lazy";
+      return img;
+    }
+    const placeholder = document.createElement("div");
+    placeholder.className = "cover placeholder square";
+    placeholder.setAttribute("aria-hidden", "true");
+    placeholder.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="1.5"/></svg>';
+    return placeholder;
+  }
+
+  function renderSlide(song: FeaturedSong, index: number): HTMLElement {
+    const slide = document.createElement("div");
+    slide.className = "featured-slide" + (index === 0 ? " active" : "");
+
+    const heroCopy = document.createElement("div");
+    heroCopy.className = "hero-copy";
+
+    const eyebrow = document.createElement("p");
+    eyebrow.className = "eyebrow";
+    eyebrow.textContent = `TODAY'S PICK・${song.group}`;
+    heroCopy.appendChild(eyebrow);
+
+    const label = document.createElement("p");
+    label.className = "hero-label";
+    label.textContent = "今日の1曲";
+    heroCopy.appendChild(label);
+
+    const h1 = document.createElement("h1");
+    h1.textContent = song.title;
+    heroCopy.appendChild(h1);
+
+    const meta = document.createElement("p");
+    meta.className = "hero-meta";
+    meta.textContent = `${song.group} ・ ${song.date}`;
+    heroCopy.appendChild(meta);
+
+    const lead = document.createElement("p");
+    lead.className = "lead";
+    lead.textContent = song.description ?? "今日はこの曲から、オーイシさんの音楽をたどってみませんか。";
+    heroCopy.appendChild(lead);
+
+    const actions = document.createElement("div");
+    actions.className = "hero-actions";
+    const ctaLink = document.createElement("a");
+    ctaLink.className = "cta";
+    ctaLink.href = `/works/${song.slug}`;
+    ctaLink.textContent = "楽曲ページを見る";
+    actions.appendChild(ctaLink);
+    const exploreLink = document.createElement("a");
+    exploreLink.className = "text-link";
+    exploreLink.href = "/works";
+    exploreLink.textContent = "楽曲を探す →";
+    actions.appendChild(exploreLink);
+    heroCopy.appendChild(actions);
+
+    slide.appendChild(heroCopy);
+
+    const coverLink = document.createElement("a");
+    coverLink.className = "hero-cover";
+    coverLink.href = `/works/${song.slug}`;
+    coverLink.setAttribute("aria-label", `${song.title}の楽曲ページを見る`);
+    coverLink.appendChild(coverEl(song));
+    slide.appendChild(coverLink);
+
+    return slide;
+  }
 
   function showFeaturedSlide(index: number) {
-    featuredSlides.forEach((slide, i) => slide.classList.toggle("active", i === index));
-    featuredDots.forEach((dot, i) => dot.classList.toggle("active", i === index));
+    const slides = carousel.querySelectorAll<HTMLElement>(".featured-slide");
+    const dots = dotsContainer.querySelectorAll<HTMLButtonElement>(".dot");
+    slides.forEach((slide, i) => slide.classList.toggle("active", i === index));
+    dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
     featuredIndex = index;
   }
 
-  featuredDots.forEach((dot, i) => {
-    dot.addEventListener("click", () => showFeaturedSlide(i));
-  });
+  let featuredIndex = 0;
 
-  if (featuredSlides.length > 1) {
-    setInterval(() => showFeaturedSlide((featuredIndex + 1) % featuredSlides.length), 8000);
+  carousel.innerHTML = "";
+  featuredSongs.forEach((song, i) => carousel.appendChild(renderSlide(song, i)));
+
+  if (featuredSongs.length > 1) {
+    dotsContainer.hidden = false;
+    featuredSongs.forEach((song, i) => {
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = "dot" + (i === 0 ? " active" : "");
+      dot.setAttribute("aria-label", `${song.group}を表示`);
+      dot.addEventListener("click", () => showFeaturedSlide(i));
+      dotsContainer.appendChild(dot);
+    });
+    setInterval(() => showFeaturedSlide((featuredIndex + 1) % featuredSongs.length), 8000);
   }
 </script>
 
