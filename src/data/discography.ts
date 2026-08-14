@@ -922,6 +922,7 @@ const raw: Omit<Track, "sortDate">[] = [
     title: "トライアングル",
     note: "アルバム『31マイスクリーム』収録曲。後に『大石昌良の弾き語りラボ』へ弾き語り版を収録",
     slug: "triangle-oishi",
+    image: "triangle-oishi",
     spotify: "https://open.spotify.com/track/2onOyd9YwLjApxwtjnPmZt",
     description: "大石昌良のソロ3rdアルバム『31マイスクリーム』に収録された楽曲。後に弾き語り版も発表された。",
     appleMusic: "https://music.apple.com/jp/album/31-myscream/1442911748",
