@@ -330,6 +330,8 @@ const raw: Omit<Track, "sortDate">[] = [
     note: "扇谷研人のアルバム『still on the journey』収録曲。大石昌良がボーカル参加",
     slug: "my-song-kibou-no-uta",
     description: "扇谷研人が作詞・作曲・編曲を手掛け、大石昌良をボーカルに迎えた楽曲。旧友である二人のピアノと歌声を軸に制作された。",
+    appleMusic: "https://music.apple.com/jp/song/my-song-%E5%B8%8C%E6%9C%9B%E3%81%AE%E3%81%86%E3%81%9F-feat-%E5%A4%A7%E7%9F%B3%E6%98%8C%E8%89%AF/1751428530",
+    spotify: "https://open.spotify.com/track/18XXSCk3XjbJg5z1VDImIl",
   },
   {
     group: "大石昌良",
@@ -1752,6 +1754,8 @@ const raw: Omit<Track, "sortDate">[] = [
     image: "duel-shiyouze",
     description: "TVアニメ『遊☆戯☆王ゴーラッシュ!!』第3期のオープニングテーマ。作詞・作曲・編曲をオーイシマサヨシが担当。",
     spotify: "https://open.spotify.com/intl-ja/track/1mm6I55gPefJxseHD72QQl",
+    appleMusic: "https://music.apple.com/jp/album/%E3%83%87%E3%83%A5%E3%82%A8%E3%83%AB%E3%81%97%E3%82%88%E3%81%86%E3%81%9C/1735720818?i=1735720819",
+    youtube: "https://www.youtube.com/watch?v=HZql_LbIIyU",
   },
   {
     group: "オーイシマサヨシ",
@@ -1764,6 +1768,7 @@ const raw: Omit<Track, "sortDate">[] = [
     description: "オーイシマサヨシ初のドラマ主題歌となった楽曲。TVドラマ『サバエとヤッたら終わる』のオープニングテーマとして、これまでのアニメソング路線とは異なるコミカルな歌詞世界で書き下ろされた。",
     appleMusic: "https://music.apple.com/jp/album/%E3%81%82%E3%81%A8%E3%81%AE%E7%A5%AD%E3%82%8A-single/1759267672",
     spotify: "https://open.spotify.com/intl-ja/track/1SR73VL87xCt6eUAL9SkeO",
+    youtube: "https://www.youtube.com/watch?v=1U_UbDfaV44",
   },
   {
     group: "オーイシマサヨシ",
@@ -1830,6 +1835,7 @@ const raw: Omit<Track, "sortDate">[] = [
       "劇場版『SSSS.GRIDMAN』新作にして主題歌でもある「uni-verse」を、YouTubeチャンネル「THE FIRST TAKE」でスペシャルアレンジ・一発撮りにて披露したバージョン。原曲の壮大さはそのままに、生演奏ならではの緊張感と表現力が加わっている。",
     youtube: "https://www.youtube.com/watch?v=0Pf-d4nLAoI",
     appleMusic: "https://music.apple.com/jp/album/uni-verse-from-the-first-take-single/1800632250",
+    spotify: "https://open.spotify.com/track/024i5yPfYK3WbEZS96aOfh",
   },
   {
     group: "オーイシマサヨシ",
@@ -2020,6 +2026,7 @@ const raw: Omit<Track, "sortDate">[] = [
     image: "wayawayawa",
     description: "2ndアルバム『ユニバース』に収録された楽曲。",
     appleMusic: "https://music.apple.com/jp/song/1726860480",
+    youtube: "https://www.youtube.com/watch?v=NmY92L95REs",
   },
   {
     group: "オーイシマサヨシ",
@@ -2031,6 +2038,7 @@ const raw: Omit<Track, "sortDate">[] = [
     image: "electric-parade",
     description: "2ndアルバム『ユニバース』収録曲。ミュージックビデオも制作されたポップナンバー。",
     appleMusic: "https://music.apple.com/jp/song/1726860482",
+    youtube: "https://www.youtube.com/watch?v=bX0CT5TZoMk",
   },
   {
     group: "オーイシマサヨシ",
@@ -2054,6 +2062,7 @@ const raw: Omit<Track, "sortDate">[] = [
     image: "bokura-no-hakoniwa",
     description: "2ndアルバム『ユニバース』の締めくくりを飾る楽曲。ミュージックビデオも制作されている。",
     appleMusic: "https://music.apple.com/jp/song/1726860487",
+    youtube: "https://www.youtube.com/watch?v=7SDexnGUnq8",
   },
   {
     group: "オーイシマサヨシ",
@@ -2587,7 +2596,7 @@ const raw: Omit<Track, "sortDate">[] = [
   { group: "OxT", type: "シングル", date: "2022.10.26", title: "HIGHEST", tieIn: "TVアニメ『陰の実力者になりたくて！』オープニングテーマ", slug: "highest-oxt", image: "HIGEST", description: "『陰の実力者になりたくて！』のオープニングテーマ。", spotify: "https://open.spotify.com/track/7IptC49keGgOpsfPYd9mXt" },
   { group: "OxT", type: "シングル", date: "2022.10.26", title: "Paradisus-Paradoxum (Mare Tranquillitatis)", note: "シングル『HIGHEST』カップリングのカバー曲", slug: "paradisus-paradoxum-oxt", description: "MYTH & ROIDの楽曲をOxTが再構築したカバーバージョン。", spotify: "https://open.spotify.com/track/7a7l3MP02xnvoBIVeAh9eY" },
   { group: "OxT", type: "シングル", date: "2023.10.05", title: "grayscale dominator", tieIn: "TVアニメ『陰の実力者になりたくて！ 2nd season』オープニングテーマ", note: "配信限定", slug: "grayscale-dominator", description: "『陰の実力者になりたくて！ 2nd season』のオープニングテーマ。", spotify: "https://open.spotify.com/track/56nUQjHmmAezeDH5ZYOy6v" },
-  { group: "OxT", type: "シングル", date: "2024.09.20", title: "WHEELER-DEALER", tieIn: "劇場版『オーバーロード 聖王国編』主題歌", note: "配信限定", slug: "wheeler-dealer", description: "劇場版『オーバーロード 聖王国編』のために制作された主題歌。", spotify: "https://open.spotify.com/track/5lcafMOGh7WI10FxCAgSle" },
+  { group: "OxT", type: "シングル", date: "2024.09.20", title: "WHEELER-DEALER", tieIn: "劇場版『オーバーロード 聖王国編』主題歌", note: "配信限定", slug: "wheeler-dealer", image: "wheeler-dealer", description: "劇場版『オーバーロード 聖王国編』のために制作された主題歌。", spotify: "https://open.spotify.com/track/5lcafMOGh7WI10FxCAgSle", appleMusic: "https://music.apple.com/jp/song/wheeler-dealer/1766031568" },
   { group: "OxT", type: "シングル", date: "2025.04.25", title: "GREATEST GLORIA", note: "OxT, MYTH & ROID名義の新録曲", slug: "greatest-gloria", image: "greatest-gloria", description: "『OVERLORD』10周年記念デジタルアルバムに収録されたOxTとMYTH & ROIDの共演曲。", spotify: "https://open.spotify.com/track/5OSsuGQE14yjGGHsodfNnn", appleMusic: "https://music.apple.com/jp/song/1807939159" },
   { group: "OxT", type: "シングル", date: "2025.11.04", title: "カブキモノSPIRIT", tieIn: "パチンコ『e花の慶次～黄金の一撃』挿入歌", slug: "kabukimono-spirit", image: "kabukimono-spirit", description: "『e花の慶次～黄金の一撃』のために制作されたOxTの挿入歌。", youtube: "https://youtu.be/Xuk8fx9qpPM", appleMusic: "https://music.apple.com/jp/song/1846539180", spotify: "https://open.spotify.com/track/3hZK0sPbgkXh23P7lypwTS" },
   { group: "OxT", type: "シングル", date: "2025.11.04", title: "漢の戦、風流なれ", tieIn: "パチンコ『e花の慶次～黄金の一撃』挿入歌", note: "鈴木このみ & OxT名義", slug: "otoko-no-ikusa-furyuu-nare", image: "otoko-no-ikusa-furyuu-nare", description: "鈴木このみとOxTが共演した『e花の慶次～黄金の一撃』挿入歌。", youtube: "https://youtu.be/KGViKS5Smr8", appleMusic: "https://music.apple.com/jp/song/1846539178", spotify: "https://open.spotify.com/track/3Ke7hgC9NXmgHAlRyg2xEC" },
@@ -2596,13 +2605,13 @@ const raw: Omit<Track, "sortDate">[] = [
   // --- 楽曲提供(他アーティスト) ---
   { group: "楽曲提供", type: "提供曲", date: "2015.02.25", title: "ブラッドタイプ☆ハートビート", subject: "アース・スター ドリーム", role: "作詞・作曲・編曲", tieIn: "TVアニメ「血液型くん!2」OPテーマ" },
   { group: "楽曲提供", type: "提供曲", date: "2022.07.13", title: "かかった魔法はアマノジャク", subject: "愛美", role: "作詞・作曲・編曲", note: "愛美のアルバム『AIMI SOUND』収録曲", slug: "kakatta-mahou-wa-amanojaku", image: "kakatta-mahou-wa-amanojaku", description: "愛美のアルバム『AIMI SOUND』収録曲。大石昌良が作詞・作曲・編曲を担当した。" },
-  { group: "楽曲提供", type: "提供曲", date: "2024.06.12", title: "愛 for you!", subject: "i☆Ris", role: "作曲", slug: "ai-for-you", image: "ai-for-you", description: "i☆Risのシングル「愛 for you!／希望の花を」表題曲。作詞はi☆Ris、作曲を大石昌良が担当した。" },
+  { group: "楽曲提供", type: "提供曲", date: "2024.06.12", title: "愛 for you!", subject: "i☆Ris", role: "作曲", slug: "ai-for-you", image: "ai-for-you", description: "i☆Risのシングル「愛 for you!／希望の花を」表題曲。作詞はi☆Ris、作曲を大石昌良が担当した。", spotify: "https://open.spotify.com/track/6rQyAQaTUSq3OxchmqX3id", appleMusic: "https://music.apple.com/jp/album/%E6%84%9B-for-you/1738163843?i=1738163844" },
   { group: "楽曲提供", type: "提供曲", date: "2024.01.17", title: "わやわやわー!", subject: "亜咲花", role: "作詞・作曲(編曲: 大石昌良・eba)", tieIn: "TVアニメ「道産子ギャルはなまらめんこい」EDテーマ", note: "先行配信日。CDは2024.02.07発売。同名のオーイシマサヨシ自身によるバージョンとは別(オーイシマサヨシ版はアルバム『ユニバース』収録、slug: wayawayawa)", slug: "wayawayawa-asaka", image: "wayawayawa-asaka", description: "TVアニメ『道産子ギャルはなまらめんこい』のエンディングテーマ。亜咲花が歌唱し、大石昌良が作詞・作曲を担当した。", spotify: "https://open.spotify.com/track/1Cfq2MGVnhT4ovbSRRmYab" },
   { group: "楽曲提供", type: "提供曲", date: "2023.09.24", title: "ハッピーエンドプリンセス", subject: "上坂すみれ", role: "作詞・作曲・編曲", tieIn: "TVアニメ「ティアムーン帝国物語」OPテーマ", note: "先行配信日。CDは2023.10.18発売", slug: "happy-end-princess", image: "happy-end-princess", description: "TVアニメ『ティアムーン帝国物語～断頭台から始まる、姫の転生逆転ストーリー～』のオープニングテーマ。上坂すみれへの大石昌良初提供曲として作詞・作曲・編曲を担当した。" },
   { group: "楽曲提供", type: "提供曲", date: "2021.03.26", title: "私と、わたし", subject: "上田桃夏", role: "編曲(作詞・作曲: 上田桃夏)", tieIn: "CHINTAI×歌カツ!夢応援ソング", slug: "watashi-to-watashi", image: "watashi-to-watashi", description: "「CHINTAI×歌カツ!」夢応援ソング。上田桃夏が作詞・作曲、大石昌良が編曲を担当した。" },
   { group: "楽曲提供", type: "提供曲", date: "2017.01.11", title: "モラトリアムダンスフロア", subject: "内田真礼", role: "作詞・作曲・編曲", note: "ミニアルバム『Drive-in Theater』収録曲" },
   { group: "楽曲提供", type: "提供曲", date: "2018.10.17", title: "君のヒロインでいるために", subject: "内田真礼", role: "作詞・作曲・編曲", note: "8thシングル『youthful beautiful』カップリング曲" },
-  { group: "楽曲提供", type: "提供曲", date: "2024.09.25", title: "BIG LOVE", subject: "内田真礼×内田雄馬", role: "作曲(作詞: こだまさおり、編曲: やしきん)", note: "先行配信日。CDは2024.10.30発売", slug: "big-love", image: "big-love", description: "内田真礼×内田雄馬の姉弟コラボシングル「Carnival／BIG LOVE」収録曲。姉弟のために書き下ろされた楽曲で、大石昌良が作曲を担当した。" },
+  { group: "楽曲提供", type: "提供曲", date: "2024.09.25", title: "BIG LOVE", subject: "内田真礼×内田雄馬", role: "作曲(作詞: こだまさおり、編曲: やしきん)", note: "先行配信日。CDは2024.10.30発売", slug: "big-love", image: "big-love", description: "内田真礼×内田雄馬の姉弟コラボシングル「Carnival／BIG LOVE」収録曲。姉弟のために書き下ろされた楽曲で、大石昌良が作曲を担当した。", appleMusic: "https://music.apple.com/jp/album/big-love/1768214754?i=1768214762", spotify: "https://open.spotify.com/track/0DuAzgYjhDjZXgCXKBXKef", youtube: "https://www.youtube.com/watch?v=DrqeKh1RRy4" },
   { group: "楽曲提供", type: "提供曲", date: "2019.06.26", title: "ARK", subject: "浦島坂田船", role: "作詞・作曲", note: "アルバム『＄HUFFLE』収録曲" },
   { group: "楽曲提供", type: "提供曲", date: "2021.07.07", title: "シンデレラステップ", subject: "浦島坂田船", role: "作詞・作曲", note: "アルバム『L∞VE』収録曲", slug: "cinderella-step", image: "cinderella-step", description: "浦島坂田船のアルバム『L∞VE』収録曲。大石昌良が作詞・作曲を担当した。" },
   { group: "楽曲提供", type: "提供曲", date: "2020.12.16", title: "名探偵キミに告ぐ", subject: "えなこ", role: "作詞・作曲・編曲", note: "えなこ1stミニアルバム『ドレス・レ・コード』表題曲", slug: "meitantei-kimi-ni-tsugu", image: "meitantei-kimi-ni-tsugu", description: "えなこ1stミニアルバム『ドレス・レ・コード』の表題曲。大石昌良が作詞・作曲・編曲を担当した。" },
@@ -2616,7 +2625,7 @@ const raw: Omit<Track, "sortDate">[] = [
   { group: "楽曲提供", type: "提供曲", date: "2021", title: "一期一会", subject: "koume", role: "作曲・編曲(作詞: koume)", caution: true, note: "リリース年のみ確認できており、月日は未確認", slug: "ichigo-ichie", description: "koumeの楽曲。koumeが作詞、大石昌良が作曲・編曲を担当した。" },
   { group: "楽曲提供", type: "提供曲", date: "2017.06.07", title: "フィッシュストーリー", subject: "斉藤壮馬", role: "作詞・作曲・編曲", note: "斉藤壮馬1stシングル(デビュー曲)" },
   { group: "楽曲提供", type: "提供曲", date: "2019.07.30", title: "無限のトライ", subject: "阪本奨悟", role: "編曲", tieIn: "TVアニメ「トライナイツ」OPテーマ", note: "配信開始日。CDは2019.10.09発売" },
-  { group: "楽曲提供", type: "提供曲", date: "2025.01.22", title: "守りたい、その笑顔", subject: "佐久間大介(Snow Man)", role: "作詞・作曲・編曲", slug: "mamoritai-sono-egao", image: "守りたいその笑顔", description: "佐久間大介（Snow Man）への提供曲。大石昌良が作詞・作曲を担当した。" },
+  { group: "楽曲提供", type: "提供曲", date: "2025.01.22", title: "守りたい、その笑顔", subject: "佐久間大介(Snow Man)", role: "作詞・作曲・編曲", slug: "mamoritai-sono-egao", image: "守りたいその笑顔", description: "佐久間大介（Snow Man）への提供曲。大石昌良が作詞・作曲を担当した。", appleMusic: "https://music.apple.com/jp/song/1804833319", spotify: "https://open.spotify.com/intl-ja/track/6NXGToveuRcKes2Tq6vT3j", youtube: "https://www.youtube.com/watch?v=7z6_M8QpZ4I" },
   { group: "楽曲提供", type: "提供曲", date: "2021.11.24", title: "turn on a radio", subject: "鈴村健一", role: "作曲・編曲", note: "4thアルバム『ぶらいと』収録曲(作詞: 鈴村健一)", slug: "turn-on-a-radio", description: "鈴村健一の4thアルバム『ぶらいと』収録曲。鈴村健一が作詞、大石昌良が作曲・編曲を担当した。" },
   { group: "楽曲提供", type: "提供曲", date: "2023.10.25", title: "最強の推し!", subject: "鈴木愛理", role: "作詞・作曲・編曲", tieIn: "テレビ東京ドラマNEXT「推しが上司になりまして」主題歌", slug: "saikyou-no-oshi", description: "鈴木愛理の配信シングル。自身が主演するテレビ東京ドラマNEXT『推しが上司になりまして』の主題歌として、大石昌良が作詞・作曲・編曲を担当した。" },
   { group: "楽曲提供", type: "提供曲", date: "2025.10.16", title: "一生☆キミ推し", subject: "鈴木愛理", role: "作詞・作曲・編曲", tieIn: "TVドラマ「推しが上司になりまして フルスロットル」主題歌", slug: "issho-kimi-oshi", image: "issho-kimi-oshi", description: "鈴木愛理14作目のデジタル配信シングル。自身が主演するTVドラマ『推しが上司になりまして フルスロットル』の主題歌として、大石昌良が作詞・作曲・編曲を担当した。", spotify: "https://open.spotify.com/track/6LNypU7IAWZuSKIda2hWK5" },
@@ -2643,13 +2652,13 @@ const raw: Omit<Track, "sortDate">[] = [
 
   // --- 楽曲提供(アニメ・ゲーム・舞台) ---
   { group: "楽曲提供", type: "提供曲", date: "2020.11.15", title: "サヨナラから始まる物語", subject: "IDOLY PRIDE", role: "作詞・作曲(編曲: 大石昌良・岸田勇気)", slug: "sayonara-kara-hajimaru-monogatari", description: "『IDOLY PRIDE』の新人アイドル10名が歌うイメージソング。大石昌良が作詞・作曲を担当した。" },
-  { group: "楽曲提供", type: "提供曲", date: "2024.08.12", title: "星色のカレイドスコープ", subject: "IDOLY PRIDE", role: "作曲(共作: 岸田勇気)", note: "3周年記念楽曲", slug: "hoshiiro-no-kaleidoscope", description: "『IDOLY PRIDE』3周年記念楽曲。星見プロダクションが歌唱し、大石昌良が岸田勇気との共作で作曲を担当した。" },
+  { group: "楽曲提供", type: "提供曲", date: "2024.08.12", title: "星色のカレイドスコープ", subject: "IDOLY PRIDE", role: "作曲(共作: 岸田勇気)", note: "3周年記念楽曲", slug: "hoshiiro-no-kaleidoscope", image: "hoshiiro-no-kaleidoscope", description: "『IDOLY PRIDE』3周年記念楽曲。星見プロダクションが歌唱し、大石昌良が岸田勇気との共作で作曲を担当した。", spotify: "https://open.spotify.com/intl-ja/track/2t590OG8GJcEnQg5dTFOkZ", appleMusic: "https://music.apple.com/jp/album/%E6%98%9F%E8%89%B2%E3%81%AE%E3%82%AB%E3%83%AC%E3%82%A4%E3%83%89%E3%82%B9%E3%82%B3%E3%83%BC%E3%83%97-single/1759291100", youtube: "https://www.youtube.com/watch?v=FgP0PYPxM2E" },
   { group: "楽曲提供", type: "提供曲", date: "", title: "☆(きらりん)トリルで始まっちゃう!", subject: "アニソン!プレミアム!", role: "作曲" },
   { group: "楽曲提供", type: "提供曲", date: "", title: "なんてカラフルな世界!", subject: "Animelo Summer Live 2020/2021 -COLORS-", role: "作詞・作曲・編曲", spotify: "https://open.spotify.com/track/4CVSdX1F4imXA3p9p2u0mj" },
   { group: "楽曲提供", type: "提供曲", date: "2019.05.29", title: "異世界かるてっと", subject: "アインズ・カズマ・スバル・ターニャ", role: "作詞・作曲・編曲", tieIn: "TVアニメ「異世界かるてっと」OPテーマ" },
   { group: "楽曲提供", type: "提供曲", date: "2020.02.05", title: "異世界ショータイム", subject: "アインズ・カズマ・スバル・ターニャ", role: "作詞・作曲・編曲", tieIn: "TVアニメ「異世界かるてっと2」OPテーマ", slug: "isekai-showtime", description: "TVアニメ『異世界かるてっと2』のオープニングテーマ。大石昌良が作詞・作曲・編曲を担当した。" },
   { group: "楽曲提供", type: "提供曲", date: "2025.10.14", title: "異世界こんちぇると", subject: "異世界かるてっと3", role: "作曲", tieIn: "TVアニメ「異世界かるてっと3」OPテーマ", slug: "isekai-concerto", image: "isekai-concerto", description: "TVアニメ『異世界かるてっと3』のオープニングテーマ。アインズ・カズマ・スバル・ターニャが歌唱し、大石昌良が作曲を担当した。", spotify: "https://open.spotify.com/track/24S0UdUOvWmnyrpHz7wADg", appleMusic: "https://music.apple.com/jp/album/1843003117?i=1843003244" },
-  { group: "楽曲提供", type: "提供曲", date: "2024.05.24", title: "Ready!! Steady!! Derby!!", subject: "ジャングルポケット・アグネスタキオン・マンハッタンカフェ・ダンツフレーム", role: "作詞・作曲", tieIn: "劇場版「ウマ娘 プリティーダービー 新時代の扉」主題歌", slug: "ready-steady-derby", description: "劇場版『ウマ娘 プリティーダービー 新時代の扉』の主題歌。大石昌良がウマ娘シリーズに初めて楽曲提供した作品で、作詞・作曲を担当した。" },
+  { group: "楽曲提供", type: "提供曲", date: "2024.05.24", title: "Ready!! Steady!! Derby!!", subject: "ジャングルポケット・アグネスタキオン・マンハッタンカフェ・ダンツフレーム", role: "作詞・作曲", tieIn: "劇場版「ウマ娘 プリティーダービー 新時代の扉」主題歌", slug: "ready-steady-derby", image: "ready-steady-derby", description: "劇場版『ウマ娘 プリティーダービー 新時代の扉』の主題歌。大石昌良がウマ娘シリーズに初めて楽曲提供した作品で、作詞・作曲を担当した。", spotify: "https://open.spotify.com/intl-ja/track/1QdPcAm3glkADSlljQBSUV", appleMusic: "https://music.apple.com/jp/album/ready-steady-derby/1813854824?i=1813854825" },
   { group: "楽曲提供", type: "提供曲", date: "2020.02.05", title: "Act! Addict! Actors!", subject: "A3ders!", role: "作詞・作曲・編曲", tieIn: "TVアニメ「A3!」OPテーマ", slug: "act-addict-actors", description: "TVアニメ『A3!』のオープニングテーマ。A3ders!が歌唱し、大石昌良が作詞・作曲・編曲を担当した。" },
   { group: "楽曲提供", type: "提供曲", date: "2020.10.21", title: "Circle of Seasons", subject: "A3ders!", role: "作詞・作曲・編曲", tieIn: "TVアニメ「A3!」SEASON AUTUMN&WINTER OPテーマ", slug: "circle-of-seasons", description: "TVアニメ『A3!』SEASON AUTUMN&WINTERのオープニングテーマ。大石昌良が作詞・作曲・編曲を担当した。" },
   { group: "楽曲提供", type: "提供曲", date: "2017.02.15", title: "MANKAI☆開花宣言", subject: "A3ders!", role: "作詞・作曲・編曲", tieIn: "ゲーム「A3!」主題歌" },
