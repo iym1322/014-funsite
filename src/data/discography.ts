@@ -259,6 +259,24 @@ const verifiedAppleMusicSongIds: Record<string, string> = {
   "mekakushi-oni": "912262064",
 };
 
+// Apple Music / Spotifyの公式配信画像から取得したジャケット。
+const verifiedArtworkSlugs = new Set([
+  "spice-sound-schedule", "golden-night", "hanabi-sound-schedule", "kitto-todokanai-darou",
+  "tatsumaki", "ai-no-katachi", "out-side-way", "taiyou-no-kuni", "kizudarake-no-shounen",
+  "tsuki-ga-ochiru-mae-ni", "stew-ga-nomitaku-naru-uta", "kimi-to-iu-hana", "yonaoshi-buddha",
+  "anata-wo-omou-tabi", "chotto-dake", "daigaku-monogatari", "mother-complex", "koi-kogare",
+  "ima-koko-ni-aru-mono", "hito-no-ko-futari", "moyase-bonnou", "wakeari",
+  "meeting-sound-schedule", "amai-yoru", "good-time-communication", "tasogare-starlight",
+  "kotoba-ijou-ni", "illusion", "kabu-rider", "akai-renga-no-aiaigasa", "scotland-yard",
+  "shinkirou-rhapsody", "snufkin-no-kaiten-mokuba", "sayonara-parade", "story",
+  "saredo-sora-no-aosa-wo-shiru", "umi-wo-miteita-boku-wa", "wonderland-oishi",
+  "rock-n-roll-star", "owaranai-lalalala", "tegami-uta", "sayonara-mou-ikanakucha",
+  "pierrot-oishi", "jump-oishi", "ohayou-oishi", "nemurenu-machi-no-boogieman-dance",
+  "lecture-me", "radio-fish", "mister-oishi", "soshite-sekai-wa-kimi-ni-koi-wo-suru",
+  "lets-sing-a-song", "honoka-terasu", "kiwi-batake-no-uchuusen", "setsuna-kaze",
+  "gensou-underground", "ultra-sing", "party-out",
+]);
+
 const soundSong = (
   title: string,
   date: string,
@@ -2915,6 +2933,7 @@ export const tracks: Track[] = raw.map((t) => ({
   ...(t.slug && verifiedAppleMusicSongIds[t.slug]
     ? { appleMusic: `https://music.apple.com/jp/song/${verifiedAppleMusicSongIds[t.slug]}` }
     : undefined),
+  ...(t.slug && !t.image && verifiedArtworkSlugs.has(t.slug) ? { image: t.slug } : undefined),
   sortDate: toSortDate(t.date || "0000"),
 }));
 
