@@ -57,6 +57,41 @@ const soundScheduleMvs: Record<string, string> = {
   "amai-yoru": "https://www.youtube.com/watch?v=yOSDk54mZCM",
 };
 
+// 「Hero」までのオーイシマサヨシ名義曲について、公式チャンネルで確認できた
+// YouTube動画をまとめる。Topicの自動生成音源は個別ページに埋め込まずリンクのみ表示する。
+const oishiBeforeHeroYouTube: Record<
+  string,
+  Pick<Omit<Track, "sortDate">, "youtube" | "youtubeAudioOnly" | "tieIn">
+> = {
+  "youkoso-japari-park-kariuta": { youtube: "https://www.youtube.com/watch?v=89JvGZT4MMc", youtubeAudioOnly: true },
+  "blood-type-heartbeat-kariuta": { youtube: "https://www.youtube.com/watch?v=23GZtnBIZFo", youtubeAudioOnly: true },
+  "makura-danshi-kariuta": { youtube: "https://www.youtube.com/watch?v=9GUI1_aCobI", youtubeAudioOnly: true },
+  "mankai-kaika-sengen-kariuta": { youtube: "https://www.youtube.com/watch?v=odHL1jwVhJs" },
+  "fukashin-ryouiki-destroyer-kariuta": { youtube: "https://www.youtube.com/watch?v=uKMg2YaatCg", youtubeAudioOnly: true },
+  "roman-hikou-kariuta": { youtube: "https://www.youtube.com/watch?v=06Hsg_8541s", youtubeAudioOnly: true },
+  "moratorium-dance-floor-kariuta": { youtube: "https://www.youtube.com/watch?v=jywtN91HOXQ" },
+  "ring-of-drinker-kariuta": { youtube: "https://www.youtube.com/watch?v=Xs3Q7x83_-w", youtubeAudioOnly: true },
+  "bouya-no-yume-yo-kariuta": { youtube: "https://www.youtube.com/watch?v=qDrmdfjaxlw", youtubeAudioOnly: true },
+  "hero-impossible-kariuta": { youtube: "https://www.youtube.com/watch?v=lGcJ4LcM1Co", youtubeAudioOnly: true },
+  "ultra-sing": { youtube: "https://www.youtube.com/watch?v=KavjSf8LhAI", youtubeAudioOnly: true },
+  "dragon-energy": { youtube: "https://www.youtube.com/watch?v=eG_q-BIRaSM" },
+  "numa": { youtube: "https://www.youtube.com/watch?v=nMoZ889wt8o" },
+  "fish-story-kariuta-2": { youtube: "https://www.youtube.com/watch?v=fogbPX_XFvA", youtubeAudioOnly: true },
+  "shunkashuutou-blooming-kariuta-2": { youtube: "https://www.youtube.com/watch?v=6Ir9P3e2Y9k", youtubeAudioOnly: true },
+  "gokudol-music-kariuta-2": { youtube: "https://www.youtube.com/watch?v=ZRz6wFoMQMU", youtubeAudioOnly: true },
+  "super-hero-kariuta-2": { youtube: "https://www.youtube.com/watch?v=ZgXunbRFRjk", youtubeAudioOnly: true },
+  "baby-music-rider-kariuta-2": { youtube: "https://www.youtube.com/watch?v=3mrRcDYqHQw", youtubeAudioOnly: true },
+  "wonderland-a-gogo-kariuta-2": { youtube: "https://www.youtube.com/watch?v=HlgqArvAlR4", youtubeAudioOnly: true },
+  "notteke-japari-beat-kariuta-2": { youtube: "https://www.youtube.com/watch?v=Sf1kDy-aOVQ", youtubeAudioOnly: true },
+  "singalong-shinkaron-kariuta-2": { youtube: "https://www.youtube.com/watch?v=ygxRrS7s1nM", youtubeAudioOnly: true },
+  "kimi-no-heroine-kariuta-2": { youtube: "https://www.youtube.com/watch?v=2q3YNIrFF20", youtubeAudioOnly: true },
+  "love-song-kariuta-2": { youtube: "https://www.youtube.com/watch?v=rhjGPnLpLOs", youtubeAudioOnly: true },
+  "hero": {
+    youtube: "https://www.youtube.com/watch?v=yD3peUMIlnk",
+    tieIn: "アニメ『モンスターストライク ノア 方舟の救世主』主題歌",
+  },
+};
+
 const soundSong = (
   title: string,
   date: string,
@@ -2703,7 +2738,11 @@ const raw: Omit<Track, "sortDate">[] = [
   { group: "楽曲提供", type: "提供曲", date: "2016.08.24", title: "ぼうやの夢よ", subject: "エミリア(CV:高橋李依)", role: "作曲・編曲(作詞: hotaru)", tieIn: "TVアニメ「Re:ゼロから始める異世界生活」挿入歌", spotify: "https://open.spotify.com/track/5fvfsO2LHOCxc4r8CxfYti" },
 ];
 
-export const tracks: Track[] = raw.map((t) => ({ ...t, sortDate: toSortDate(t.date || "0000") }));
+export const tracks: Track[] = raw.map((t) => ({
+  ...t,
+  ...(t.slug ? oishiBeforeHeroYouTube[t.slug] : undefined),
+  sortDate: toSortDate(t.date || "0000"),
+}));
 
 // 楽曲自身に画像がない場合に使う、収録アルバムの画像を返す。
 // 同じ楽曲を複数作品が収録している場合は、データ上で最初の画像付きアルバムを優先する。
