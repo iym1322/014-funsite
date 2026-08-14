@@ -16,12 +16,14 @@ const { track } = Astro.props;
 
 // 埋め込みは公式チャンネルの動画であることを確認済みのtrack.youtubeがある場合のみ表示する
 // (YouTubeの埋め込み機能自体が投稿者=権利者が許可した範囲の利用のため著作権上問題ない)。
+// ただしtrack.youtubeAudioOnlyがtrueの場合(MV等の映像を伴わない音源のみのリリース)は
+// 埋め込みを表示せず、各種リンクのYouTubeリンクのみ表示する。
 function getYouTubeId(url?: string): string | null {
   if (!url) return null;
   const match = url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
   return match ? match[1] : null;
 }
-const youtubeId = getYouTubeId(track.youtube);
+const youtubeId = track.youtubeAudioOnly ? null : getYouTubeId(track.youtube);
 const linkArtist = track.group === "楽曲提供" ? (track.subject ?? "大石昌良") : track.group;
 const searchQuery = encodeURIComponent(`${linkArtist} ${track.title}`);
 const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
