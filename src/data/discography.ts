@@ -2704,5 +2704,5 @@ export function getAlbumCoverImages(track: Track): string[] {
   return [album.image, album.title].filter((candidate): candidate is string => Boolean(candidate));
 }
 
-export const groups = ["Sound Schedule", "大石昌良", "オーイシマサヨシ", "OxT", "楽曲提供"] as const;
+export const groups = ["オーイシマサヨシ", "大石昌良", "OxT", "Sound Schedule", "楽曲提供"] as const;
 export const types = ["アルバム", "シングル", "映像", "提供曲"] as const;
