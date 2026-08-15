@@ -24,8 +24,8 @@ const trackOptions = tracks
   <h1>推し曲コーナー</h1>
   <p class="note">
     好きな曲の魅力を自分の言葉で紹介するコーナーです。どなたでも投稿できます。
-    投稿は承認なしですぐに公開されるため、歌詞の転載や誹謗中傷など不適切な内容は
-    お控えください(発見次第、運営が削除します)。
+    投稿は承認なしですぐに公開されるため、歌詞の全文転載や誹謗中傷など不適切な内容は
+    お控えください(一部の引用は問題ありません。発見次第、運営が削除します)。
   </p>
 
   <section class="post-list">
@@ -57,7 +57,7 @@ const trackOptions = tracks
       </label>
       <label>
         コメント
-        <textarea name="body" id="body-input" rows="3" maxlength="500" required placeholder="好きな理由を自由に書いてください(歌詞の転載はご遠慮ください)"></textarea>
+        <textarea name="body" id="body-input" rows="3" maxlength="500" required placeholder="好きな理由を自由に書いてください(歌詞の一部引用はOK、全文転載はご遠慮ください)"></textarea>
       </label>
       <!-- ハニーポット: 通常は非表示。ボットが埋めてしまう欄なので、値が入っていたら投稿を弾く -->
       <label class="honeypot" aria-hidden="true">
