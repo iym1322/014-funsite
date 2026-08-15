@@ -1,7 +1,8 @@
 ---
 // ディスコグラフィー一覧ページ(カードグリッド表示)。
 // 個別ページ(slug)を持つ曲のみを表示し、検索・絞り込み・並べ替え・ページネーション
-// (24件/ページ、Vanilla JS)に対応している。
+// (表示件数はデフォルト24件/ページ、選択式で変更可能。件数に応じてカード=画像サイズも
+// 連動して変える。Vanilla JS)に対応している。
 import Layout from "../layouts/Layout.astro";
 import TrackCover from "../components/TrackCover.astro";
 import { tracks, groups, types, getAlbumCoverImages } from "../data/discography";
@@ -41,6 +42,14 @@ const sorted = [...showcased].sort((a, b) => b.sortDate.localeCompare(a.sortDate
       <option value="date-asc">リリース日(古い順)</option>
       <option value="title-asc">曲名順</option>
       <option value="group-asc">名義順</option>
+    </select>
+
+    <select id="page-size" aria-label="1ページの表示件数">
+      <option value="12">12件/ページ(画像大)</option>
+      <option value="24" selected>24件/ページ(標準)</option>
+      <option value="48">48件/ページ(画像小)</option>
+      <option value="96">96件/ページ(画像最小)</option>
+      <option value="all">すべて表示</option>
     </select>
   </div>
 
@@ -95,9 +104,29 @@ const sorted = [...showcased].sort((a, b) => b.sortDate.localeCompare(a.sortDate
   const typeSelect = document.getElementById("filter-type") as HTMLSelectElement;
   const tieinCheckbox = document.getElementById("filter-tiein") as HTMLInputElement;
   const sortSelect = document.getElementById("sort") as HTMLSelectElement;
+  const pageSizeSelect = document.getElementById("page-size") as HTMLSelectElement;
 
-  const PAGE_SIZE = 24;
+  // 表示件数が多いほどカード(画像)を小さくして、1ページに収まる情報量を調整する。
+  const CARD_MIN_WIDTH: Record<string, string> = {
+    "12": "15rem",
+    "24": "11rem",
+    "48": "8.5rem",
+    "96": "7rem",
+    all: "6.5rem",
+  };
+
   let currentPage = 1;
+
+  function getPageSize(): number {
+    const value = pageSizeSelect.value;
+    // Infinityだと (currentPage - 1) * pageSize が 0 * Infinity = NaN になるため、
+    // 「すべて表示」は十分大きな有限値で代用する。
+    return value === "all" ? Number.MAX_SAFE_INTEGER : Number(value);
+  }
+
+  function applyCardSize() {
+    grid.style.setProperty("--card-min-width", CARD_MIN_WIDTH[pageSizeSelect.value] ?? "11rem");
+  }
 
   function applyFiltersAndSort(resetPage = true) {
     if (resetPage) currentPage = 1;
@@ -128,15 +157,16 @@ const sorted = [...showcased].sort((a, b) => b.sortDate.localeCompare(a.sortDate
     });
     for (const card of matching) grid.appendChild(card);
 
-    const pageCount = Math.max(1, Math.ceil(matching.length / PAGE_SIZE));
+    const pageSize = getPageSize();
+    const pageCount = Math.max(1, Math.ceil(matching.length / pageSize));
     if (currentPage > pageCount) currentPage = pageCount;
 
-    const start = (currentPage - 1) * PAGE_SIZE;
-    const pageItems = matching.slice(start, start + PAGE_SIZE);
+    const start = (currentPage - 1) * pageSize;
+    const pageItems = matching.slice(start, start + pageSize);
     for (const card of pageItems) card.style.display = "";
 
     const rangeStart = matching.length === 0 ? 0 : start + 1;
-    const rangeEnd = Math.min(start + PAGE_SIZE, matching.length);
+    const rangeEnd = Math.min(start + pageSize, matching.length);
     resultCount.textContent = `${matching.length}件中 ${rangeStart}-${rangeEnd}件を表示`;
 
     renderPagination(pageCount);
@@ -172,6 +202,12 @@ const sorted = [...showcased].sort((a, b) => b.sortDate.localeCompare(a.sortDate
     el.addEventListener("change", () => applyFiltersAndSort(true));
   }
 
+  pageSizeSelect.addEventListener("change", () => {
+    applyCardSize();
+    applyFiltersAndSort(true);
+  });
+
+  applyCardSize();
   applyFiltersAndSort(true);
 </script>
 
@@ -219,7 +255,7 @@ const sorted = [...showcased].sort((a, b) => b.sortDate.localeCompare(a.sortDate
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(var(--card-min-width, 11rem), 1fr));
     gap: 1.5rem;
     margin-bottom: 3rem;
   }
