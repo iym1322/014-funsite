@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://014-funsite.vercel.app/sitemap-index.xml
