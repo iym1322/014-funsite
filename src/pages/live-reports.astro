@@ -70,8 +70,17 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
         <input type="text" name="author" id="author-input" maxlength="50" required placeholder="例: 014ファン" />
       </label>
       <label>
-        感想
-        <textarea name="body" id="body-input" rows="4" maxlength="800" required placeholder="参戦した感想を自由に書いてください(セトリの丸写しはご遠慮ください)"></textarea>
+        <span class="label-row">
+          感想
+          <button type="button" id="template-button" class="template-button">書き方のテンプレートを入れる</button>
+        </span>
+        <textarea name="body" id="body-input" rows="4" maxlength="800" required placeholder="参戦した感想を自由に書いてください(セトリの丸写しはご遠慮ください)。書き方に迷ったら「書き方のテンプレートを入れる」もどうぞ"></textarea>
+      </label>
+      <label>
+        写真(任意、5MBまで・jpg/png/webp/gif)
+        <input type="file" name="image" id="image-input" accept="image/jpeg,image/png,image/webp,image/gif" />
+        <img id="image-preview" class="image-preview" hidden alt="選択した写真のプレビュー" />
+        <p class="field-help">参戦時の1枚を添えられます(グッズ・会場写真など。チケットの個人情報が写っていないかご確認ください)。</p>
       </label>
       <!-- ハニーポット: ボット対策 -->
       <label class="honeypot" aria-hidden="true">
@@ -92,6 +101,8 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
   import { generateOwnerToken, hashOwnerToken, saveOwnerToken, getOwnerToken, removeOwnerToken } from "../lib/postOwnership";
 
   const OWNER_NS = "live_reports";
+  const IMAGE_BUCKET = "live-report-images";
+  const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
   type LiveReport = {
     id: string;
@@ -100,8 +111,12 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
     venue: string | null;
     author: string;
     body: string;
+    image_url: string | null;
     created_at: string;
   };
+
+  // 感想の書き方に迷う人向けの簡単な構成テンプレート(自由記述はそのまま残す)。
+  const REPORT_TEMPLATE = `【良かったところ】\n\n\n【印象に残った曲・MC】\n\n\n【総合的な感想】\n\n`;
 
   const eventSelect = document.getElementById("event-select") as HTMLSelectElement;
   const eventMonthFilter = document.getElementById("event-month-filter") as HTMLSelectElement;
@@ -118,6 +133,9 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
   const form = document.getElementById("report-form") as HTMLFormElement;
   const authorInput = document.getElementById("author-input") as HTMLInputElement;
   const bodyInput = document.getElementById("body-input") as HTMLTextAreaElement;
+  const templateButton = document.getElementById("template-button") as HTMLButtonElement;
+  const imageInput = document.getElementById("image-input") as HTMLInputElement;
+  const imagePreview = document.getElementById("image-preview") as HTMLImageElement;
   const websiteInput = document.getElementById("website-input") as HTMLInputElement;
   const submitButton = document.getElementById("submit-button") as HTMLButtonElement;
   const formMessage = document.getElementById("form-message") as HTMLParagraphElement;
@@ -166,6 +184,33 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
     venueInput.value = selected.note;
   });
 
+  templateButton.addEventListener("click", () => {
+    if (bodyInput.value.trim() && !confirm("入力済みの感想をテンプレートで置き換えますか？")) return;
+    bodyInput.value = REPORT_TEMPLATE;
+    bodyInput.focus();
+  });
+
+  imageInput.addEventListener("change", () => {
+    const file = imageInput.files?.[0];
+    if (!file) {
+      imagePreview.hidden = true;
+      imagePreview.removeAttribute("src");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      alert("画像は5MBまでです。別の画像を選択してください。");
+      imageInput.value = "";
+      imagePreview.hidden = true;
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      imagePreview.src = reader.result as string;
+      imagePreview.hidden = false;
+    };
+    reader.readAsDataURL(file);
+  });
+
   function renderReport(report: LiveReport) {
     const li = document.createElement("li");
     li.className = "report-card";
@@ -195,6 +240,15 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
     author.className = "report-author";
     author.textContent = report.author;
     li.appendChild(author);
+
+    if (report.image_url) {
+      const img = document.createElement("img");
+      img.className = "report-image";
+      img.src = report.image_url;
+      img.alt = `${report.event_title}の投稿写真`;
+      img.loading = "lazy";
+      li.appendChild(img);
+    }
 
     const body = document.createElement("p");
     body.className = "report-text";
@@ -274,8 +328,29 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
       return;
     }
 
+    const imageFile = imageInput.files?.[0] ?? null;
+    if (imageFile && imageFile.size > MAX_IMAGE_BYTES) {
+      formMessage.textContent = "画像は5MBまでです。別の画像を選択してください。";
+      return;
+    }
+
     submitButton.disabled = true;
     formMessage.textContent = "";
+
+    let imageUrl: string | null = null;
+    if (imageFile) {
+      const ext = imageFile.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from(IMAGE_BUCKET)
+        .upload(path, imageFile, { contentType: imageFile.type });
+      if (uploadError) {
+        submitButton.disabled = false;
+        formMessage.textContent = "画像のアップロードに失敗しました。時間をおいて再度お試しください。";
+        return;
+      }
+      imageUrl = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+    }
 
     const ownerToken = generateOwnerToken();
     const ownerTokenHash = await hashOwnerToken(ownerToken);
@@ -287,6 +362,7 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
         venue: venue || null,
         author,
         body,
+        image_url: imageUrl,
         owner_token_hash: ownerTokenHash,
       })
       .select("id")
@@ -303,6 +379,8 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
 
     form.reset();
     selectedScheduleDate = "";
+    imagePreview.hidden = true;
+    imagePreview.removeAttribute("src");
     formMessage.textContent = "投稿しました。ありがとうございます!";
     await loadReports();
   });
@@ -369,6 +447,46 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
     gap: 0.4rem;
     font-size: 0.85rem;
     color: var(--color-text-muted);
+  }
+
+  .label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .template-button {
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-accent);
+    font-family: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+
+  .template-button:hover {
+    border-color: var(--color-accent);
+  }
+
+  .image-preview {
+    display: block;
+    max-width: 12rem;
+    max-height: 12rem;
+    margin-top: 0.5rem;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+
+  .report-image {
+    display: block;
+    width: 100%;
+    max-height: 24rem;
+    margin: 0 0 0.75rem;
+    border-radius: 8px;
+    object-fit: cover;
   }
 
   .post-form input,

@@ -79,11 +79,32 @@ create table if not exists public.live_reports (
   venue text check (venue is null or char_length(venue) <= 100),
   author text not null check (char_length(author) between 1 and 50),
   body text not null check (char_length(body) between 1 and 800),
+  image_url text,
   owner_token_hash text,
   created_at timestamptz not null default now()
 );
 
 alter table public.live_reports add column if not exists owner_token_hash text;
+alter table public.live_reports add column if not exists image_url text;
+
+-- 投稿写真用のストレージバケット(公開読み取り・anonアップロード可、5MB・画像形式限定)。
+-- id/nameが既に存在する場合は設定(サイズ上限・許可MIME)だけ上書きする。
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('live-report-images', 'live-report-images', true, 5242880, array['image/jpeg','image/png','image/webp','image/gif'])
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+create policy "live_report_images_insert_public"
+  on storage.objects for insert
+  to anon
+  with check (bucket_id = 'live-report-images');
+
+create policy "live_report_images_select_public"
+  on storage.objects for select
+  to anon
+  using (bucket_id = 'live-report-images');
 
 alter table public.live_reports enable row level security;
 
