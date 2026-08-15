@@ -1,8 +1,11 @@
 -- ユーザー参加型機能(推し曲投稿・イベントレポート・投票)のDBスキーマ。
--- Supabaseダッシュボードの「SQL Editor」に貼り付けて実行する。
+-- Supabaseダッシュボードの「SQL Editor」に貼り付けて実行する(再実行しても安全な
+-- 冪等な内容になっている)。
 -- 方針(CONTENTS_PLAN.md 5章): 即時公開・事後モデレーション。
--- anonキー(公開キー)には INSERT と SELECT のみ許可し、UPDATE/DELETEは許可しない
--- (荒らし投稿の削除はSupabaseダッシュボードから運営者が行う想定)。
+-- anonキー(公開キー)には INSERT と SELECT のみ許可し、任意のUPDATE/DELETEは
+-- 許可しない(荒らし投稿の削除はSupabaseダッシュボードから運営者が行う想定)。
+-- 例外として、投稿者本人がowner_token_hash照合済みのRPC経由でのみ自分の投稿を
+-- 削除できる(末尾「投稿の自己削除機能」セクション参照)。
 --
 -- 注意: プロジェクト作成時に「Automatically expose new tables」を無効にした場合、
 -- RLSポリシーだけでなくテーブルへの基本的なGRANTも別途必要になる
@@ -18,8 +21,13 @@ create table if not exists public.favorite_posts (
   author text not null check (char_length(author) between 1 and 50),
   body text not null check (char_length(body) between 1 and 500),
   likes integer not null default 0,
+  owner_token_hash text,
   created_at timestamptz not null default now()
 );
+
+-- 既存テーブルへの追加(自分の投稿を削除できる機能。既存行はNULLのままとなり、
+-- 元投稿者を特定できないため削除不可のままになる=想定どおりの挙動)。
+alter table public.favorite_posts add column if not exists owner_token_hash text;
 
 alter table public.favorite_posts enable row level security;
 
@@ -71,8 +79,11 @@ create table if not exists public.live_reports (
   venue text check (venue is null or char_length(venue) <= 100),
   author text not null check (char_length(author) between 1 and 50),
   body text not null check (char_length(body) between 1 and 800),
+  owner_token_hash text,
   created_at timestamptz not null default now()
 );
+
+alter table public.live_reports add column if not exists owner_token_hash text;
 
 alter table public.live_reports enable row level security;
 
@@ -144,8 +155,11 @@ create table if not exists public.moments (
   comment text not null check (char_length(comment) between 1 and 300),
   author text not null check (char_length(author) between 1 and 50),
   likes integer not null default 0,
+  owner_token_hash text,
   created_at timestamptz not null default now()
 );
+
+alter table public.moments add column if not exists owner_token_hash text;
 
 alter table public.moments enable row level security;
 
@@ -200,8 +214,11 @@ create table if not exists public.setlists (
   ),
   author text not null check (char_length(author) between 1 and 50),
   likes integer not null default 0,
+  owner_token_hash text,
   created_at timestamptz not null default now()
 );
+
+alter table public.setlists add column if not exists owner_token_hash text;
 
 alter table public.setlists enable row level security;
 
@@ -238,3 +255,68 @@ as $$
 $$;
 
 grant execute on function public.decrement_setlist_likes(uuid) to anon;
+
+-- =========================================
+-- 投稿の自己削除機能
+-- =========================================
+-- ログイン機能が無いため、投稿時にブラウザ側で生成したランダムなトークンの
+-- SHA-256ハッシュ(hex文字列)をowner_token_hashに保存する。削除リクエストでは
+-- 生トークンを受け取り、ここで同じ方式でハッシュ化して照合する
+-- (生トークンはDBに保存されないため、テーブルの中身が漏れても悪用できない)。
+-- owner_token_hashがNULLの行(トークン導入前の既存投稿)は誰も削除できない。
+
+create or replace function public.delete_favorite_post(post_id uuid, token text)
+returns void
+language sql
+security definer
+set search_path = public, extensions
+as $$
+  delete from public.favorite_posts
+  where id = post_id
+    and owner_token_hash is not null
+    and owner_token_hash = encode(digest(token, 'sha256'), 'hex');
+$$;
+
+grant execute on function public.delete_favorite_post(uuid, text) to anon;
+
+create or replace function public.delete_live_report(report_id uuid, token text)
+returns void
+language sql
+security definer
+set search_path = public, extensions
+as $$
+  delete from public.live_reports
+  where id = report_id
+    and owner_token_hash is not null
+    and owner_token_hash = encode(digest(token, 'sha256'), 'hex');
+$$;
+
+grant execute on function public.delete_live_report(uuid, text) to anon;
+
+create or replace function public.delete_moment(moment_id uuid, token text)
+returns void
+language sql
+security definer
+set search_path = public, extensions
+as $$
+  delete from public.moments
+  where id = moment_id
+    and owner_token_hash is not null
+    and owner_token_hash = encode(digest(token, 'sha256'), 'hex');
+$$;
+
+grant execute on function public.delete_moment(uuid, text) to anon;
+
+create or replace function public.delete_setlist(setlist_id uuid, token text)
+returns void
+language sql
+security definer
+set search_path = public, extensions
+as $$
+  delete from public.setlists
+  where id = setlist_id
+    and owner_token_hash is not null
+    and owner_token_hash = encode(digest(token, 'sha256'), 'hex');
+$$;
+
+grant execute on function public.delete_setlist(uuid, text) to anon;

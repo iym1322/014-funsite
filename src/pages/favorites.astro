@@ -76,6 +76,9 @@ const trackOptions = tracks
 
 <script>
   import { supabase } from "../lib/supabase";
+  import { generateOwnerToken, hashOwnerToken, saveOwnerToken, getOwnerToken, removeOwnerToken } from "../lib/postOwnership";
+
+  const OWNER_NS = "favorite_posts";
 
   type FavoritePost = {
     id: string;
@@ -185,7 +188,9 @@ const trackOptions = tracks
     body.innerHTML = `
       <p class="post-author"></p>
       <p class="post-text"></p>
-      <button class="like-button" type="button">👍 <span class="like-count">${post.likes}</span></button>
+      <div class="post-actions">
+        <button class="like-button" type="button">👍 <span class="like-count">${post.likes}</span></button>
+      </div>
     `;
     (body.querySelector(".post-author") as HTMLElement).textContent = post.author;
     (body.querySelector(".post-text") as HTMLElement).textContent = post.body;
@@ -217,6 +222,28 @@ const trackOptions = tracks
         countEl.textContent = String(Number(countEl.textContent) + 1);
       }
     });
+
+    // 自分が投稿したもの(localStorageにトークンが残っているもの)にだけ削除ボタンを出す。
+    const ownerToken = getOwnerToken(OWNER_NS, post.id);
+    if (ownerToken) {
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "delete-button";
+      deleteButton.textContent = "削除";
+      deleteButton.addEventListener("click", async () => {
+        if (!confirm("この投稿を削除しますか？元に戻せません。")) return;
+        deleteButton.disabled = true;
+        const { error } = await supabase.rpc("delete_favorite_post", { post_id: post.id, token: ownerToken });
+        if (error) {
+          alert("削除に失敗しました。時間をおいて再度お試しください。");
+          deleteButton.disabled = false;
+          return;
+        }
+        removeOwnerToken(OWNER_NS, post.id);
+        li.remove();
+      });
+      (body.querySelector(".post-actions") as HTMLElement).appendChild(deleteButton);
+    }
 
     li.appendChild(trackLink);
     li.appendChild(body);
@@ -275,11 +302,13 @@ const trackOptions = tracks
     submitButton.disabled = true;
     formMessage.textContent = "";
 
-    const { error } = await supabase.from("favorite_posts").insert({
-      track_slug: trackSlug,
-      author,
-      body,
-    });
+    const ownerToken = generateOwnerToken();
+    const ownerTokenHash = await hashOwnerToken(ownerToken);
+    const { data, error } = await supabase
+      .from("favorite_posts")
+      .insert({ track_slug: trackSlug, author, body, owner_token_hash: ownerTokenHash })
+      .select("id")
+      .single();
 
     submitButton.disabled = false;
 
@@ -287,6 +316,8 @@ const trackOptions = tracks
       formMessage.textContent = "投稿に失敗しました。時間をおいて再度お試しください。";
       return;
     }
+
+    if (data) saveOwnerToken(OWNER_NS, data.id, ownerToken);
 
     form.reset();
     formMessage.textContent = "投稿しました。ありがとうございます!";
@@ -495,6 +526,12 @@ const trackOptions = tracks
     white-space: pre-wrap;
   }
 
+  .post-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
   .like-button {
     display: inline-flex;
     align-items: center;
@@ -522,5 +559,25 @@ const trackOptions = tracks
 
   .like-button:disabled {
     opacity: 0.7;
+  }
+
+  .delete-button {
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: #a3663f;
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .delete-button:hover {
+    border-color: #a3663f;
+  }
+
+  .delete-button:disabled {
+    opacity: 0.6;
+    cursor: default;
   }
 </style>

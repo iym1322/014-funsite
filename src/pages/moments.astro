@@ -157,6 +157,9 @@ const latestVideos = await fetchLatestVideos();
 
 <script>
   import { supabase } from "../lib/supabase";
+  import { generateOwnerToken, hashOwnerToken, saveOwnerToken, getOwnerToken, removeOwnerToken } from "../lib/postOwnership";
+
+  const OWNER_NS = "moments";
 
   type Moment = {
     id: string;
@@ -313,6 +316,28 @@ const latestVideos = await fetchLatestVideos();
       }
     });
 
+    // 自分が投稿したもの(localStorageにトークンが残っているもの)にだけ削除ボタンを出す。
+    const ownerToken = getOwnerToken(OWNER_NS, moment.id);
+    if (ownerToken) {
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "delete-button";
+      deleteButton.textContent = "削除";
+      deleteButton.addEventListener("click", async () => {
+        if (!confirm("この投稿を削除しますか？元に戻せません。")) return;
+        deleteButton.disabled = true;
+        const { error } = await supabase.rpc("delete_moment", { moment_id: moment.id, token: ownerToken });
+        if (error) {
+          alert("削除に失敗しました。時間をおいて再度お試しください。");
+          deleteButton.disabled = false;
+          return;
+        }
+        removeOwnerToken(OWNER_NS, moment.id);
+        li.remove();
+      });
+      (body.querySelector(".moment-actions") as HTMLElement).appendChild(deleteButton);
+    }
+
     li.appendChild(body);
     return li;
   }
@@ -375,15 +400,22 @@ const latestVideos = await fetchLatestVideos();
     submitButton.disabled = true;
     formMessage.textContent = "";
 
-    const { error } = await supabase.from("moments").insert({
-      channel,
-      video_title: videoTitle,
-      video_id: parsed.videoId,
-      start_seconds: parsed.start,
-      source_url: youtubeUrlInput.value.trim(),
-      comment,
-      author,
-    });
+    const ownerToken = generateOwnerToken();
+    const ownerTokenHash = await hashOwnerToken(ownerToken);
+    const { data, error } = await supabase
+      .from("moments")
+      .insert({
+        channel,
+        video_title: videoTitle,
+        video_id: parsed.videoId,
+        start_seconds: parsed.start,
+        source_url: youtubeUrlInput.value.trim(),
+        comment,
+        author,
+        owner_token_hash: ownerTokenHash,
+      })
+      .select("id")
+      .single();
 
     submitButton.disabled = false;
 
@@ -391,6 +423,8 @@ const latestVideos = await fetchLatestVideos();
       formMessage.textContent = "投稿に失敗しました。時間をおいて再度お試しください。";
       return;
     }
+
+    if (data) saveOwnerToken(OWNER_NS, data.id, ownerToken);
 
     form.reset();
     channelOtherLabel.hidden = true;
@@ -749,5 +783,25 @@ const latestVideos = await fetchLatestVideos();
 
   .like-button:disabled {
     opacity: 0.7;
+  }
+
+  .delete-button {
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: #a3663f;
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .delete-button:hover {
+    border-color: #a3663f;
+  }
+
+  .delete-button:disabled {
+    opacity: 0.6;
+    cursor: default;
   }
 </style>

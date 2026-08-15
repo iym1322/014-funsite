@@ -89,6 +89,9 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
 
 <script>
   import { supabase } from "../lib/supabase";
+  import { generateOwnerToken, hashOwnerToken, saveOwnerToken, getOwnerToken, removeOwnerToken } from "../lib/postOwnership";
+
+  const OWNER_NS = "live_reports";
 
   type LiveReport = {
     id: string;
@@ -198,6 +201,31 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
     body.textContent = report.body;
     li.appendChild(body);
 
+    // 自分が投稿したもの(localStorageにトークンが残っているもの)にだけ削除ボタンを出す。
+    const ownerToken = getOwnerToken(OWNER_NS, report.id);
+    if (ownerToken) {
+      const actions = document.createElement("div");
+      actions.className = "report-actions";
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "delete-button";
+      deleteButton.textContent = "削除";
+      deleteButton.addEventListener("click", async () => {
+        if (!confirm("このレポートを削除しますか？元に戻せません。")) return;
+        deleteButton.disabled = true;
+        const { error } = await supabase.rpc("delete_live_report", { report_id: report.id, token: ownerToken });
+        if (error) {
+          alert("削除に失敗しました。時間をおいて再度お試しください。");
+          deleteButton.disabled = false;
+          return;
+        }
+        removeOwnerToken(OWNER_NS, report.id);
+        li.remove();
+      });
+      actions.appendChild(deleteButton);
+      li.appendChild(actions);
+    }
+
     return li;
   }
 
@@ -249,13 +277,20 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
     submitButton.disabled = true;
     formMessage.textContent = "";
 
-    const { error } = await supabase.from("live_reports").insert({
-      event_title: eventTitle,
-      schedule_date: selectedScheduleDate || null,
-      venue: venue || null,
-      author,
-      body,
-    });
+    const ownerToken = generateOwnerToken();
+    const ownerTokenHash = await hashOwnerToken(ownerToken);
+    const { data, error } = await supabase
+      .from("live_reports")
+      .insert({
+        event_title: eventTitle,
+        schedule_date: selectedScheduleDate || null,
+        venue: venue || null,
+        author,
+        body,
+        owner_token_hash: ownerTokenHash,
+      })
+      .select("id")
+      .single();
 
     submitButton.disabled = false;
 
@@ -263,6 +298,8 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
       formMessage.textContent = "投稿に失敗しました。時間をおいて再度お試しください。";
       return;
     }
+
+    if (data) saveOwnerToken(OWNER_NS, data.id, ownerToken);
 
     form.reset();
     selectedScheduleDate = "";
@@ -400,6 +437,30 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
   .report-title {
     margin: 0 0 0.3rem;
     font-weight: 700;
+  }
+
+  .report-actions {
+    margin-top: 0.75rem;
+  }
+
+  .delete-button {
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: #a3663f;
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .delete-button:hover {
+    border-color: #a3663f;
+  }
+
+  .delete-button:disabled {
+    opacity: 0.6;
+    cursor: default;
   }
 
   .report-meta {
