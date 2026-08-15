@@ -17,8 +17,9 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
   <h1>イベントレポート</h1>
   <p class="note">
     参戦したライブ・イベントの感想を記録するコーナーです。どなたでも投稿できます。
-    投稿は承認なしですぐに公開されるため、セトリの丸写しや誹謗中傷など不適切な内容は
-    お控えください(発見次第、運営が削除します)。
+    投稿は承認なしですぐに公開されるため、誹謗中傷など不適切な内容はお控えください
+    (発見次第、運営が削除します)。セットリストや展開に触れる場合は、下の「ネタバレ」欄を
+    「あり」にしていただけると助かります。
   </p>
 
   <section class="post-list">
@@ -76,11 +77,26 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
         </p>
         <div class="template-chips">
           <button type="button" class="template-chip" data-heading="良かったところ">良かったところ</button>
-          <button type="button" class="template-chip" data-heading="印象に残った曲・MC">印象に残った曲・MC</button>
+          <button type="button" class="template-chip" data-heading="印象に残った曲">印象に残った曲</button>
+          <button type="button" class="template-chip" data-heading="MC">MC</button>
+          <button type="button" class="template-chip" data-heading="セットリスト">セットリスト</button>
+          <button type="button" class="template-chip" data-heading="グッズ">グッズ</button>
+          <button type="button" class="template-chip" data-heading="会場の様子">会場の様子</button>
           <button type="button" class="template-chip" data-heading="総合的な感想">総合的な感想</button>
         </div>
-        <textarea name="body" id="body-input" rows="8" maxlength="800" required placeholder="参戦した感想を自由に書いてください(セトリの丸写しはご遠慮ください)。書き方に迷ったら上のボタンもどうぞ"></textarea>
+        <textarea name="body" id="body-input" rows="8" maxlength="800" required placeholder="参戦した感想を自由に書いてください。書き方に迷ったら上のボタンもどうぞ"></textarea>
       </label>
+      <fieldset class="spoiler-picker">
+        <legend>ネタバレ</legend>
+        <label class="radio-option">
+          <input type="radio" name="spoiler" value="none" checked />
+          なし
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="spoiler" value="spoiler" />
+          あり(セットリスト・展開など)
+        </label>
+      </fieldset>
       <label>
         写真(任意、最大3枚・1枚5MBまで・jpg/png/webp/gif)
         <input type="file" name="image" id="image-input" accept="image/jpeg,image/png,image/webp,image/gif" multiple />
@@ -118,6 +134,7 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
     author: string;
     body: string;
     image_urls: string[];
+    has_spoiler: boolean;
     created_at: string;
   };
 
@@ -139,6 +156,7 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
   const templateChips = document.querySelectorAll<HTMLButtonElement>(".template-chip");
   const imageInput = document.getElementById("image-input") as HTMLInputElement;
   const imagePreviewList = document.getElementById("image-preview-list") as HTMLDivElement;
+  const spoilerInputs = document.querySelectorAll<HTMLInputElement>('input[name="spoiler"]');
   const websiteInput = document.getElementById("website-input") as HTMLInputElement;
   const submitButton = document.getElementById("submit-button") as HTMLButtonElement;
   const formMessage = document.getElementById("form-message") as HTMLParagraphElement;
@@ -258,9 +276,18 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
       <span class="report-toggle-icon" aria-hidden="true">▼</span>
     `;
     (summary.querySelector(".report-title") as HTMLElement).textContent = report.event_title;
-    (summary.querySelector(".report-preview") as HTMLElement).textContent = report.body;
+    // ネタバレありの投稿は、折りたたみ表示のプレビュー欄に本文を出さない(開く前に見えてしまうため)。
+    (summary.querySelector(".report-preview") as HTMLElement).textContent = report.has_spoiler
+      ? "ネタバレを含みます。開いて確認してください。"
+      : report.body;
 
     const metaEl = summary.querySelector(".report-meta") as HTMLElement;
+    if (report.has_spoiler) {
+      const spoilerBadge = document.createElement("span");
+      spoilerBadge.className = "spoiler-badge";
+      spoilerBadge.textContent = "ネタバレあり";
+      metaEl.appendChild(spoilerBadge);
+    }
     if (report.venue) {
       const venueSpan = document.createElement("span");
       venueSpan.textContent = report.venue;
@@ -285,6 +312,13 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
       summary.setAttribute("aria-expanded", String(!expanded));
       details.hidden = expanded;
     });
+
+    if (report.has_spoiler) {
+      const spoilerNote = document.createElement("p");
+      spoilerNote.className = "spoiler-note";
+      spoilerNote.textContent = "⚠ このレポートにはネタバレが含まれます。";
+      details.appendChild(spoilerNote);
+    }
 
     const author = document.createElement("p");
     author.className = "report-author";
@@ -413,6 +447,8 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
       imageUrls.push(supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path).data.publicUrl);
     }
 
+    const hasSpoiler = Array.from(spoilerInputs).find((input) => input.checked)?.value === "spoiler";
+
     const ownerToken = generateOwnerToken();
     const ownerTokenHash = await hashOwnerToken(ownerToken);
     const { data, error } = await supabase
@@ -424,6 +460,7 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
         author,
         body,
         image_urls: imageUrls,
+        has_spoiler: hasSpoiler,
         owner_token_hash: ownerTokenHash,
       })
       .select("id")
@@ -528,6 +565,34 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
 
   .template-chip:hover {
     border-color: var(--color-accent);
+  }
+
+  .spoiler-picker {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .spoiler-picker legend {
+    padding: 0 0.35rem;
+    color: var(--color-text);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .radio-option {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 0.4rem !important;
+    font-size: 0.85rem;
+  }
+
+  .radio-option input {
+    width: auto;
   }
 
   .image-preview-list {
@@ -719,6 +784,21 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
   .calendar-link {
     color: var(--color-accent);
     text-decoration: none;
+  }
+
+  .spoiler-badge {
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    background: #a3663f;
+    color: var(--color-surface);
+    font-weight: 700;
+  }
+
+  .spoiler-note {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    color: #a3663f;
+    font-weight: 700;
   }
 
   .report-author {

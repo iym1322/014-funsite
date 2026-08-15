@@ -80,11 +80,13 @@ create table if not exists public.live_reports (
   author text not null check (char_length(author) between 1 and 50),
   body text not null check (char_length(body) between 1 and 800),
   image_urls jsonb not null default '[]'::jsonb,
+  has_spoiler boolean not null default false,
   owner_token_hash text,
   created_at timestamptz not null default now()
 );
 
 alter table public.live_reports add column if not exists owner_token_hash text;
+alter table public.live_reports add column if not exists has_spoiler boolean not null default false;
 
 -- image_url(単一画像)からimage_urls(最大3枚のJSON配列)への移行。
 -- 2回目以降の実行では image_urls が既に埋まっているため update 対象がなくなり、
