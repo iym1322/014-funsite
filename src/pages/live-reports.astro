@@ -211,35 +211,52 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
     reader.readAsDataURL(file);
   });
 
+  // あなたのセットリストページと同様、カードはクリックで開閉するアコーディオン形式にする
+  // (画像や長文の感想が並ぶと一覧が縦に長くなりすぎるため、既定は折りたたみ表示)。
   function renderReport(report: LiveReport) {
     const li = document.createElement("li");
     li.className = "report-card";
 
-    const title = document.createElement("p");
-    title.className = "report-title";
-    title.textContent = report.event_title;
-    li.appendChild(title);
+    const summary = document.createElement("button");
+    summary.type = "button";
+    summary.className = "report-summary";
+    summary.setAttribute("aria-expanded", "false");
+    summary.innerHTML = `
+      <span class="report-summary-text">
+        <span class="report-title"></span>
+        <span class="report-meta"></span>
+        <span class="report-preview"></span>
+      </span>
+      <span class="report-toggle-icon" aria-hidden="true">▼</span>
+    `;
+    (summary.querySelector(".report-title") as HTMLElement).textContent = report.event_title;
+    (summary.querySelector(".report-preview") as HTMLElement).textContent = report.body;
 
-    const meta = document.createElement("p");
-    meta.className = "report-meta";
+    const metaEl = summary.querySelector(".report-meta") as HTMLElement;
     if (report.venue) {
       const venueSpan = document.createElement("span");
       venueSpan.textContent = report.venue;
-      meta.appendChild(venueSpan);
+      metaEl.appendChild(venueSpan);
     }
     if (report.schedule_date) {
       const link = document.createElement("a");
       link.className = "calendar-link";
       link.href = "/calendar";
       link.textContent = "カレンダーで見る →";
-      meta.appendChild(link);
+      link.addEventListener("click", (e) => e.stopPropagation());
+      metaEl.appendChild(link);
     }
-    li.appendChild(meta);
+    li.appendChild(summary);
 
-    const author = document.createElement("p");
-    author.className = "report-author";
-    author.textContent = report.author;
-    li.appendChild(author);
+    const details = document.createElement("div");
+    details.className = "report-details";
+    details.hidden = true;
+
+    summary.addEventListener("click", () => {
+      const expanded = summary.getAttribute("aria-expanded") === "true";
+      summary.setAttribute("aria-expanded", String(!expanded));
+      details.hidden = expanded;
+    });
 
     if (report.image_url) {
       const img = document.createElement("img");
@@ -247,13 +264,18 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
       img.src = report.image_url;
       img.alt = `${report.event_title}の投稿写真`;
       img.loading = "lazy";
-      li.appendChild(img);
+      details.appendChild(img);
     }
+
+    const author = document.createElement("p");
+    author.className = "report-author";
+    author.textContent = report.author;
+    details.appendChild(author);
 
     const body = document.createElement("p");
     body.className = "report-text";
     body.textContent = report.body;
-    li.appendChild(body);
+    details.appendChild(body);
 
     // 自分が投稿したもの(localStorageにトークンが残っているもの)にだけ削除ボタンを出す。
     const ownerToken = getOwnerToken(OWNER_NS, report.id);
@@ -277,9 +299,10 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
         li.remove();
       });
       actions.appendChild(deleteButton);
-      li.appendChild(actions);
+      details.appendChild(actions);
     }
 
+    li.appendChild(details);
     return li;
   }
 
@@ -483,7 +506,8 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
   .report-image {
     display: block;
     width: 100%;
-    max-height: 24rem;
+    max-width: 20rem;
+    aspect-ratio: 4 / 3;
     margin: 0 0 0.75rem;
     border-radius: 8px;
     object-fit: cover;
@@ -548,12 +572,69 @@ const scheduleMonths = [...new Set(scheduleOptions.map((e) => e.date.slice(0, 7)
   .report-card {
     border: 1px solid var(--color-border);
     border-radius: 8px;
-    padding: 1.25rem;
     background: var(--color-surface);
+    overflow: hidden;
+  }
+
+  .report-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    padding: 1rem 1.25rem;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .report-summary:hover {
+    background: var(--color-bg);
+  }
+
+  .report-summary-text {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .report-toggle-icon {
+    flex: none;
+    display: inline-block;
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    transition: transform 200ms ease;
+  }
+
+  .report-summary[aria-expanded="true"] .report-toggle-icon {
+    transform: rotate(180deg);
+  }
+
+  .report-preview {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .report-details {
+    padding: 0 1.25rem 1.25rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .report-details .report-image {
+    margin-top: 1rem;
   }
 
   .report-title {
-    margin: 0 0 0.3rem;
+    margin: 0;
     font-weight: 700;
   }
 
