@@ -79,13 +79,26 @@ create table if not exists public.live_reports (
   venue text check (venue is null or char_length(venue) <= 100),
   author text not null check (char_length(author) between 1 and 50),
   body text not null check (char_length(body) between 1 and 800),
-  image_url text,
+  image_urls jsonb not null default '[]'::jsonb,
   owner_token_hash text,
   created_at timestamptz not null default now()
 );
 
 alter table public.live_reports add column if not exists owner_token_hash text;
-alter table public.live_reports add column if not exists image_url text;
+
+-- image_url(単一画像)からimage_urls(最大3枚のJSON配列)への移行。
+-- 2回目以降の実行では image_urls が既に埋まっているため update 対象がなくなり、
+-- image_url列も既に削除済みになるため、そのまま安全に再実行できる。
+alter table public.live_reports add column if not exists image_urls jsonb not null default '[]'::jsonb;
+do $$
+begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'live_reports' and column_name = 'image_url') then
+    update public.live_reports
+    set image_urls = jsonb_build_array(image_url)
+    where image_url is not null and image_urls = '[]'::jsonb;
+    alter table public.live_reports drop column image_url;
+  end if;
+end $$;
 
 -- 投稿写真用のストレージバケット(公開読み取り・anonアップロード可、5MB・画像形式限定)。
 -- id/nameが既に存在する場合は設定(サイズ上限・許可MIME)だけ上書きする。
