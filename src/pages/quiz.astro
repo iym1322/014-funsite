@@ -33,6 +33,28 @@ const countBreakpoints = [10, 20, 30];
         <span class="count-label"></span>
       </label>
     </fieldset>
+    <fieldset class="difficulty-picker">
+      <legend>難易度</legend>
+      <label class="difficulty-option">
+        <input type="radio" name="quiz-difficulty" value="all" checked />
+        すべて
+      </label>
+      <label class="difficulty-option">
+        <input type="radio" name="quiz-difficulty" value="初級" />
+        初級
+      </label>
+      <label class="difficulty-option">
+        <input type="radio" name="quiz-difficulty" value="中級" />
+        中級
+      </label>
+      <label class="difficulty-option">
+        <input type="radio" name="quiz-difficulty" value="上級" />
+        上級
+      </label>
+      <p class="field-help">
+        みんなの正答率が一定数たまった問題だけ難易度で絞り込まれます。データが少ない問題はどの難易度でも出題されます。
+      </p>
+    </fieldset>
     <button type="button" class="start-button" id="start-button">検定をはじめる</button>
   </div>
 
@@ -74,6 +96,8 @@ const countBreakpoints = [10, 20, 30];
 </Layout>
 
 <script>
+  import { supabase } from "../lib/supabase";
+
   type QuizQuestion = {
     id: string;
     category: string;
@@ -84,6 +108,7 @@ const countBreakpoints = [10, 20, 30];
   };
 
   type ShuffledQuestion = {
+    id: string;
     category: string;
     question: string;
     choices: string[];
@@ -93,7 +118,38 @@ const countBreakpoints = [10, 20, 30];
     relatedLabel?: string;
   };
 
+  type Difficulty = "初級" | "中級" | "上級";
+
   const allQuestions: QuizQuestion[] = JSON.parse(document.getElementById("quiz-data")!.textContent!);
+
+  // 難易度は「みんなの正答率」から動的に決める。サンプル数が少ない質問は
+  // 判定を保留し、どの難易度を選んでも出題対象になる(データが無いのに
+  // いきなり上級/初級に固定されてしまうのを避けるため)。
+  const MIN_SAMPLES = 20;
+  const EASY_RATE = 0.7;
+  const HARD_RATE = 0.4;
+  let statsByQuestionId = new Map<string, { correct: number; total: number }>();
+
+  async function loadStats() {
+    const { data, error } = await supabase.from("quiz_stats").select("question_id, correct_count, total_count");
+    if (error || !data) return;
+    statsByQuestionId = new Map(
+      data.map((row: { question_id: string; correct_count: number; total_count: number }) => [
+        row.question_id,
+        { correct: row.correct_count, total: row.total_count },
+      ])
+    );
+  }
+
+  // サンプル不足の質問はnullを返す(呼び出し側で「どの難易度でも対象」として扱う)。
+  function computedDifficulty(questionId: string): Difficulty | null {
+    const stats = statsByQuestionId.get(questionId);
+    if (!stats || stats.total < MIN_SAMPLES) return null;
+    const rate = stats.correct / stats.total;
+    if (rate >= EASY_RATE) return "初級";
+    if (rate >= HARD_RATE) return "中級";
+    return "上級";
+  }
 
   const quizStart = document.getElementById("quiz-start") as HTMLDivElement;
   const startButton = document.getElementById("start-button") as HTMLButtonElement;
@@ -127,11 +183,10 @@ const countBreakpoints = [10, 20, 30];
     return arr;
   }
 
-  // 出題数の選択肢は総問題数に応じて動的に出し分ける
-  // (例えば総問題数が10問しか無ければ「10問」と「全部」は同じ結果になり
-  // 意味が無いため、総問題数を下回る候補だけを表示する)。
-  function setupCountOptions() {
-    const total = allQuestions.length;
+  // 出題数の選択肢は、選ばれた難易度で絞り込んだ後の問題数に応じて動的に出し分ける
+  // (例えば絞り込み後が10問しか無ければ「10問」と「全部」は同じ結果になり
+  // 意味が無いため、その数を下回る候補だけを表示する)。
+  function setupCountOptions(total: number) {
     for (const option of countOptions) {
       const breakpoint = option.dataset.breakpoint;
       const labelEl = option.querySelector(".count-label") as HTMLElement;
@@ -146,18 +201,34 @@ const countBreakpoints = [10, 20, 30];
     }
   }
 
-  function selectedCount(): number {
+  function selectedCount(poolSize: number): number {
     const checked = document.querySelector<HTMLInputElement>('input[name="quiz-count"]:checked');
     const value = checked?.value ?? "all";
-    return value === "all" ? allQuestions.length : Math.min(Number(value), allQuestions.length);
+    return value === "all" ? poolSize : Math.min(Number(value), poolSize);
   }
 
-  function buildQuestions(count: number): ShuffledQuestion[] {
-    return shuffle(allQuestions)
+  function selectedDifficulty(): Difficulty | "all" {
+    const checked = document.querySelector<HTMLInputElement>('input[name="quiz-difficulty"]:checked');
+    return (checked?.value as Difficulty | "all") ?? "all";
+  }
+
+  // 選ばれた難易度で問題プールを絞り込む。データ不足(判定null)の質問は
+  // 「どの難易度でも出題対象」として、選んだ難易度に関わらず含める。
+  function filterByDifficulty(difficulty: Difficulty | "all"): QuizQuestion[] {
+    if (difficulty === "all") return allQuestions;
+    return allQuestions.filter((q) => {
+      const level = computedDifficulty(q.id);
+      return level === null || level === difficulty;
+    });
+  }
+
+  function buildQuestions(count: number, pool: QuizQuestion[]): ShuffledQuestion[] {
+    return shuffle(pool)
       .slice(0, count)
       .map((q) => {
         const order = shuffle(q.choices.map((_, i) => i));
         return {
+          id: q.id,
           category: q.category,
           question: q.question,
           choices: order.map((i) => q.choices[i]),
@@ -197,6 +268,9 @@ const countBreakpoints = [10, 20, 30];
       else if (i === index) button.classList.add("incorrect");
     });
 
+    // 集計は失敗しても体験に影響しないよう、結果を待たずに投げっぱなしにする。
+    void supabase.rpc("record_quiz_answer", { q_id: q.id, was_correct: correct });
+
     verdictEl.textContent = correct ? "⭕ 正解！" : "❌ 不正解";
     verdictEl.className = `quiz-verdict ${correct ? "is-correct" : "is-incorrect"}`;
     explanationTextEl.textContent = q.explanation;
@@ -233,7 +307,9 @@ const countBreakpoints = [10, 20, 30];
   }
 
   function startQuiz() {
-    questions = buildQuestions(selectedCount());
+    const pool = filterByDifficulty(selectedDifficulty());
+    const count = selectedCount(pool.length);
+    questions = buildQuestions(count, pool);
     currentIndex = 0;
     score = 0;
     quizStart.hidden = true;
@@ -258,7 +334,19 @@ const countBreakpoints = [10, 20, 30];
   startButton.addEventListener("click", startQuiz);
   retryButton.addEventListener("click", showStart);
 
-  setupCountOptions();
+  // 難易度を切り替えたら、出題数の選択肢(「全部」の件数表示など)も
+  // 絞り込み後の件数に合わせて更新する。
+  const difficultyInputs = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="quiz-difficulty"]'));
+  difficultyInputs.forEach((input) => {
+    input.addEventListener("change", () => {
+      setupCountOptions(filterByDifficulty(selectedDifficulty()).length);
+    });
+  });
+
+  loadStats().then(() => {
+    setupCountOptions(filterByDifficulty(selectedDifficulty()).length);
+  });
+  setupCountOptions(allQuestions.length);
   showStart();
 </script>
 
@@ -310,6 +398,44 @@ const countBreakpoints = [10, 20, 30];
 
   .count-option input {
     width: auto;
+  }
+
+  .difficulty-picker {
+    margin: 0 0 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+  }
+
+  .difficulty-picker legend {
+    padding: 0 0.35rem;
+    color: var(--color-text);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .difficulty-option {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  .difficulty-option input {
+    width: auto;
+  }
+
+  .difficulty-picker .field-help {
+    flex-basis: 100%;
+    margin: 0.25rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
   }
 
   .start-button {

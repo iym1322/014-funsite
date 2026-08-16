@@ -293,6 +293,45 @@ $$;
 grant execute on function public.decrement_setlist_likes(uuid) to anon;
 
 -- =========================================
+-- オーイシ検定 正答率集計
+-- =========================================
+-- 質問データ自体はsrc/data/quiz.tsの静的データで管理し、ここでは質問id(text)ごとの
+-- 累計解答数・正解数だけを持つ。正答率から動的に難易度(初級/中級/上級)を算出する
+-- ロジックはクライアント側(quiz.astro)にあり、サンプル数が少ない質問はどの難易度
+-- でも出題対象になる(集計テーブル側では特に区別しない)。
+create table if not exists public.quiz_stats (
+  question_id text primary key,
+  correct_count integer not null default 0,
+  total_count integer not null default 0
+);
+
+alter table public.quiz_stats enable row level security;
+
+create policy "quiz_stats_select_all"
+  on public.quiz_stats for select
+  to anon
+  using (true);
+
+grant select on public.quiz_stats to anon;
+
+-- 直接のINSERT/UPDATEはanonに許可せず、+1集計だけを行うRPC経由にする
+-- (任意の値へのUPDATEや不正な集計操作を防ぐため)。
+create or replace function public.record_quiz_answer(q_id text, was_correct boolean)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  insert into public.quiz_stats (question_id, correct_count, total_count)
+  values (q_id, case when was_correct then 1 else 0 end, 1)
+  on conflict (question_id) do update set
+    correct_count = public.quiz_stats.correct_count + case when was_correct then 1 else 0 end,
+    total_count = public.quiz_stats.total_count + 1;
+$$;
+
+grant execute on function public.record_quiz_answer(text, boolean) to anon;
+
+-- =========================================
 -- 投稿の自己削除機能
 -- =========================================
 -- ログイン機能が無いため、投稿時にブラウザ側で生成したランダムなトークンの
