@@ -1,0 +1,343 @@
+---
+// オーイシ検定(CONTENTS_PLAN.md C-27「クイズコーナー」)。
+// 静的な四択クイズで、投稿・投票のようなSupabase連携は不要(全問クライアント内で完結)。
+// 問題順・選択肢順は毎回シャッフルし、周回プレイでも新鮮に楽しめるようにしている。
+import Layout from "../layouts/Layout.astro";
+import { quizQuestions } from "../data/quiz";
+---
+
+<Layout title="オーイシ検定 | 014 BASE">
+  <h1>オーイシ検定</h1>
+  <p class="note">
+    オーイシマサヨシ／大石昌良に関する四択クイズです。全{quizQuestions.length}問、
+    間違えても大丈夫。1問ごとに解説つきなので、クイズを通して知識を深められます。
+  </p>
+
+  <div class="quiz-panel" id="quiz-panel">
+    <p class="quiz-progress" id="quiz-progress"></p>
+    <p class="quiz-category" id="quiz-category"></p>
+    <h2 class="quiz-question" id="quiz-question"></h2>
+
+    <div class="quiz-choices">
+      <button type="button" class="choice-button" data-index="0">
+        <span class="choice-letter">A</span><span class="choice-text"></span>
+      </button>
+      <button type="button" class="choice-button" data-index="1">
+        <span class="choice-letter">B</span><span class="choice-text"></span>
+      </button>
+      <button type="button" class="choice-button" data-index="2">
+        <span class="choice-letter">C</span><span class="choice-text"></span>
+      </button>
+      <button type="button" class="choice-button" data-index="3">
+        <span class="choice-letter">D</span><span class="choice-text"></span>
+      </button>
+    </div>
+
+    <div class="quiz-explanation" id="quiz-explanation" hidden>
+      <p class="quiz-verdict" id="quiz-verdict"></p>
+      <p class="quiz-explanation-text" id="quiz-explanation-text"></p>
+      <button type="button" class="next-button" id="next-button"></button>
+    </div>
+  </div>
+
+  <div class="quiz-result" id="quiz-result" hidden>
+    <p class="result-score" id="result-score"></p>
+    <p class="result-message" id="result-message"></p>
+    <button type="button" class="retry-button" id="retry-button">もう一度挑戦する</button>
+  </div>
+
+  <script type="application/json" id="quiz-data" set:html={JSON.stringify(quizQuestions)} />
+</Layout>
+
+<script>
+  type QuizQuestion = {
+    id: string;
+    category: string;
+    question: string;
+    choices: string[];
+    answerIndex: number;
+    explanation: string;
+  };
+
+  type ShuffledQuestion = {
+    category: string;
+    question: string;
+    choices: string[];
+    answerIndex: number;
+    explanation: string;
+  };
+
+  const allQuestions: QuizQuestion[] = JSON.parse(document.getElementById("quiz-data")!.textContent!);
+
+  const quizPanel = document.getElementById("quiz-panel") as HTMLDivElement;
+  const progressEl = document.getElementById("quiz-progress") as HTMLParagraphElement;
+  const categoryEl = document.getElementById("quiz-category") as HTMLParagraphElement;
+  const questionEl = document.getElementById("quiz-question") as HTMLHeadingElement;
+  const choiceButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(".choice-button"));
+  const explanationPanel = document.getElementById("quiz-explanation") as HTMLDivElement;
+  const verdictEl = document.getElementById("quiz-verdict") as HTMLParagraphElement;
+  const explanationTextEl = document.getElementById("quiz-explanation-text") as HTMLParagraphElement;
+  const nextButton = document.getElementById("next-button") as HTMLButtonElement;
+  const resultPanel = document.getElementById("quiz-result") as HTMLDivElement;
+  const resultScoreEl = document.getElementById("result-score") as HTMLParagraphElement;
+  const resultMessageEl = document.getElementById("result-message") as HTMLParagraphElement;
+  const retryButton = document.getElementById("retry-button") as HTMLButtonElement;
+
+  let questions: ShuffledQuestion[] = [];
+  let currentIndex = 0;
+  let score = 0;
+  let answered = false;
+
+  function shuffle<T>(items: T[]): T[] {
+    const arr = [...items];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function buildQuestions(): ShuffledQuestion[] {
+    return shuffle(allQuestions).map((q) => {
+      const order = shuffle(q.choices.map((_, i) => i));
+      return {
+        category: q.category,
+        question: q.question,
+        choices: order.map((i) => q.choices[i]),
+        answerIndex: order.indexOf(q.answerIndex),
+        explanation: q.explanation,
+      };
+    });
+  }
+
+  function showQuestion() {
+    answered = false;
+    const q = questions[currentIndex];
+    progressEl.textContent = `問 ${currentIndex + 1} / ${questions.length}`;
+    categoryEl.textContent = q.category;
+    questionEl.textContent = q.question;
+    choiceButtons.forEach((button, i) => {
+      const textEl = button.querySelector(".choice-text") as HTMLElement;
+      textEl.textContent = q.choices[i] ?? "";
+      button.disabled = false;
+      button.className = "choice-button";
+    });
+    explanationPanel.hidden = true;
+  }
+
+  function handleChoice(index: number) {
+    if (answered) return;
+    answered = true;
+    const q = questions[currentIndex];
+    const correct = index === q.answerIndex;
+    if (correct) score++;
+
+    choiceButtons.forEach((button, i) => {
+      button.disabled = true;
+      if (i === q.answerIndex) button.classList.add("correct");
+      else if (i === index) button.classList.add("incorrect");
+    });
+
+    verdictEl.textContent = correct ? "⭕ 正解！" : "❌ 不正解";
+    verdictEl.className = `quiz-verdict ${correct ? "is-correct" : "is-incorrect"}`;
+    explanationTextEl.textContent = q.explanation;
+    nextButton.textContent = currentIndex + 1 < questions.length ? "次の問題へ" : "結果を見る";
+    explanationPanel.hidden = false;
+  }
+
+  function resultMessage(correctCount: number, total: number): string {
+    const rate = correctCount / total;
+    if (rate === 1) return "パーフェクト！あなたは立派なオーイシ博士です🎓";
+    if (rate >= 0.7) return "かなりのオーイシ通ですね！";
+    if (rate >= 0.4) return "まずまず！もっと深掘りしてみよう。";
+    return "これから知っていけば大丈夫、サイトを見て予習しよう！";
+  }
+
+  function showResult() {
+    quizPanel.hidden = true;
+    resultPanel.hidden = false;
+    resultScoreEl.textContent = `${questions.length}問中 ${score}問正解！`;
+    resultMessageEl.textContent = resultMessage(score, questions.length);
+  }
+
+  function startQuiz() {
+    questions = buildQuestions();
+    currentIndex = 0;
+    score = 0;
+    quizPanel.hidden = false;
+    resultPanel.hidden = true;
+    showQuestion();
+  }
+
+  choiceButtons.forEach((button, i) => {
+    button.addEventListener("click", () => handleChoice(i));
+  });
+
+  nextButton.addEventListener("click", () => {
+    if (currentIndex + 1 < questions.length) {
+      currentIndex++;
+      showQuestion();
+    } else {
+      showResult();
+    }
+  });
+
+  retryButton.addEventListener("click", startQuiz);
+
+  startQuiz();
+</script>
+
+<style>
+  .note {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .quiz-panel {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+  }
+
+  .quiz-progress {
+    margin: 0 0 0.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+  }
+
+  .quiz-category {
+    display: inline-block;
+    margin: 0 0 0.75rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: var(--color-accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .quiz-question {
+    margin: 0 0 1.25rem;
+    font-size: 1.1rem;
+    line-height: 1.6;
+  }
+
+  .quiz-choices {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .choice-button {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: 0.95rem;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .choice-button:hover:not(:disabled) {
+    border-color: var(--color-accent);
+  }
+
+  .choice-button:disabled {
+    cursor: default;
+  }
+
+  .choice-letter {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .choice-button.correct {
+    border-color: #4a7c59;
+    background: color-mix(in srgb, #4a7c59 12%, var(--color-bg));
+  }
+
+  .choice-button.incorrect {
+    border-color: #a3663f;
+    background: color-mix(in srgb, #a3663f 12%, var(--color-bg));
+  }
+
+  .quiz-explanation {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .quiz-verdict {
+    margin: 0 0 0.5rem;
+    font-weight: 700;
+  }
+
+  .quiz-verdict.is-correct {
+    color: #4a7c59;
+  }
+
+  .quiz-verdict.is-incorrect {
+    color: #a3663f;
+  }
+
+  .quiz-explanation-text {
+    margin: 0 0 1.25rem;
+    line-height: 1.8;
+    color: var(--color-text-muted);
+  }
+
+  .next-button {
+    padding: 0.6rem 1.5rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: var(--color-surface);
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .quiz-result {
+    margin-top: 1.5rem;
+    padding: 2rem 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+    text-align: center;
+  }
+
+  .result-score {
+    margin: 0 0 0.5rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .result-message {
+    margin: 0 0 1.5rem;
+    color: var(--color-text-muted);
+  }
+
+  .retry-button {
+    padding: 0.6rem 1.5rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: var(--color-surface);
+    font-family: inherit;
+    cursor: pointer;
+  }
+</style>
