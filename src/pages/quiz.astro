@@ -4,6 +4,11 @@
 // 問題順・選択肢順は毎回シャッフルし、周回プレイでも新鮮に楽しめるようにしている。
 import Layout from "../layouts/Layout.astro";
 import { quizQuestions } from "../data/quiz";
+
+// 出題数の候補ライン。総問題数を上回るものはJS側で非表示にする
+// (現状10問しか無いため今は「全部(10問)」のみ表示されるが、問題を増やせば
+// 自動的に選択肢が増える)。
+const countBreakpoints = [10, 20, 30];
 ---
 
 <Layout title="オーイシ検定 | 014 BASE">
@@ -13,7 +18,25 @@ import { quizQuestions } from "../data/quiz";
     間違えても大丈夫。1問ごとに解説つきなので、クイズを通して知識を深められます。
   </p>
 
-  <div class="quiz-panel" id="quiz-panel">
+  <div class="quiz-start" id="quiz-start">
+    <p class="start-lead">出題数を選んでスタートしてください。</p>
+    <fieldset class="count-picker">
+      <legend>出題数</legend>
+      {countBreakpoints.map((n) => (
+        <label class="count-option" data-breakpoint={n}>
+          <input type="radio" name="quiz-count" value={String(n)} />
+          <span class="count-label"></span>
+        </label>
+      ))}
+      <label class="count-option" data-breakpoint="all">
+        <input type="radio" name="quiz-count" value="all" checked />
+        <span class="count-label"></span>
+      </label>
+    </fieldset>
+    <button type="button" class="start-button" id="start-button">検定をはじめる</button>
+  </div>
+
+  <div class="quiz-panel" id="quiz-panel" hidden>
     <p class="quiz-progress" id="quiz-progress"></p>
     <p class="quiz-category" id="quiz-category"></p>
     <h2 class="quiz-question" id="quiz-question"></h2>
@@ -36,6 +59,7 @@ import { quizQuestions } from "../data/quiz";
     <div class="quiz-explanation" id="quiz-explanation" hidden>
       <p class="quiz-verdict" id="quiz-verdict"></p>
       <p class="quiz-explanation-text" id="quiz-explanation-text"></p>
+      <a class="related-link" id="related-link" href="#" hidden>関連ページを見る →</a>
       <button type="button" class="next-button" id="next-button"></button>
     </div>
   </div>
@@ -65,10 +89,15 @@ import { quizQuestions } from "../data/quiz";
     choices: string[];
     answerIndex: number;
     explanation: string;
+    relatedHref?: string;
+    relatedLabel?: string;
   };
 
   const allQuestions: QuizQuestion[] = JSON.parse(document.getElementById("quiz-data")!.textContent!);
 
+  const quizStart = document.getElementById("quiz-start") as HTMLDivElement;
+  const startButton = document.getElementById("start-button") as HTMLButtonElement;
+  const countOptions = Array.from(document.querySelectorAll<HTMLLabelElement>(".count-option"));
   const quizPanel = document.getElementById("quiz-panel") as HTMLDivElement;
   const progressEl = document.getElementById("quiz-progress") as HTMLParagraphElement;
   const categoryEl = document.getElementById("quiz-category") as HTMLParagraphElement;
@@ -77,6 +106,7 @@ import { quizQuestions } from "../data/quiz";
   const explanationPanel = document.getElementById("quiz-explanation") as HTMLDivElement;
   const verdictEl = document.getElementById("quiz-verdict") as HTMLParagraphElement;
   const explanationTextEl = document.getElementById("quiz-explanation-text") as HTMLParagraphElement;
+  const relatedLink = document.getElementById("related-link") as HTMLAnchorElement;
   const nextButton = document.getElementById("next-button") as HTMLButtonElement;
   const resultPanel = document.getElementById("quiz-result") as HTMLDivElement;
   const resultScoreEl = document.getElementById("result-score") as HTMLParagraphElement;
@@ -97,17 +127,46 @@ import { quizQuestions } from "../data/quiz";
     return arr;
   }
 
-  function buildQuestions(): ShuffledQuestion[] {
-    return shuffle(allQuestions).map((q) => {
-      const order = shuffle(q.choices.map((_, i) => i));
-      return {
-        category: q.category,
-        question: q.question,
-        choices: order.map((i) => q.choices[i]),
-        answerIndex: order.indexOf(q.answerIndex),
-        explanation: q.explanation,
-      };
-    });
+  // 出題数の選択肢は総問題数に応じて動的に出し分ける
+  // (例えば総問題数が10問しか無ければ「10問」と「全部」は同じ結果になり
+  // 意味が無いため、総問題数を下回る候補だけを表示する)。
+  function setupCountOptions() {
+    const total = allQuestions.length;
+    for (const option of countOptions) {
+      const breakpoint = option.dataset.breakpoint;
+      const labelEl = option.querySelector(".count-label") as HTMLElement;
+      if (breakpoint === "all") {
+        labelEl.textContent = `全部(${total}問)`;
+        option.hidden = false;
+      } else {
+        const n = Number(breakpoint);
+        labelEl.textContent = `${n}問`;
+        option.hidden = n >= total;
+      }
+    }
+  }
+
+  function selectedCount(): number {
+    const checked = document.querySelector<HTMLInputElement>('input[name="quiz-count"]:checked');
+    const value = checked?.value ?? "all";
+    return value === "all" ? allQuestions.length : Math.min(Number(value), allQuestions.length);
+  }
+
+  function buildQuestions(count: number): ShuffledQuestion[] {
+    return shuffle(allQuestions)
+      .slice(0, count)
+      .map((q) => {
+        const order = shuffle(q.choices.map((_, i) => i));
+        return {
+          category: q.category,
+          question: q.question,
+          choices: order.map((i) => q.choices[i]),
+          answerIndex: order.indexOf(q.answerIndex),
+          explanation: q.explanation,
+          relatedHref: q.relatedHref,
+          relatedLabel: q.relatedLabel,
+        };
+      });
   }
 
   function showQuestion() {
@@ -141,6 +200,13 @@ import { quizQuestions } from "../data/quiz";
     verdictEl.textContent = correct ? "⭕ 正解！" : "❌ 不正解";
     verdictEl.className = `quiz-verdict ${correct ? "is-correct" : "is-incorrect"}`;
     explanationTextEl.textContent = q.explanation;
+    if (q.relatedHref) {
+      relatedLink.href = q.relatedHref;
+      relatedLink.textContent = q.relatedLabel ? `${q.relatedLabel} →` : "関連ページを見る →";
+      relatedLink.hidden = false;
+    } else {
+      relatedLink.hidden = true;
+    }
     nextButton.textContent = currentIndex + 1 < questions.length ? "次の問題へ" : "結果を見る";
     explanationPanel.hidden = false;
   }
@@ -160,10 +226,17 @@ import { quizQuestions } from "../data/quiz";
     resultMessageEl.textContent = resultMessage(score, questions.length);
   }
 
+  function showStart() {
+    quizStart.hidden = false;
+    quizPanel.hidden = true;
+    resultPanel.hidden = true;
+  }
+
   function startQuiz() {
-    questions = buildQuestions();
+    questions = buildQuestions(selectedCount());
     currentIndex = 0;
     score = 0;
+    quizStart.hidden = true;
     quizPanel.hidden = false;
     resultPanel.hidden = true;
     showQuestion();
@@ -182,15 +255,71 @@ import { quizQuestions } from "../data/quiz";
     }
   });
 
-  retryButton.addEventListener("click", startQuiz);
+  startButton.addEventListener("click", startQuiz);
+  retryButton.addEventListener("click", showStart);
 
-  startQuiz();
+  setupCountOptions();
+  showStart();
 </script>
 
 <style>
   .note {
     color: var(--color-text-muted);
     font-size: 0.9rem;
+  }
+
+  .quiz-start {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+  }
+
+  .start-lead {
+    margin: 0 0 1.25rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .count-picker {
+    margin: 0 0 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+  }
+
+  .count-picker legend {
+    padding: 0 0.35rem;
+    color: var(--color-text);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .count-option {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  .count-option input {
+    width: auto;
+  }
+
+  .start-button {
+    padding: 0.6rem 1.5rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: var(--color-surface);
+    font-family: inherit;
+    cursor: pointer;
   }
 
   .quiz-panel {
@@ -296,9 +425,21 @@ import { quizQuestions } from "../data/quiz";
   }
 
   .quiz-explanation-text {
-    margin: 0 0 1.25rem;
+    margin: 0 0 1rem;
     line-height: 1.8;
     color: var(--color-text-muted);
+  }
+
+  .related-link {
+    display: inline-block;
+    margin: 0 0 1.25rem;
+    color: var(--color-accent);
+    font-size: 0.85rem;
+    text-decoration: none;
+  }
+
+  .related-link:hover {
+    text-decoration: underline;
   }
 
   .next-button {

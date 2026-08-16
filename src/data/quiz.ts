@@ -10,6 +10,9 @@ export type QuizQuestion = {
   choices: string[];
   answerIndex: number; // choices内の正解のindex
   explanation: string;
+  // 解説に関連するサイト内ページへのリンク(任意)。対応する個別ページが無い場合は省略する。
+  relatedHref?: string;
+  relatedLabel?: string;
 };
 
 export const quizQuestions: QuizQuestion[] = [
@@ -21,6 +24,8 @@ export const quizQuestions: QuizQuestion[] = [
     answerIndex: 0,
     explanation:
       "オーイシマサヨシ(大石昌良)は愛媛県宇和島市出身。公式プロフィールにも愛媛県宇和島市出身と記載されている。",
+    relatedHref: "/profile",
+    relatedLabel: "プロフィールページを見る",
   },
   {
     id: "birthday",
@@ -30,6 +35,8 @@ export const quizQuestions: QuizQuestion[] = [
     answerIndex: 0,
     explanation:
       "オーイシマサヨシは1980年1月5日生まれ。大石昌良名義とオーイシマサヨシ名義を使い分けながら幅広く活動している。",
+    relatedHref: "/profile",
+    relatedLabel: "プロフィールページを見る",
   },
   {
     id: "sound-schedule",
@@ -48,6 +55,8 @@ export const quizQuestions: QuizQuestion[] = [
     answerIndex: 2,
     explanation:
       "2014年から、アニメ・ゲームなどのコンテンツ向け名義として「オーイシマサヨシ」での活動を開始。同年にアニメ『月刊少女野崎くん』のOPテーマ「君じゃなきゃダメみたい」をリリースした。",
+    relatedHref: "/profile",
+    relatedLabel: "プロフィールページを見る",
   },
   {
     id: "kimi-janakya-dame-mitai-anime",
@@ -57,6 +66,8 @@ export const quizQuestions: QuizQuestion[] = [
     answerIndex: 1,
     explanation:
       "「君じゃなきゃダメみたい」は、2014年放送のTVアニメ『月刊少女野崎くん』のオープニングテーマ。オーイシマサヨシ名義を代表する初期の楽曲の一つ。",
+    relatedHref: "/works/kimi-janakya-dame-mitai",
+    relatedLabel: "「君じゃなきゃダメみたい」のページを見る",
   },
   {
     id: "oxt-unit",
@@ -75,6 +86,8 @@ export const quizQuestions: QuizQuestion[] = [
     answerIndex: 1,
     explanation:
       "「UNION」はOxTが担当したTVアニメ『SSSS.GRIDMAN』のオープニングテーマ。OxTの代表曲の一つ。",
+    relatedHref: "/works/union-oxt",
+    relatedLabel: "「UNION」のページを見る",
   },
   {
     id: "japari-park",
@@ -84,6 +97,8 @@ export const quizQuestions: QuizQuestion[] = [
     answerIndex: 0,
     explanation:
       "「ようこそジャパリパークへ」はTVアニメ『けものフレンズ』のオープニングテーマ。どうぶつビスケッツ×PPPが歌唱し、オーイシマサヨシが作詞・作曲・編曲を担当した。2017年を代表するアニメソングの一つとして大きな話題になった。",
+    relatedHref: "/works/youkoso-japari-park-kariuta",
+    relatedLabel: "オーイシマサヨシ自身によるセルフカバー版のページを見る",
   },
   {
     id: "solo-debut",
@@ -93,6 +108,8 @@ export const quizQuestions: QuizQuestion[] = [
     answerIndex: 2,
     explanation:
       "Sound Scheduleでの活動を経て、2008年に「大石昌良」名義でソロデビュー。その後2014年から「オーイシマサヨシ」名義でアニメ・ゲームなどのコンテンツ向け楽曲を中心に活動するようになった。",
+    relatedHref: "/profile",
+    relatedLabel: "プロフィールページを見る",
   },
   {
     id: "kariuta-album",
@@ -102,5 +119,7 @@ export const quizQuestions: QuizQuestion[] = [
     answerIndex: 1,
     explanation:
       "『仮歌』は2017年7月に発売されたオーイシマサヨシ初のアルバム。自身が他のアーティストなどに提供した楽曲をセルフカバーするという特徴的な作品で、「ようこそジャパリパークへ」なども収録されている。",
+    relatedHref: "/works/kagauta",
+    relatedLabel: "アルバム『仮歌』のページを見る",
   },
 ];
