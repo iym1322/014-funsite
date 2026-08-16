@@ -16,6 +16,8 @@ const countBreakpoints = [10, 20, 30];
   <p class="note">
     オーイシマサヨシ／大石昌良に関する四択クイズです。全{quizQuestions.length}問、
     間違えても大丈夫。1問ごとに解説つきなので、クイズを通して知識を深められます。
+    ファンから投稿された問題(運営による事実確認は未実施)も出題されることがあり、
+    その場合は問題文の横に「投稿問題」バッジが表示されます。
   </p>
 
   <div class="quiz-start" id="quiz-start">
@@ -60,7 +62,10 @@ const countBreakpoints = [10, 20, 30];
 
   <div class="quiz-panel" id="quiz-panel" hidden>
     <p class="quiz-progress" id="quiz-progress"></p>
-    <p class="quiz-category" id="quiz-category"></p>
+    <div class="quiz-meta-row">
+      <p class="quiz-category" id="quiz-category"></p>
+      <span class="submitted-badge" id="submitted-badge" hidden>投稿問題</span>
+    </div>
     <h2 class="quiz-question" id="quiz-question"></h2>
 
     <div class="quiz-choices">
@@ -95,9 +100,10 @@ const countBreakpoints = [10, 20, 30];
   <section class="submission-list">
     <h2>みんなの投稿問題</h2>
     <p class="note">
-      ファンのみなさんが投稿したオリジナル問題です。上の検定本編とは異なり、
-      運営による事実確認は行っていません(内容の正確性は投稿者の責任となります)。
-      不適切な内容は発見次第削除します。
+      ファンのみなさんが投稿したオリジナル問題です。運営による事実確認は行っていません
+      (内容の正確性は投稿者の責任となります)。不適切な内容は発見次第削除します。
+      投稿された問題は、この一覧に加えて上の検定本編でも「投稿問題」バッジ付きで
+      出題されることがあります。
     </p>
     <p class="loading-message" id="submission-loading">読み込み中...</p>
     <ul id="submission-items"></ul>
@@ -171,6 +177,9 @@ const countBreakpoints = [10, 20, 30];
     choices: string[];
     answerIndex: number;
     explanation: string;
+    relatedHref?: string;
+    relatedLabel?: string;
+    isSubmitted?: boolean;
   };
 
   type ShuffledQuestion = {
@@ -182,11 +191,19 @@ const countBreakpoints = [10, 20, 30];
     explanation: string;
     relatedHref?: string;
     relatedLabel?: string;
+    isSubmitted?: boolean;
   };
 
   type Difficulty = "初級" | "中級" | "上級";
 
   const allQuestions: QuizQuestion[] = JSON.parse(document.getElementById("quiz-data")!.textContent!);
+  // ユーザーが投稿した問題(未検証)。読み込み後、検定本編の出題プールにも合流させる
+  // (「投稿問題」バッジで見分けられるようにした上で、混ぜてよいという方針にしたため)。
+  let submittedQuestions: QuizQuestion[] = [];
+
+  function playableQuestions(): QuizQuestion[] {
+    return [...allQuestions, ...submittedQuestions];
+  }
 
   // 難易度は「みんなの正答率」から動的に決める。サンプル数が少ない質問は
   // 判定を保留し、どの難易度を選んでも出題対象になる(データが無いのに
@@ -223,6 +240,7 @@ const countBreakpoints = [10, 20, 30];
   const quizPanel = document.getElementById("quiz-panel") as HTMLDivElement;
   const progressEl = document.getElementById("quiz-progress") as HTMLParagraphElement;
   const categoryEl = document.getElementById("quiz-category") as HTMLParagraphElement;
+  const submittedBadge = document.getElementById("submitted-badge") as HTMLSpanElement;
   const questionEl = document.getElementById("quiz-question") as HTMLHeadingElement;
   const choiceButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(".choice-button"));
   const explanationPanel = document.getElementById("quiz-explanation") as HTMLDivElement;
@@ -281,8 +299,9 @@ const countBreakpoints = [10, 20, 30];
   // 選ばれた難易度で問題プールを絞り込む。データ不足(判定null)の質問は
   // 「どの難易度でも出題対象」として、選んだ難易度に関わらず含める。
   function filterByDifficulty(difficulty: Difficulty | "all"): QuizQuestion[] {
-    if (difficulty === "all") return allQuestions;
-    return allQuestions.filter((q) => {
+    const pool = playableQuestions();
+    if (difficulty === "all") return pool;
+    return pool.filter((q) => {
       const level = computedDifficulty(q.id);
       return level === null || level === difficulty;
     });
@@ -302,6 +321,7 @@ const countBreakpoints = [10, 20, 30];
           explanation: q.explanation,
           relatedHref: q.relatedHref,
           relatedLabel: q.relatedLabel,
+          isSubmitted: q.isSubmitted,
         };
       });
   }
@@ -311,6 +331,7 @@ const countBreakpoints = [10, 20, 30];
     const q = questions[currentIndex];
     progressEl.textContent = `問 ${currentIndex + 1} / ${questions.length}`;
     categoryEl.textContent = q.category;
+    submittedBadge.hidden = !q.isSubmitted;
     questionEl.textContent = q.question;
     choiceButtons.forEach((button, i) => {
       const textEl = button.querySelector(".choice-text") as HTMLElement;
@@ -404,14 +425,14 @@ const countBreakpoints = [10, 20, 30];
   // 絞り込み後の件数に合わせて更新する。
   const difficultyInputs = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="quiz-difficulty"]'));
   difficultyInputs.forEach((input) => {
-    input.addEventListener("change", () => {
-      setupCountOptions(filterByDifficulty(selectedDifficulty()).length);
-    });
+    input.addEventListener("change", refreshCountOptions);
   });
 
-  loadStats().then(() => {
+  function refreshCountOptions() {
     setupCountOptions(filterByDifficulty(selectedDifficulty()).length);
-  });
+  }
+
+  loadStats().then(refreshCountOptions);
   setupCountOptions(allQuestions.length);
   showStart();
 
@@ -542,15 +563,29 @@ const countBreakpoints = [10, 20, 30];
       return;
     }
 
+    const rows = (data ?? []) as QuizSubmission[];
+
+    // 投稿問題は「投稿問題」バッジ付きで検定本編の出題プールにも合流させる。
+    submittedQuestions = rows.map((item) => ({
+      id: item.id,
+      category: item.category,
+      question: item.question,
+      choices: item.choices,
+      answerIndex: item.answer_index,
+      explanation: item.explanation,
+      isSubmitted: true,
+    }));
+    refreshCountOptions();
+
     submissionList.innerHTML = "";
-    if (!data || data.length === 0) {
+    if (rows.length === 0) {
       const empty = document.createElement("li");
       empty.className = "loading-message empty-message";
       empty.textContent = "まだ投稿がありません。最初の問題を投稿してみませんか?";
       submissionList.appendChild(empty);
       return;
     }
-    for (const item of data as QuizSubmission[]) {
+    for (const item of rows) {
       submissionList.appendChild(renderSubmission(item));
     }
   }
@@ -724,13 +759,29 @@ const countBreakpoints = [10, 20, 30];
     font-size: 0.85rem;
   }
 
+  .quiz-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+  }
+
   .quiz-category {
     display: inline-block;
-    margin: 0 0 0.75rem;
     padding: 0.15rem 0.6rem;
     border-radius: 999px;
     background: var(--color-bg);
     color: var(--color-accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .submitted-badge {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    background: #a3663f;
+    color: var(--color-surface);
     font-size: 0.75rem;
     font-weight: 700;
   }
