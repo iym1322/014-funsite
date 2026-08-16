@@ -10,7 +10,7 @@ const navItems = [
   { href: "/setlists", label: "あなたのセットリスト" },
   { href: "/live-reports", label: "イベントレポート" },
   { href: "/ranking", label: "勝手にランキング" },
-  { href: "/quiz", label: "オーイシ検定" },
+  { href: "/quiz", label: "オーイシ検定", badge: "制作中" },
   { href: "/calendar", label: "カレンダー" },
 ];
 ---
@@ -24,7 +24,12 @@ const navItems = [
       </a>
       <ul>
         {navItems.map((item) => (
-          <li><a href={item.href}>{item.label}</a></li>
+          <li>
+            <a href={item.href}>
+              {item.label}
+              {item.badge && <span class="nav-badge">{item.badge}</span>}
+            </a>
+          </li>
         ))}
       </ul>
     </nav>

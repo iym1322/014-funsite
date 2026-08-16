@@ -110,6 +110,18 @@ a {
   color: var(--color-accent);
 }
 
+.nav-badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-surface);
+  font-size: 0.65rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
 @media (max-width: 640px) {
   /* サイトタイトルが長く、横幅が狭いとナビ側の幅が0になってしまうため、
      タイトルとナビを縦に並べてそれぞれ全幅を使えるようにする。 */
