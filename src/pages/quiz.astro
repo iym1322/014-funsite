@@ -16,8 +16,9 @@ const countBreakpoints = [10, 20, 30];
   <p class="note">
     オーイシマサヨシ／大石昌良に関する四択クイズです。全{quizQuestions.length}問、
     間違えても大丈夫。1問ごとに解説つきなので、クイズを通して知識を深められます。
-    ファンから投稿された問題(運営による事実確認は未実施)も出題されることがあり、
-    その場合は問題文の横に「投稿問題」バッジが表示されます。
+    ファンから投稿された問題(事後確認となります)も出題されることがあり、
+    その場合は問題文の横に「投稿問題」バッジが表示されます。内容が事実と違うと思ったら、
+    解説の下にある通報ボタンからお知らせください。
   </p>
 
   <div class="quiz-start" id="quiz-start">
@@ -87,7 +88,10 @@ const countBreakpoints = [10, 20, 30];
       <p class="quiz-verdict" id="quiz-verdict"></p>
       <p class="quiz-explanation-text" id="quiz-explanation-text"></p>
       <a class="related-link" id="related-link" href="#" hidden>関連ページを見る →</a>
-      <button type="button" class="next-button" id="next-button"></button>
+      <div class="explanation-footer">
+        <button type="button" class="next-button" id="next-button"></button>
+        <button type="button" class="flag-button" id="flag-button">⚠ この解説、事実と違うかも</button>
+      </div>
     </div>
   </div>
 
@@ -100,10 +104,10 @@ const countBreakpoints = [10, 20, 30];
   <section class="submission-list">
     <h2>みんなの投稿問題</h2>
     <p class="note">
-      ファンのみなさんが投稿したオリジナル問題です。運営による事実確認は行っていません
+      ファンのみなさんが投稿したオリジナル問題です。内容の確認は事後確認となります
       (内容の正確性は投稿者の責任となります)。不適切な内容は発見次第削除します。
       投稿された問題は、この一覧に加えて上の検定本編でも「投稿問題」バッジ付きで
-      出題されることがあります。
+      出題されることがあります。内容が事実と違うと思ったら、通報ボタンからお知らせください。
     </p>
     <p class="loading-message" id="submission-loading">読み込み中...</p>
     <ul id="submission-items"></ul>
@@ -248,6 +252,8 @@ const countBreakpoints = [10, 20, 30];
   const explanationTextEl = document.getElementById("quiz-explanation-text") as HTMLParagraphElement;
   const relatedLink = document.getElementById("related-link") as HTMLAnchorElement;
   const nextButton = document.getElementById("next-button") as HTMLButtonElement;
+  const flagButton = document.getElementById("flag-button") as HTMLButtonElement;
+  const FLAG_BUTTON_DEFAULT_TEXT = "⚠ この解説、事実と違うかも";
   const resultPanel = document.getElementById("quiz-result") as HTMLDivElement;
   const resultScoreEl = document.getElementById("result-score") as HTMLParagraphElement;
   const resultMessageEl = document.getElementById("result-message") as HTMLParagraphElement;
@@ -340,6 +346,8 @@ const countBreakpoints = [10, 20, 30];
       button.className = "choice-button";
     });
     explanationPanel.hidden = true;
+    flagButton.disabled = false;
+    flagButton.textContent = FLAG_BUTTON_DEFAULT_TEXT;
   }
 
   function handleChoice(index: number) {
@@ -415,6 +423,19 @@ const countBreakpoints = [10, 20, 30];
       showQuestion();
     } else {
       showResult();
+    }
+  });
+
+  // 通報件数はユーザーには見せない(運営がSupabaseダッシュボードで確認するだけ)ので、
+  // ここでは押した本人への「送りました」フィードバックだけ返す。
+  flagButton.addEventListener("click", async () => {
+    const q = questions[currentIndex];
+    flagButton.disabled = true;
+    flagButton.textContent = "報告しました。ありがとうございます";
+    const { error } = await supabase.rpc("flag_quiz_question", { q_id: q.id });
+    if (error) {
+      flagButton.disabled = false;
+      flagButton.textContent = FLAG_BUTTON_DEFAULT_TEXT;
     }
   });
 
@@ -516,6 +537,21 @@ const countBreakpoints = [10, 20, 30];
     author.className = "submission-author";
     author.textContent = item.author;
     details.appendChild(author);
+
+    const flagButton = document.createElement("button");
+    flagButton.type = "button";
+    flagButton.className = "flag-button";
+    flagButton.textContent = "⚠ この問題、事実と違うかも";
+    flagButton.addEventListener("click", async () => {
+      flagButton.disabled = true;
+      flagButton.textContent = "報告しました。ありがとうございます";
+      const { error } = await supabase.rpc("flag_quiz_question", { q_id: item.id });
+      if (error) {
+        flagButton.disabled = false;
+        flagButton.textContent = "⚠ この問題、事実と違うかも";
+      }
+    });
+    details.appendChild(flagButton);
 
     const ownerToken = getOwnerToken(SUBMISSION_OWNER_NS, item.id);
     if (ownerToken) {
@@ -891,6 +927,17 @@ const countBreakpoints = [10, 20, 30];
     cursor: pointer;
   }
 
+  .explanation-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .explanation-footer :global(.flag-button) {
+    margin-top: 0;
+  }
+
   .quiz-result {
     margin-top: 1.5rem;
     padding: 2rem 1.5rem;
@@ -1070,6 +1117,28 @@ const countBreakpoints = [10, 20, 30];
 
   .delete-button:disabled {
     opacity: 0.6;
+    cursor: default;
+  }
+
+  .flag-button {
+    margin-top: 0.75rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .flag-button:hover:not(:disabled) {
+    border-color: #a3663f;
+    color: #a3663f;
+  }
+
+  .flag-button:disabled {
+    opacity: 0.7;
     cursor: default;
   }
 

@@ -332,6 +332,35 @@ $$;
 grant execute on function public.record_quiz_answer(text, boolean) to anon;
 
 -- =========================================
+-- オーイシ検定 通報(内容が事実と違う可能性の申告)
+-- =========================================
+-- 「この解説はおかしいかも」ボタンからの申告件数を集計する。運営がSupabase
+-- ダッシュボードで内容確認の目安として使うためだけのもので、利用者には
+-- 件数を一切見せない。そのためquiz_statsとは別テーブルにし、anonへの
+-- SELECT権限・ポリシーはあえて付与しない(RLS有効かつポリシー無し=デフォルト拒否。
+-- 加算はSECURITY DEFINER関数経由のみ許可する)。
+create table if not exists public.quiz_flags (
+  question_id text primary key,
+  flag_count integer not null default 0
+);
+
+alter table public.quiz_flags enable row level security;
+
+create or replace function public.flag_quiz_question(q_id text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  insert into public.quiz_flags (question_id, flag_count)
+  values (q_id, 1)
+  on conflict (question_id) do update set
+    flag_count = public.quiz_flags.flag_count + 1;
+$$;
+
+grant execute on function public.flag_quiz_question(text) to anon;
+
+-- =========================================
 -- オーイシ検定 投稿問題
 -- =========================================
 -- ファンが自作した四択問題を投稿できるコーナー。他の投稿コーナーと同じ即時公開・
