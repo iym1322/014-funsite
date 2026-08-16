@@ -332,6 +332,43 @@ $$;
 grant execute on function public.record_quiz_answer(text, boolean) to anon;
 
 -- =========================================
+-- オーイシ検定 投稿問題
+-- =========================================
+-- ファンが自作した四択問題を投稿できるコーナー。他の投稿コーナーと同じ即時公開・
+-- 事後モデレーション方針だが、こちらはクイズの「正解」という事実性を扱うため、
+-- 「運営による事実確認は行っていない」旨をページ上に明記した上で、src/data/quiz.ts
+-- の検定本編(正答率集計・難易度判定の対象)とは別区画として表示する
+-- (誤った投稿がそのまま検定本編の統計や難易度判定に混入しないようにするため)。
+create table if not exists public.quiz_submissions (
+  id uuid primary key default gen_random_uuid(),
+  category text not null check (char_length(category) between 1 and 30),
+  question text not null check (char_length(question) between 1 and 200),
+  choices jsonb not null check (
+    jsonb_typeof(choices) = 'array'
+    and jsonb_array_length(choices) = 4
+  ),
+  answer_index integer not null check (answer_index between 0 and 3),
+  explanation text not null check (char_length(explanation) between 1 and 400),
+  author text not null check (char_length(author) between 1 and 50),
+  owner_token_hash text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.quiz_submissions enable row level security;
+
+create policy "quiz_submissions_select_all"
+  on public.quiz_submissions for select
+  to anon
+  using (true);
+
+create policy "quiz_submissions_insert_public"
+  on public.quiz_submissions for insert
+  to anon
+  with check (true);
+
+grant select, insert on public.quiz_submissions to anon;
+
+-- =========================================
 -- 投稿の自己削除機能
 -- =========================================
 -- ログイン機能が無いため、投稿時にブラウザ側で生成したランダムなトークンの
@@ -395,3 +432,17 @@ as $$
 $$;
 
 grant execute on function public.delete_setlist(uuid, text) to anon;
+
+create or replace function public.delete_quiz_submission(submission_id uuid, token text)
+returns void
+language sql
+security definer
+set search_path = public, extensions
+as $$
+  delete from public.quiz_submissions
+  where id = submission_id
+    and owner_token_hash is not null
+    and owner_token_hash = encode(digest(token, 'sha256'), 'hex');
+$$;
+
+grant execute on function public.delete_quiz_submission(uuid, text) to anon;
