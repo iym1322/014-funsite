@@ -81,17 +81,35 @@ const questionsForClient = rankingQuestions.map((q) => ({
         .slice(0, 3);
       const totalVotes = [...counts.values()].reduce((sum, v) => sum + v, 0);
 
-      const section = document.createElement("section");
+      const section = document.createElement("div");
       section.className = "question";
 
-      const heading = document.createElement("h2");
-      heading.textContent = q.question;
-      section.appendChild(heading);
+      // TOP3をクリックで開閉するプルダウン形式にする(お題数が増えて一覧が
+      // 縦に長くなりすぎるため、既定は折りたたみ表示)。
+      const summary = document.createElement("button");
+      summary.type = "button";
+      summary.className = "question-summary";
+      summary.setAttribute("aria-expanded", "false");
+      summary.innerHTML = `
+        <span class="question-summary-text">
+          <h2></h2>
+          <span class="question-hint"></span>
+        </span>
+        <span class="question-toggle-icon" aria-hidden="true">▼</span>
+      `;
+      (summary.querySelector("h2") as HTMLElement).textContent = q.question;
+      (summary.querySelector(".question-hint") as HTMLElement).textContent = `総投票数: ${totalVotes}票・タップしてTOP3を見る`;
+      section.appendChild(summary);
 
-      const totalEl = document.createElement("p");
-      totalEl.className = "total-votes";
-      totalEl.textContent = `総投票数: ${totalVotes}票`;
-      section.appendChild(totalEl);
+      const details = document.createElement("div");
+      details.className = "question-details";
+      details.hidden = true;
+
+      summary.addEventListener("click", () => {
+        const expanded = summary.getAttribute("aria-expanded") === "true";
+        summary.setAttribute("aria-expanded", String(!expanded));
+        details.hidden = expanded;
+      });
 
       const list = document.createElement("ol");
       list.className = "rank-list";
@@ -127,14 +145,15 @@ const questionsForClient = rankingQuestions.map((q) => ({
         list.appendChild(li);
       });
 
-      section.appendChild(list);
+      details.appendChild(list);
 
       const detailLink = document.createElement("a");
       detailLink.className = "detail-link";
       detailLink.href = `/ranking/${q.id}`;
       detailLink.textContent = "全順位を見る・投票する →";
-      section.appendChild(detailLink);
+      details.appendChild(detailLink);
 
+      section.appendChild(details);
       container.appendChild(section);
     }
   }
@@ -156,17 +175,63 @@ const questionsForClient = rankingQuestions.map((q) => ({
   }
 
   .question {
-    margin-top: 3rem;
+    margin-top: 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+    overflow: hidden;
   }
 
-  .question h2 {
-    margin-bottom: 0.25rem;
+  .question-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    padding: 1.25rem 1.5rem;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
   }
 
-  .total-votes {
+  .question-summary:hover {
+    background: var(--color-bg);
+  }
+
+  .question-summary-text {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .question-summary h2 {
+    margin: 0;
+  }
+
+  .question-hint {
     color: var(--color-text-muted);
     font-size: 0.8rem;
-    margin: 0 0 1rem;
+  }
+
+  .question-toggle-icon {
+    flex: none;
+    display: inline-block;
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    transition: transform 200ms ease;
+  }
+
+  .question-summary[aria-expanded="true"] .question-toggle-icon {
+    transform: rotate(180deg);
+  }
+
+  .question-details {
+    padding: 0 1.5rem 1.5rem;
+    border-top: 1px solid var(--color-border);
+    padding-top: 1.25rem;
   }
 
   .rank-list {

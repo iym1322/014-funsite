@@ -47,4 +47,29 @@ export const rankingQuestions: RankingQuestion[] = [
     question: "カラオケで歌うなら？",
     choices: "all-singles",
   },
+  {
+    id: "tearjerker",
+    question: "一番泣ける曲は？",
+    choices: "all-singles",
+  },
+  {
+    id: "hype",
+    question: "一番テンションが上がる曲は？",
+    choices: "all-singles",
+  },
+  {
+    id: "recommend",
+    question: "はじめての人にすすめるなら？",
+    choices: "all-singles",
+  },
+  {
+    id: "live",
+    question: "ライブで一番盛り上がる曲は？",
+    choices: "all-singles",
+  },
+  {
+    id: "bgm",
+    question: "作業用BGMにするなら？",
+    choices: "all-singles",
+  },
 ];

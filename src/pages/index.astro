@@ -87,13 +87,18 @@ const featuredPool = featuredGroups
 const latestSongs = [...songs]
   .sort((a, b) => b.sortDate.localeCompare(a.sortDate))
   .slice(0, 10);
-const activeRanking = rankingQuestions[0];
-const rankingCandidates = resolveRankingChoices(activeRanking)
-  .map((c) => {
-    const track = tracks.find((t) => t.slug === c.trackSlug);
-    return track ? { slug: c.trackSlug, title: track.title } : null;
-  })
-  .filter((c): c is { slug: string; title: string } => c !== null);
+// 開催中のランキングはお題を1つに固定せず、全お題をゆっくり自動で切り替える
+// カルーセル表示にする(お題数が増えたため)。
+const rankingSlides = rankingQuestions.map((q) => ({
+  id: q.id,
+  question: q.question,
+  candidates: resolveRankingChoices(q)
+    .map((c) => {
+      const track = tracks.find((t) => t.slug === c.trackSlug);
+      return track ? { slug: c.trackSlug, title: track.title } : null;
+    })
+    .filter((c): c is { slug: string; title: string } => c !== null),
+}));
 
 // 推し曲プレビュー用に、投稿がどの曲についてか解決できるよう曲名の一覧を渡しておく
 // (実際の投稿一覧・得票数はSupabaseからブラウザ側で取得する。ビルド時には分からないため)。
@@ -187,24 +192,25 @@ const formatEventDate = (date: string) => {
       </div>
       <a href="/ranking">投票ページへ →</a>
     </div>
-    <div class="ranking-panel">
-      <div class="ranking-question">
-        <span>今回のお題</span>
-        <h3>{activeRanking.question}</h3>
-        <p>投票結果はリアルタイムで反映されます。</p>
-      </div>
-      <ol class="ranking-list" id="ranking-preview-list">
-        <li class="placeholder">読み込み中...</li>
-      </ol>
+    <div class="ranking-carousel" id="ranking-carousel">
+      {rankingSlides.map((slide, index) => (
+        <div class="ranking-panel" data-index={index} hidden={index !== 0}>
+          <div class="ranking-question">
+            <span>今回のお題</span>
+            <h3>{slide.question}</h3>
+            <p>投票結果はリアルタイムで反映されます。</p>
+          </div>
+          <ol class="ranking-list" data-question-id={slide.id}>
+            <li class="placeholder">読み込み中...</li>
+          </ol>
+        </div>
+      ))}
     </div>
+    {rankingSlides.length > 1 && <div class="ranking-dots" id="ranking-dots"></div>}
   </section>
 
   <script type="application/json" id="track-title-lookup-data" set:html={JSON.stringify(trackTitleLookup)} />
-  <script
-    type="application/json"
-    id="ranking-preview-data"
-    set:html={JSON.stringify({ id: activeRanking.id, candidates: rankingCandidates })}
-  />
+  <script type="application/json" id="ranking-slides-data" set:html={JSON.stringify(rankingSlides)} />
 
   <section class="event-preview">
     <div class="section-heading">
@@ -428,15 +434,16 @@ const formatEventDate = (date: string) => {
   type TrackTitleLookup = { slug: string; title: string; coverSrc: string | null };
   type FavoritePost = { id: string; track_slug: string; author: string; body: string; likes: number };
   type RankingCandidate = { slug: string; title: string };
+  type RankingSlide = { id: string; question: string; candidates: RankingCandidate[] };
 
   const trackTitleLookup: TrackTitleLookup[] = JSON.parse(
     document.getElementById("track-title-lookup-data")!.textContent!
   );
   const trackMap = new Map(trackTitleLookup.map((t) => [t.slug, t]));
 
-  const rankingPreviewData: { id: string; candidates: RankingCandidate[] } = JSON.parse(
-    document.getElementById("ranking-preview-data")!.textContent!
-  );
+  const rankingSlides: RankingSlide[] = JSON.parse(document.getElementById("ranking-slides-data")!.textContent!);
+  const rankingCarousel = document.getElementById("ranking-carousel") as HTMLDivElement;
+  const rankingDotsContainer = document.getElementById("ranking-dots") as HTMLDivElement | null;
 
   function coverEl(): HTMLDivElement {
     const cover = document.createElement("div");
@@ -497,33 +504,85 @@ const formatEventDate = (date: string) => {
   }
 
   async function loadRankingPreview() {
-    const list = document.getElementById("ranking-preview-list") as HTMLOListElement;
     const { data } = await supabase
       .from("ranking_results")
       .select("*")
-      .eq("question_id", rankingPreviewData.id);
+      .in("question_id", rankingSlides.map((s) => s.id));
 
-    const counts = new Map((data ?? []).map((row: any) => [row.track_slug, row.votes as number]));
-    const ranked = rankingPreviewData.candidates
-      .map((c) => ({ ...c, votes: counts.get(c.slug) ?? 0 }))
-      .sort((a, b) => b.votes - a.votes)
-      .slice(0, 3);
+    const byQuestion = new Map<string, Map<string, number>>();
+    for (const row of (data ?? []) as { question_id: string; track_slug: string; votes: number }[]) {
+      if (!byQuestion.has(row.question_id)) byQuestion.set(row.question_id, new Map());
+      byQuestion.get(row.question_id)!.set(row.track_slug, row.votes);
+    }
 
-    list.innerHTML = "";
-    ranked.forEach((choice, index) => {
-      const li = document.createElement("li");
-      const rank = document.createElement("strong");
-      rank.textContent = String(index + 1);
-      const link = document.createElement("a");
-      link.href = `/works/${choice.slug}`;
-      link.textContent = choice.title;
-      const votes = document.createElement("span");
-      votes.textContent = `${choice.votes}票`;
-      li.appendChild(rank);
-      li.appendChild(link);
-      li.appendChild(votes);
-      list.appendChild(li);
+    for (const slide of rankingSlides) {
+      const counts = byQuestion.get(slide.id) ?? new Map<string, number>();
+      const ranked = slide.candidates
+        .map((c) => ({ ...c, votes: counts.get(c.slug) ?? 0 }))
+        .sort((a, b) => b.votes - a.votes)
+        .slice(0, 3);
+
+      const list = rankingCarousel.querySelector<HTMLOListElement>(`.ranking-list[data-question-id="${slide.id}"]`);
+      if (!list) continue;
+      list.innerHTML = "";
+      ranked.forEach((choice, index) => {
+        const li = document.createElement("li");
+        const rank = document.createElement("strong");
+        rank.textContent = String(index + 1);
+        const link = document.createElement("a");
+        link.href = `/works/${choice.slug}`;
+        link.textContent = choice.title;
+        const votes = document.createElement("span");
+        votes.textContent = `${choice.votes}票`;
+        li.appendChild(rank);
+        li.appendChild(link);
+        li.appendChild(votes);
+        list.appendChild(li);
+      });
+    }
+  }
+
+  // 開催中のランキングは、お題を自動でゆっくり切り替えるカルーセル表示にする
+  // (「今日の1曲」より長い間隔でのんびり切り替わればよいという方針)。
+  let rankingSlideIndex = 0;
+  let rankingTimer: ReturnType<typeof setInterval> | null = null;
+
+  function showRankingSlide(index: number) {
+    const panels = rankingCarousel.querySelectorAll<HTMLElement>(".ranking-panel");
+    panels.forEach((panel, i) => {
+      panel.hidden = i !== index;
     });
+    rankingDotsContainer?.querySelectorAll<HTMLButtonElement>(".dot").forEach((dot, i) => {
+      dot.classList.toggle("active", i === index);
+    });
+    rankingSlideIndex = index;
+  }
+
+  function restartRankingAutoRotate() {
+    if (rankingTimer !== null) clearInterval(rankingTimer);
+    if (rankingSlides.length > 1) {
+      rankingTimer = setInterval(
+        () => showRankingSlide((rankingSlideIndex + 1) % rankingSlides.length),
+        18000
+      );
+    }
+  }
+
+  function goToRankingSlide(index: number) {
+    showRankingSlide(index);
+    restartRankingAutoRotate();
+  }
+
+  if (rankingDotsContainer && rankingSlides.length > 1) {
+    rankingSlides.forEach((slide, i) => {
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = "dot" + (i === 0 ? " active" : "");
+      dot.setAttribute("aria-label", `お題「${slide.question}」を表示`);
+      dot.addEventListener("click", () => goToRankingSlide(i));
+      rankingDotsContainer.appendChild(dot);
+    });
+    restartRankingAutoRotate();
   }
 
   loadFavoritePreview();
@@ -889,6 +948,10 @@ const formatEventDate = (date: string) => {
     -webkit-line-clamp: 3;
   }
 
+  .ranking-carousel {
+    position: relative;
+  }
+
   .ranking-panel {
     display: grid;
     grid-template-columns: 0.85fr 1.15fr;
@@ -896,6 +959,31 @@ const formatEventDate = (date: string) => {
     border-radius: 16px;
     background: var(--color-surface);
     overflow: hidden;
+  }
+
+  .ranking-panel[hidden] {
+    display: none;
+  }
+
+  .ranking-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .ranking-dots .dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: rgb(74 55 39 / 20%);
+    cursor: pointer;
+  }
+
+  .ranking-dots .dot.active {
+    background: var(--color-accent);
   }
 
   .ranking-question {
