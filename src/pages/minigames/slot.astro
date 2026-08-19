@@ -1,0 +1,467 @@
+---
+// オーイシマサヨシスロット(ミニゲーム)。
+// 「オーイシマサヨシ」のうち、長音記号「ー」は固定表示にして、残り7文字分を
+// 7つのリールでそろえられるか挑戦する。各リールの絵柄はテキストではなく
+// public/images/リール文字/<テーマ名>/ 以下の画像ファイルを使う。
+// 最初の「シ」(4番目)と最後の「シ」(8番目)は別の絵柄として扱う
+// (見た目は同じ「シ」でも画像ファイルが異なるため、どちらのシが正解かが
+// リールごとに決まっている)。
+//
+// テーマ(スロットの種類)はフォルダ名から自動検出するため、フォルダを
+// 追加・削除するだけで選択肢が増減する。各テーマフォルダには
+// 01_オ.png 〜 08_シ.png の8枚(オーイシマサヨシの8文字分、うち02がー)が
+// 入っている前提。
+// 投稿・投票のようなSupabase連携は不要(全問クライアント内で完結)。
+import fs from "node:fs";
+import path from "node:path";
+import Layout from "../../layouts/Layout.astro";
+
+const REEL_IMAGE_DIR = "リール文字";
+const REEL_FILES = ["01_オ", "02_ー", "03_イ", "04_シ", "05_マ", "06_サ", "07_ヨ", "08_シ"];
+
+const reelImagesRoot = path.join(process.cwd(), "public", "images", REEL_IMAGE_DIR);
+const themeNames = fs.existsSync(reelImagesRoot)
+  ? fs
+      .readdirSync(reelImagesRoot)
+      .filter((name) => fs.statSync(path.join(reelImagesRoot, name)).isDirectory())
+      .sort()
+  : [];
+
+const themes = themeNames.map((name) => ({
+  id: name,
+  // 8枚のURL(01_オ 〜 08_シ の順)。encodeURIComponentで日本語ファイル名・
+  // 長音記号を含むパスを安全なURLにする。
+  images: REEL_FILES.map(
+    (file) => `/images/${encodeURIComponent(REEL_IMAGE_DIR)}/${encodeURIComponent(name)}/${encodeURIComponent(file)}.png`
+  ),
+}));
+
+// 固定表示(長音記号「ー」)はREEL_FILESの2番目(index 1)。
+// スピンする7リールはそれ以外の7枚(index 0,2,3,4,5,6,7)で、そのままの順が
+// 「オ・イ・シ・マ・サ・ヨ・シ」= 各リールの正解画像のindexになる。
+const REEL_FILE_INDEXES = [0, 2, 3, 4, 5, 6, 7];
+const FIXED_FILE_INDEX = 1;
+
+type Slot = { type: "reel"; reelIndex: number; fileIndex: number } | { type: "fixed"; fileIndex: number };
+const slots: Slot[] = [
+  { type: "reel", reelIndex: 0, fileIndex: REEL_FILE_INDEXES[0] },
+  { type: "fixed", fileIndex: FIXED_FILE_INDEX },
+  { type: "reel", reelIndex: 1, fileIndex: REEL_FILE_INDEXES[1] },
+  { type: "reel", reelIndex: 2, fileIndex: REEL_FILE_INDEXES[2] },
+  { type: "reel", reelIndex: 3, fileIndex: REEL_FILE_INDEXES[3] },
+  { type: "reel", reelIndex: 4, fileIndex: REEL_FILE_INDEXES[4] },
+  { type: "reel", reelIndex: 5, fileIndex: REEL_FILE_INDEXES[5] },
+  { type: "reel", reelIndex: 6, fileIndex: REEL_FILE_INDEXES[6] },
+];
+
+const defaultTheme = themes[0];
+---
+
+<Layout title="オーイシマサヨシスロット | 014 BASE">
+  <a class="back-link" href="/minigames">← ミニゲーム一覧に戻る</a>
+  <h1>オーイシマサヨシスロット</h1>
+  <p class="note">
+    3種類のデザインから選んで遊べるミニゲームです。7つのリールにはそれぞれ7種類の
+    絵柄が抽選されます(最初の「シ」と最後の「シ」は別の絵柄として扱われるため、
+    どちらか片方だけそろえるのもより難しくなっています)。長音記号「ー」は固定表示です。
+    「スタート」で全リールが回転します。リールごとの「止める」ボタンでタイミングよく
+    止めて、「オーイシマサヨシ」がそろうか挑戦してみてください。
+  </p>
+
+  {themes.length === 0 ? (
+    <p class="placeholder">
+      リール画像が見つかりませんでした(public/images/リール文字/ 以下にテーマフォルダを配置してください)。
+    </p>
+  ) : (
+    <Fragment>
+      <fieldset class="theme-picker" id="theme-picker">
+        <legend>スロットの種類</legend>
+        {themes.map((theme, i) => (
+          <label class="theme-option">
+            <input type="radio" name="slot-theme" value={theme.id} checked={i === 0} />
+            {theme.id}
+          </label>
+        ))}
+      </fieldset>
+
+      <div class="slot-machine">
+        <div class="reels" id="reels">
+          {slots.map((slot) =>
+            slot.type === "reel" ? (
+              <div class="reel" data-reel-index={slot.reelIndex}>
+                <div class="reel-window">
+                  <img class="reel-symbol-img" src={defaultTheme.images[slot.fileIndex]} alt="" />
+                </div>
+                <button type="button" class="reel-stop" data-reel-index={slot.reelIndex} disabled>止める</button>
+              </div>
+            ) : (
+              <div class="fixed-slot">
+                <div class="reel-window is-fixed">
+                  <img class="reel-symbol-img" src={defaultTheme.images[slot.fileIndex]} alt="ー" />
+                </div>
+                <div class="reel-stop-placeholder" aria-hidden="true"></div>
+              </div>
+            )
+          )}
+        </div>
+
+        <div class="slot-controls">
+          <button type="button" id="slot-start-button" class="start-button">スタート</button>
+          <button type="button" id="slot-stop-all-button" class="stop-all-button" hidden>まとめて止める</button>
+        </div>
+
+        <p class="slot-result" id="slot-result" hidden></p>
+        <button type="button" id="slot-retry-button" class="retry-button" hidden>もう一度挑戦する</button>
+      </div>
+
+      <script type="application/json" id="slot-themes-data" set:html={JSON.stringify(themes)} />
+      <script type="application/json" id="slot-fixed-index-data" set:html={JSON.stringify(FIXED_FILE_INDEX)} />
+    </Fragment>
+  )}
+</Layout>
+
+<script>
+  type Theme = { id: string; images: string[] };
+
+  const themesDataEl = document.getElementById("slot-themes-data");
+  if (themesDataEl) {
+    const themes: Theme[] = JSON.parse(themesDataEl.textContent!);
+    const FIXED_FILE_INDEX: number = JSON.parse(document.getElementById("slot-fixed-index-data")!.textContent!);
+    // スピンする7リールの正解ファイルindex(オ・イ・シ・マ・サ・ヨ・シの順)。
+    const REEL_FILE_INDEXES = [0, 2, 3, 4, 5, 6, 7];
+
+    function shuffle<T>(items: T[]): T[] {
+      const arr = [...items];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    const reelEls = Array.from(document.querySelectorAll<HTMLDivElement>(".reel"));
+    const fixedImgEl = document.querySelector<HTMLImageElement>(".fixed-slot .reel-symbol-img");
+    const themeInputs = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="slot-theme"]'));
+    const themePicker = document.getElementById("theme-picker") as HTMLFieldSetElement;
+    const startButton = document.getElementById("slot-start-button") as HTMLButtonElement;
+    const stopAllButton = document.getElementById("slot-stop-all-button") as HTMLButtonElement;
+    const resultEl = document.getElementById("slot-result") as HTMLParagraphElement;
+    const retryButton = document.getElementById("slot-retry-button") as HTMLButtonElement;
+
+    function selectedTheme(): Theme {
+      const checked = themeInputs.find((input) => input.checked);
+      return themes.find((t) => t.id === checked?.value) ?? themes[0];
+    }
+
+    // 各リールの正解画像(テーマ選択に応じて変わる)。
+    let reelTargets: string[] = [];
+    // 各リールが実際に抽選する7枚の絵柄プール(最初のシ・最後のシも別絵柄として
+    // それぞれ独立に含まれる)。
+    let reelPool: string[] = [];
+    let reelSymbolSets: string[][] = [];
+    const reelIndices: number[] = new Array(REEL_FILE_INDEXES.length).fill(0);
+    const reelStopped: boolean[] = new Array(REEL_FILE_INDEXES.length).fill(false);
+    const reelIntervals: (ReturnType<typeof setInterval> | null)[] = new Array(REEL_FILE_INDEXES.length).fill(null);
+
+    function updateReelDisplay(i: number) {
+      const imgEl = reelEls[i].querySelector(".reel-symbol-img") as HTMLImageElement;
+      imgEl.src = reelSymbolSets[i][reelIndices[i]];
+    }
+
+    function stopReel(i: number) {
+      if (reelStopped[i]) return;
+      reelStopped[i] = true;
+      const interval = reelIntervals[i];
+      if (interval !== null) clearInterval(interval);
+      reelIntervals[i] = null;
+      (reelEls[i].querySelector(".reel-stop") as HTMLButtonElement).disabled = true;
+      if (reelStopped.every(Boolean)) finishGame();
+    }
+
+    function stopAllReels() {
+      for (let i = 0; i < REEL_FILE_INDEXES.length; i++) stopReel(i);
+    }
+
+    function finishGame() {
+      stopAllButton.hidden = true;
+      let allCorrect = true;
+      reelEls.forEach((reel, i) => {
+        const symbol = reelSymbolSets[i][reelIndices[i]];
+        const windowEl = reel.querySelector(".reel-window") as HTMLElement;
+        const correct = symbol === reelTargets[i];
+        windowEl.classList.add(correct ? "correct" : "incorrect");
+        if (!correct) allCorrect = false;
+      });
+      resultEl.hidden = false;
+      resultEl.textContent = allCorrect
+        ? "🎉 大当たり！「オーイシマサヨシ」がそろいました！"
+        : "残念…！また挑戦してみてください。";
+      resultEl.className = `slot-result ${allCorrect ? "is-win" : "is-lose"}`;
+      retryButton.hidden = false;
+      themePicker.disabled = false;
+    }
+
+    function startGame() {
+      const theme = selectedTheme();
+      reelTargets = REEL_FILE_INDEXES.map((fileIndex) => theme.images[fileIndex]);
+      reelPool = reelTargets.slice();
+      if (fixedImgEl) fixedImgEl.src = theme.images[FIXED_FILE_INDEX];
+
+      reelSymbolSets = reelTargets.map(() => shuffle(reelPool));
+      startButton.hidden = true;
+      stopAllButton.hidden = false;
+      resultEl.hidden = true;
+      retryButton.hidden = true;
+      themePicker.disabled = true;
+
+      reelEls.forEach((reel, i) => {
+        reelStopped[i] = false;
+        reel.querySelector(".reel-window")!.classList.remove("correct", "incorrect");
+        const stopBtn = reel.querySelector(".reel-stop") as HTMLButtonElement;
+        stopBtn.disabled = false;
+        reelIndices[i] = Math.floor(Math.random() * reelSymbolSets[i].length);
+        updateReelDisplay(i);
+        reelIntervals[i] = setInterval(() => {
+          reelIndices[i] = (reelIndices[i] + 1) % reelSymbolSets[i].length;
+          updateReelDisplay(i);
+        }, 105);
+      });
+    }
+
+    reelEls.forEach((reel, i) => {
+      const stopBtn = reel.querySelector(".reel-stop") as HTMLButtonElement;
+      stopBtn.addEventListener("click", () => stopReel(i));
+    });
+
+    startButton.addEventListener("click", startGame);
+    stopAllButton.addEventListener("click", stopAllReels);
+    retryButton.addEventListener("click", startGame);
+
+    // テーマを切り替えたら、開始前ならすぐに固定表示(「ー」)と初期絵柄を
+    // プレビューし直す。
+    themeInputs.forEach((input) => {
+      input.addEventListener("change", () => {
+        const theme = selectedTheme();
+        if (fixedImgEl) fixedImgEl.src = theme.images[FIXED_FILE_INDEX];
+        reelEls.forEach((reel, i) => {
+          const imgEl = reel.querySelector(".reel-symbol-img") as HTMLImageElement;
+          imgEl.src = theme.images[REEL_FILE_INDEXES[i]];
+        });
+      });
+    });
+  }
+</script>
+
+<style>
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    color: var(--color-accent);
+  }
+
+  .note {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .placeholder {
+    margin-top: 1.5rem;
+    color: var(--color-text-muted);
+    border: 1px dashed var(--color-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+  }
+
+  .theme-picker {
+    margin: 1.5rem 0 0;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+  }
+
+  .theme-picker:disabled {
+    opacity: 0.6;
+  }
+
+  .theme-picker legend {
+    padding: 0 0.35rem;
+    color: var(--color-text);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .theme-option {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  .theme-option input {
+    width: auto;
+  }
+
+  .slot-machine {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+    text-align: center;
+  }
+
+  .reels {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 0.5rem;
+  }
+
+  .reel,
+  .fixed-slot {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .reel-window {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    padding: 0.35rem;
+    border: 2px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-bg);
+    box-sizing: border-box;
+  }
+
+  .reel-symbol-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .reel-window.is-fixed {
+    border-style: dashed;
+    background: none;
+  }
+
+  .reel-window.correct {
+    border-color: #4a7c59;
+    background: color-mix(in srgb, #4a7c59 15%, var(--color-bg));
+  }
+
+  .reel-window.incorrect {
+    border-color: #a3663f;
+    background: color-mix(in srgb, #a3663f 12%, var(--color-bg));
+  }
+
+  .reel-stop,
+  .reel-stop-placeholder {
+    width: 100%;
+    padding: 0.4rem 0;
+    font-size: 0.75rem;
+    box-sizing: border-box;
+  }
+
+  .reel-stop {
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .reel-stop-placeholder {
+    visibility: hidden;
+  }
+
+  .reel-stop:hover:not(:disabled) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .reel-stop:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .slot-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .start-button,
+  .stop-all-button,
+  .retry-button {
+    padding: 0.6rem 1.75rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: var(--color-surface);
+    font-family: inherit;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+
+  .stop-all-button {
+    background: var(--color-bg);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+  }
+
+  .slot-result {
+    margin: 1.5rem 0 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .slot-result.is-win {
+    color: #4a7c59;
+  }
+
+  .slot-result.is-lose {
+    color: var(--color-text-muted);
+  }
+
+  .retry-button {
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 640px) {
+    .reels {
+      grid-template-columns: repeat(4, 1fr);
+      row-gap: 1rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .reels {
+      gap: 0.35rem;
+    }
+
+    .reel-stop,
+    .reel-stop-placeholder {
+      font-size: 0.65rem;
+      padding: 0.35rem 0;
+    }
+  }
+</style>
