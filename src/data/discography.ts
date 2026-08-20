@@ -29,6 +29,10 @@ export type Track = {
   appleMusic?: string;
   spotify?: string;
   slug?: string; // 個別ページ(/works/[slug])を持つ曲にのみ設定
+  // 読み仮名(ひらがな)。works.astroの曲名順ソート用。漢字を含むタイトルは
+  // 文字列比較だけでは正しい50音順にならないため、該当する曲にだけ設定する
+  // (英語タイトルはそのままソートに使うため設定不要)。
+  yomi?: string;
   image?: string; // public/images/works/ 配下のファイル名(自分で用意した画像のみ使用)
   description?: string; // 楽曲紹介文
   tracklist?: TrackRef[]; // アルバムの収録曲(判明分のみ。未調査なら省略=個別ページで「準備中」表示)
@@ -276,6 +280,156 @@ const verifiedArtworkSlugs = new Set([
   "lets-sing-a-song", "honoka-terasu", "kiwi-batake-no-uchuusen", "setsuna-kaze",
   "gensou-underground", "ultra-sing", "party-out",
 ]);
+
+// 漢字を含むタイトルの読み仮名(works.astroの曲名順ソート用)。slugキーで
+// tracks生成時にマージする(soundScheduleMvs等と同じ「slugキーの上書き辞書」方式)。
+// 英語タイトルは元の文字列のままソートに使うため、ここには含めない。
+const yomiOverrides: Record<string, string> = {
+  "hanabi-sound-schedule": "はなび", // 花火
+  "tatsumaki": "たつまき", // 竜巻
+  "ai-no-katachi": "あいのかたち", // 愛のかたち
+  "taiyou-no-kuni": "たいようのくに", // 太陽の国
+  "kizudarake-no-shounen": "きずだらけのしょうねん", // 傷だらけの少年
+  "hoeru-inu-to-kimi": "ほえるいぬときみ", // 吠える犬と君
+  "tsuki-ga-ochiru-mae-ni": "つきがおちるまえに…", // 月が落ちる前に…
+  "stew-ga-nomitaku-naru-uta": "しちゅーがのみたくなるうた", // シチューが飲みたくなる唄
+  "kimi-to-iu-hana": "きみというはな", // 君という花
+  "yonaoshi-buddha": "よなおしぶっだ", // 世直しブッダ
+  "anata-wo-omou-tabi": "あなたをおもうたび", // あなたを想う旅
+  "osananajimi": "おさななじみ", // 幼なじみ
+  "daigaku-monogatari": "だいがくものがたり", // 大学物語
+  "koi-kogare": "こいこがれ", // 恋焦がれ
+  "ima-koko-ni-aru-mono": "いまここにあるもの", // 今ココにあるもの
+  "hito-no-ko-futari": "ひとのこふたり", // 人の子ふたり
+  "moyase-bonnou": "もやせぼんのう", // 燃やせ煩悩
+  "penne-no-onna": "ぺんねのおんな", // ペンネの女
+  "iq-kyoudai": "IQきょうだい", // IQ兄弟
+  "unmei-no-hito-e": "うんめいのひとへ", // 運命の人へ
+  "bokura-no-yukue": "ぼくらのゆくえ", // 僕らの行方
+  "mado-no-mukou": "まどのむこう", // 窓の向こう
+  "tokyo-life-sound-schedule": "とうきょうらいふ", // 東京ライフ
+  "ketsumatsu-no-nai-futari": "けつまつのないふたり", // 結末のない二人
+  "mayonaka-no-id": "まよなかのID", // 真夜中のID
+  "kyoukaisen-nite": "きょうかいせんにて", // 境界線にて
+  "bokura-no-touhikou": "ぼくらのとうひこう", // 僕らの逃避行
+  "kimi-no-tame-ni-dekiru-koto": "きみのためにできること", // 君のためにできること
+  "amai-yoru": "あまいよる", // 甘い夜
+  "onaji-sora-no-shita-de": "おなじそらのしたで", // 同じ空の下で
+  "ougon-recipe": "おうごんれしぴ", // 黄金レシピ
+  "kotoba-ijou-ni": "ことばいじょうに", // 言葉以上に
+  "shiawase-no-moji": "しあわせのもじ", // しあわせの文字
+  "chounouryoku-shounen": "ちょうのうりょくしょうねん", // 超能力少年
+  "sono-ai-wo-tomenaide": "そのあいをとめないで", // その愛を止めないで
+  "bokura-no-ashiato": "ぼくらのあしあと～はじめのいっぽ～", // 僕らの足跡～はじめのいっぽ～
+  "ginga-station": "ぎんがすてーしょん", // 銀河ステーション
+  "mekakushi-oni": "めかくしおに", // 目隠し鬼
+  "someday-my-prince-will-come-petit-cafe": "いつかおうじさまが", // いつか王子様が
+  "kagayaku-mirai-petit-cafe": "かがやくみらい", // 輝く未来
+  "kimi-wa-tomodachi-petit-cafe": "きみはともだち", // 君はともだち
+  "yume-wa-hisoka-ni-petit-cafe": "ゆめはひそかに", // 夢はひそかに
+  "beauty-and-the-beast-petit-cafe": "びじょとやじゅう", // 美女と野獣
+  "when-you-wish-upon-a-star-petit-cafe": "ほしにねがいを", // 星に願いを
+  "my-song-kibou-no-uta": "my song～きぼうのうた feat.おおいしまさよし", // my song～希望のうた feat.大石昌良
+  "ano-machi-kono-machi": "あのまちこのまち", // あの街この街
+  "hikigatari-lab": "おおいしまさよしのひきがたりらぼ", // 大石昌良の弾き語りラボ
+  "kaisou-kaeri-no-ressha-kara": "かいそう～がえりのれっしゃから～", // 回想～帰りの列車から～
+  "hyoutan-ike": "ひょうたんいけ", // ひょうたん池
+  "irazu-no-mori": "いらずのもり", // 入らずの森
+  "namida-ga-tomaranai": "なみだがとまらない", // 涙が止まらない
+  "wakusei-waltz": "わくせいわるつ", // 惑星ワルツ
+  "akai-renga-no-aiaigasa": "あかいれんがのあいあいがさ", // 赤いレンガの相合い傘
+  "shinkirou-rhapsody": "しんきろうらぷそでぃ", // 蜃気楼ラプソディ
+  "snufkin-no-kaiten-mokuba": "すなふきんのかいてんもくば", // スナフキンの回転木馬
+  "saredo-sora-no-aosa-wo-shiru": "されどそらのあおさをしる", // されど空の青さを知る
+  "umi-wo-miteita-boku-wa": "うみをみていた ぼくは", // 海を見ていた ぼくは
+  "kimi-ni-kikaseru-monogatari": "きみにきかせるものがたり", // 君に聞かせる物語
+  "bokura-ga-tabi-ni-deru-riyuu": "ぼくらがたびにでるりゆう", // ぼくらが旅に出る理由
+  "yozora-no-mukou": "よぞらのむこう", // 夜空ノムコウ
+  "365nichi-petit-cafe": "365にち", // 365日
+  "marunouchi-sadistic": "まるのうちさでぃすてぃっく", // 丸の内サディスティック
+  "love-story-wa-totsuzen-ni": "らぶ・すとーりーはとつぜんに", // ラブ・ストーリーは突然に
+  "te-no-hira-no-tokyo-tower": "てのひらのとうきょうたわー", // 手のひらの東京タワー
+  "hanabi-petit-cafe": "はなび", // 花火
+  "tokyo-boogie-woogie": "とうきょうぶぎうぎ", // 東京ブギウギ
+  "kibou-no-wadachi": "きぼうのわだち", // 希望の轍
+  "tooku-tooku": "とおくとおく", // 遠く遠く
+  "ai-wo-kanjite": "あいをかんじて", // 愛を感じて
+  "tobira-akete": "とびらあけて", // とびら開けて
+  "perfect-day-disney": "ぱーふぇくと・でい ～とくべつないちにち～", // パーフェクト・デイ ～特別な一日～
+  "tokyo-loop": "とうきょうるーぷ", // 東京ループ
+  "owaranai-lalalala": "おわらないらららら", // 終わらないララララ
+  "tegami-uta": "てがみうた", // 手紙唄
+  "sayonara-mou-ikanakucha": "さよなら、もういかなくちゃ", // さよなら、もう行かなくちゃ
+  "nemurenu-machi-no-boogieman-dance": "ねむれぬまちのぶぎーまんだんす", // 眠れぬ街のブギーマンダンス
+  "soshite-sekai-wa-kimi-ni-koi-wo-suru": "そしてせかいはきみにこいをする", // そして世界は君に恋をする
+  "megane-darling": "めがねだーりん", // 眼鏡ダーリン
+  "tokai-no-semi-wa-yoru-ni-naku": "とかいのせみはよるになく", // 都会の蝉は夜に鳴く
+  "shuuen-teki-melodrama": "しゅうえんてきめろどらま", // 終焉的メロドラマ
+  "kiwi-batake-no-uchuusen": "きういはたけのうちゅうせん", // キウイ畑の宇宙船
+  "setsuna-kaze": "せつなかぜ", // セツナ風
+  "chiisana-koi-no-melody": "ちいさなこいのめろでぃ", // 小さな恋のメロディ
+  "gensou-underground": "げんそうあんだーぐらうんど", // 幻想アンダーグラウンド
+  "gokai-shinaide-kudasai": "ごかいしないでください 〜せいさくきかんちゅうのいきぬきです〜", // 誤解しないでください 〜制作期間中の息抜きです〜
+  "kagikko-noel": "かぎっこのえる", // 鍵っ子ノエル
+  "mimi-no-kikoenaku-natta-koibito": "みみのきこえなくなったこいびととそのうたうたい", // 耳の聞こえなくなった恋人とそのうたうたい
+  "wakare-no-tanedane": "わかれのたねだね", // 別れの種だね
+  "hikigatari-lab-tour-2015": "おおいしまさよしのひきがたりらぼつあー2015 とうきょうこうえん", // 大石昌良の弾き語りラボツアー2015 東京公演
+  "hikigatari-lab-10th": "おおいしまさよしのひきがたりらぼ〜10th Anniversary \"One Man\" Show〜", // 大石昌良の弾き語りラボ〜10th Anniversary "One Man" Show〜
+  "kagauta": "かりうた", // 仮歌
+  "kagauta-2": "かりうたII", // 仮歌II
+  "kagauta-3": "かりうたⅢ", // 仮歌Ⅲ
+  "kimi-janakya-dame-mitai": "きみじゃなきゃだめみたい", // 君じゃなきゃダメみたい
+  "numa": "ぬま", // 沼
+  "rakuen-toshi": "らくえんとし", // 楽園都市
+  "sekai-ga-kimi-wo": "せかいがきみをひつようとするときがきたんだ", // 世界が君を必要とする時が来たんだ
+  "eiyu-no-uta": "えいゆうのうた", // 英雄の歌
+  "shinwaku-algorithm": "しんわくあるごりずむ", // 神或アルゴリズム
+  "koi-wa-explosion": "こいはえくすぷろーじょん", // 恋はエクスプロージョン
+  "aoi-housougeki": "あおいほうげき", // 碧い砲撃
+  "shinda": "しんだ!", // 死んだ!
+  "ougon-kouro": "おうごんこうろ", // 黄金航路
+  "suki-ni-naccha-dame-na-hito": "すきになっちゃだめなひと", // 好きになっちゃダメな人
+  "ato-no-matsuri": "あとのまつり", // あとの祭り
+  "shujinkou-ni-narou": "しゅじんこうになろう！", // 主人公になろう！
+  "kimi-janakya-dame-mitai-first-take": "きみじゃなきゃだめみたい – From THE FIRST TAKE", // 君じゃなきゃダメみたい – From THE FIRST TAKE
+  "kimi-wa-koibito": "きみはこいびと", // 君は恋人
+  "aa-subarashiki-nichijou": "ああ、すばらしきにちじょう", // 嗚呼、素晴らしき日常
+  "megane-go-round-kariuta": "めがねごーらうんど(かりうた ver.)", // メガネゴーラウンド(仮歌 ver.)
+  "bokura-no-hakoniwa": "ぼくらのはこにわ", // 僕らの箱庭
+  "makura-danshi-kariuta": "まくらだんし", // 枕男子
+  "mankai-kaika-sengen-kariuta": "MANKAI☆かいかせんげん", // MANKAI☆開花宣言
+  "fukashin-ryouiki-destroyer-kariuta": "ふかしんりょういきですとろいやー", // 不可侵領域デストロイヤー
+  "roman-hikou-kariuta": "ろまんひこう", // 浪漫飛行
+  "bouya-no-yume-yo-kariuta": "ぼうやのゆめよ", // ぼうやの夢よ
+  "shunkashuutou-blooming-kariuta-2": "しゅんかしゅうとう☆Blooming!", // 春夏秋冬☆Blooming!
+  "notteke-japari-beat-kariuta-2": "のってけ！じゃぱりびーと", // 乗ってけ！ジャパリビート
+  "singalong-shinkaron-kariuta-2": "しんがろんしんかろん", // シンガロン進化論
+  "kimi-no-heroine-kariuta-2": "きみのひろいんでいるために", // 君のヒロインでいるために
+  "kagauta-tour-2017": "かりうたつあー", // 仮歌ツアー
+  "kagauta-tour-2019": "かりうたつあー2019", // 仮歌ツアー2019
+  "oishi-budokan": "おーいしぶどうかん 〜おーいしまさよし わんまんらいぶ at にほんぶどうかん〜", // オーイシ武道館 〜オーイシマサヨシ ワンマンライブ at 日本武道館〜
+  "oishi-budokan-vol2": "おーいしぶどうかん Vol.2 〜おーいしまさよし わんまんらいぶ at にほんぶどうかん〜", // オーイシ武道館 Vol.2 〜オーイシマサヨシ ワンマンライブ at 日本武道館〜
+  "shizukanaru-ichibyou": "しずかなるいちびょう", // 静かなる一秒
+  "kimi-janakya-dame-mitai-oxt": "きみじゃなきゃだめみたい -OxT ver-", // 君じゃなきゃダメみたい -OxT ver-
+  "yume-no-hero-oxt": "ゆめのひーろー -OxT ver-", // 夢のヒーロー -OxT ver-
+  "kodou-escalation-oxt": "こどうえすかれーしょん -OxT ver.-", // 鼓動エスカレーション -OxT ver.-
+  "motto-kimi-wo-shireba": "もっときみをしれば", // もっと君を知れば
+  "otoko-no-ikusa-furyuu-nare": "おとこのいくさ、ふうりゅうなれ", // 漢の戦、風流なれ
+  "kakatta-mahou-wa-amanojaku": "かかったまほうはあまのじゃく", // かかった魔法はアマノジャク
+  "ai-for-you": "あい for you!", // 愛 for you!
+  "watashi-to-watashi": "わたしと、わたし", // 私と、わたし
+  "meitantei-kimi-ni-tsugu": "めいたんていきみにつぐ", // 名探偵キミに告ぐ
+  "ichigo-ichie": "いちごいちえ", // 一期一会
+  "mamoritai-sono-egao": "まもりたい、そのえがお", // 守りたい、その笑顔
+  "saikyou-no-oshi": "さいきょうのおし!", // 最強の推し!
+  "issho-kimi-oshi": "いっしょう☆きみおし", // 一生☆キミ推し
+  "tatoe-sekai-ga-soppo-muitemo": "たとえせかいがそっぽむいても", // たとえ世界がそっぽ向いても
+  "mirai-note": "みらいのーと", // 未来ノート
+  "sayonara-kara-hajimaru-monogatari": "さよならからはじまるものがたり", // サヨナラから始まる物語
+  "hoshiiro-no-kaleidoscope": "ほしいろのかれいどすこーぷ", // 星色のカレイドスコープ
+  "isekai-showtime": "いせかいしょーたいむ", // 異世界ショータイム
+  "isekai-concerto": "いせかいこんちぇると", // 異世界こんちぇると
+};
 
 const soundSong = (
   title: string,
@@ -2934,6 +3088,7 @@ export const tracks: Track[] = raw.map((t) => ({
     ? { appleMusic: `https://music.apple.com/jp/song/${verifiedAppleMusicSongIds[t.slug]}` }
     : undefined),
   ...(t.slug && !t.image && verifiedArtworkSlugs.has(t.slug) ? { image: t.slug } : undefined),
+  ...(t.slug && yomiOverrides[t.slug] ? { yomi: yomiOverrides[t.slug] } : undefined),
   sortDate: toSortDate(t.date || "0000"),
 }));
 

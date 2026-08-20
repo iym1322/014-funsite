@@ -67,6 +67,7 @@ const sorted = [...showcased].sort((a, b) => b.sortDate.localeCompare(a.sortDate
           href={`/works/${track.slug}`}
           data-date={track.sortDate}
           data-title={track.title}
+          data-sort-title={track.yomi ?? track.title}
           data-group={track.group}
           data-type={track.type}
           data-tiein={track.tieIn ? "1" : "0"}
@@ -151,7 +152,7 @@ const sorted = [...showcased].sort((a, b) => b.sortDate.localeCompare(a.sortDate
     matching.sort((a, b) => {
       if (sortValue === "date-asc") return a.dataset.date!.localeCompare(b.dataset.date!);
       if (sortValue === "date-desc") return b.dataset.date!.localeCompare(a.dataset.date!);
-      if (sortValue === "title-asc") return a.dataset.title!.localeCompare(b.dataset.title!, "ja");
+      if (sortValue === "title-asc") return a.dataset.sortTitle!.localeCompare(b.dataset.sortTitle!, "ja");
       if (sortValue === "group-asc") return a.dataset.group!.localeCompare(b.dataset.group!, "ja");
       return 0;
     });
