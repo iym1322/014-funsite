@@ -164,6 +164,7 @@ const formatEventDate = (date: string) => {
       </div>
     </div>
   </div>
+  <button type="button" class="bgm-reopen-button" id="bgm-reopen-button" aria-label="今日のBGMを開く" hidden>🎵</button>
 
   <section class="latest-section">
     <div class="section-heading">
@@ -473,6 +474,7 @@ const formatEventDate = (date: string) => {
     const bgmTogglePlayButton = document.getElementById("bgm-toggle-play") as HTMLButtonElement;
     const bgmSkipButton = document.getElementById("bgm-skip") as HTMLButtonElement;
     const bgmCloseButton = document.getElementById("bgm-close") as HTMLButtonElement;
+    const bgmReopenButton = document.getElementById("bgm-reopen-button") as HTMLButtonElement;
 
     let bgmIndex = 0;
     let bgmPlayer: any = null;
@@ -697,14 +699,19 @@ const formatEventDate = (date: string) => {
       armAutoplayCheck();
     });
 
-    // ウィジェットを常時表示にしたため、起動用の専用ボタンに戻す先が無い。
-    // 閉じるボタンは「このページ滞在中は表示しない」扱いとし、リロードするまで
-    // 再表示はしない(いわゆる通知の「閉じる」と同じ挙動)。
+    // 閉じたときは、再度開くための小さなボタン(bgm-reopen-button)に切り替える。
     bgmCloseButton.addEventListener("click", () => {
       if (bgmAutoplayCheckTimer) clearTimeout(bgmAutoplayCheckTimer);
       if (bgmLoadCheckTimer) clearTimeout(bgmLoadCheckTimer);
       if (bgmPlayer) bgmPlayer.pauseVideo();
       bgmWidget.hidden = true;
+      bgmReopenButton.hidden = false;
+    });
+
+    bgmReopenButton.addEventListener("click", () => {
+      bgmReopenButton.hidden = true;
+      bgmWidget.hidden = false;
+      if (!bgmStarted) startBgmPlayback();
     });
   }
 </script>
@@ -1523,6 +1530,22 @@ const formatEventDate = (date: string) => {
     border: 1px solid var(--color-border);
     box-shadow: 0 8px 24px rgb(47 44 40 / 18%);
     max-width: min(90vw, 22rem);
+  }
+
+  .bgm-reopen-button {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 40;
+    width: 3rem;
+    height: 3rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: var(--color-surface);
+    font-size: 1.2rem;
+    box-shadow: 0 8px 24px rgb(47 44 40 / 18%);
+    cursor: pointer;
   }
 
   .bgm-widget[hidden] {
