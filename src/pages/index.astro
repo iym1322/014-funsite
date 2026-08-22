@@ -464,6 +464,7 @@ const formatEventDate = (date: string) => {
     let bgmPlayer: any = null;
     let bgmApiReady = false;
     let bgmStarted = false;
+    let bgmPendingStart = false;
 
     function updateBgmTitle() {
       const current = bgmSongs[bgmIndex];
@@ -482,6 +483,11 @@ const formatEventDate = (date: string) => {
         videoId: bgmSongs[bgmIndex].videoId,
         playerVars: { autoplay: 1, playsinline: 1 },
         events: {
+          onReady: (event: any) => {
+            // playerVars.autoplayだけだとブラウザの自動再生ポリシーで再生されない
+            // ことがあるため、準備完了時点でも明示的にplayVideo()を呼んでおく。
+            event.target.playVideo();
+          },
           onStateChange: (event: any) => {
             if (event.data === (window as any).YT.PlayerState.ENDED) {
               playBgmIndex(bgmIndex + 1);
@@ -497,21 +503,27 @@ const formatEventDate = (date: string) => {
       });
     }
 
-    function loadYouTubeApiAndStart() {
-      if (bgmApiReady) {
-        createBgmPlayer();
-        return;
-      }
+    // ボタンを押した瞬間(ユーザー操作の文脈)にYT.Playerの生成まで同期的に行わないと、
+    // ブラウザの自動再生ポリシーでミュートなし再生がブロックされることがある。
+    // そのため、YouTube IFrame APIはページ読み込み時点で先読みしておき、
+    // クリック時は(APIが読み込み済みなら)即座にプレイヤーを生成する。
+    function preloadYouTubeApi() {
       const existingCallback = (window as any).onYouTubeIframeAPIReady;
       (window as any).onYouTubeIframeAPIReady = () => {
         bgmApiReady = true;
         if (typeof existingCallback === "function") existingCallback();
-        createBgmPlayer();
+        if (bgmPendingStart) createBgmPlayer();
       };
+      if ((window as any).YT && (window as any).YT.Player) {
+        bgmApiReady = true;
+        return;
+      }
       const script = document.createElement("script");
       script.src = "https://www.youtube.com/iframe_api";
       document.head.appendChild(script);
     }
+
+    preloadYouTubeApi();
 
     bgmLaunchButton.hidden = false;
     bgmLaunchButton.addEventListener("click", () => {
@@ -519,7 +531,11 @@ const formatEventDate = (date: string) => {
       bgmWidget.hidden = false;
       if (!bgmStarted) {
         bgmStarted = true;
-        loadYouTubeApiAndStart();
+        if (bgmApiReady) {
+          createBgmPlayer();
+        } else {
+          bgmPendingStart = true;
+        }
       }
     });
 
