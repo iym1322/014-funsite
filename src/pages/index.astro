@@ -157,7 +157,7 @@ const formatEventDate = (date: string) => {
       <p class="bgm-title" id="bgm-current-title"></p>
       <p class="bgm-status" id="bgm-status" hidden></p>
       <div class="bgm-buttons">
-        <button type="button" class="bgm-icon-button" id="bgm-toggle-play" aria-label="一時停止">⏸</button>
+        <button type="button" class="bgm-icon-button" id="bgm-toggle-play" aria-label="再生">▶</button>
         <button type="button" class="bgm-icon-button" id="bgm-skip" aria-label="次の曲">⏭</button>
         <button type="button" class="bgm-icon-button bgm-close" id="bgm-close" aria-label="閉じる">×</button>
       </div>
@@ -482,10 +482,32 @@ const formatEventDate = (date: string) => {
     let bgmPendingStart = false;
     let bgmErrorStreak = 0;
     let bgmAutoplayCheckTimer: ReturnType<typeof setTimeout> | null = null;
+    let bgmLoadCheckTimer: ReturnType<typeof setTimeout> | null = null;
 
     function updateBgmTitle() {
+      if (bgmLoadCheckTimer) {
+        clearTimeout(bgmLoadCheckTimer);
+        bgmLoadCheckTimer = null;
+      }
       const current = bgmSongs[bgmIndex];
       bgmTitleEl.textContent = `${current.song.title}(${current.song.group})`;
+    }
+
+    // YouTube IFrame API自体が読み込まれない(広告ブロッカーや拡張機能が
+    // youtube.com/iframe_api をブロックしているなど)場合、クリックしても
+    // プレイヤーが一切初期化されず、ボタンは押した瞬間のラベルのまま・
+    // 曲名も空欄・映像エリアも黒いままになる。数秒待っても曲名が
+    // 表示されなければ、その状態だと判断して分かりやすく案内する。
+    function armLoadCheck() {
+      if (bgmLoadCheckTimer) clearTimeout(bgmLoadCheckTimer);
+      bgmLoadCheckTimer = setTimeout(() => {
+        if (!bgmTitleEl.textContent) {
+          showBgmStatus(
+            "YouTubeの読み込みがブロックされているようです。広告ブロッカーや拡張機能を" +
+              "オフにするか、シークレットウィンドウなどで試してみてください。"
+          );
+        }
+      }, 6000);
     }
 
     function showBgmStatus(message: string) {
@@ -624,6 +646,7 @@ const formatEventDate = (date: string) => {
       bgmWidget.hidden = false;
       if (!bgmStarted) {
         bgmStarted = true;
+        armLoadCheck();
         if (bgmApiReady) {
           createBgmPlayer();
         } else {
@@ -666,6 +689,7 @@ const formatEventDate = (date: string) => {
 
     bgmCloseButton.addEventListener("click", () => {
       if (bgmAutoplayCheckTimer) clearTimeout(bgmAutoplayCheckTimer);
+      if (bgmLoadCheckTimer) clearTimeout(bgmLoadCheckTimer);
       if (bgmPlayer) bgmPlayer.pauseVideo();
       bgmWidget.hidden = true;
       bgmLaunchButton.hidden = false;
