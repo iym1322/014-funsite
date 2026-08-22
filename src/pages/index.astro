@@ -516,9 +516,32 @@ const formatEventDate = (date: string) => {
       playBgmIndex(bgmIndex + 1);
     }
 
+    // ボタンの表示を、実際の再生状態(PLAYING/PAUSED)とミュート状態の両方を見て決める。
+    // 「再生中と表示されているのに音が出ない」場合は、ブラウザが自動再生ポリシーを
+    // 満たすために無音(ミュート)で再生を始めていることがほとんどのため、
+    // その状態を見分けてボタンで気付けるようにする。
+    function updateToggleButtonUi() {
+      if (!bgmPlayer) return;
+      const state = bgmPlayer.getPlayerState();
+      const playing = state === (window as any).YT.PlayerState.PLAYING;
+      const muted = bgmPlayer.isMuted();
+      if (playing && muted) {
+        bgmTogglePlayButton.textContent = "🔇";
+        bgmTogglePlayButton.setAttribute("aria-label", "タップして音を出す");
+      } else if (playing) {
+        bgmTogglePlayButton.textContent = "⏸";
+        bgmTogglePlayButton.setAttribute("aria-label", "一時停止");
+      } else {
+        bgmTogglePlayButton.textContent = "▶";
+        bgmTogglePlayButton.setAttribute("aria-label", "再生");
+      }
+    }
+
     // 自動再生がブラウザにブロックされていると、再生状態が変わらないまま止まる。
-    // 数秒待っても再生が始まらなければ、確実にユーザー操作起点になる
-    // 「タップして再生」ボタンを出して手動再開を促す。
+    // また、ブロックまではされなくても「無音(ミュート)でなら自動再生を許可する」
+    // 挙動になっていることも多く、その場合は再生状態はPLAYINGになるため見た目上
+    // 区別が付きにくい。数秒待って状態を確認し、どちらの場合も気付けるように
+    // メッセージを出す。
     function armAutoplayCheck() {
       if (bgmAutoplayCheckTimer) clearTimeout(bgmAutoplayCheckTimer);
       bgmAutoplayCheckTimer = setTimeout(() => {
@@ -528,7 +551,10 @@ const formatEventDate = (date: string) => {
         const buffering = (window as any).YT.PlayerState.BUFFERING;
         if (state !== playing && state !== buffering) {
           showBgmStatus("自動再生がブロックされました。もう一度ボタンを押してください。");
+        } else if (bgmPlayer.isMuted()) {
+          showBgmStatus("音が出ない場合は、🔇ボタンを押してください(ミュートで再生されています)。");
         }
+        updateToggleButtonUi();
       }, 2500);
     }
 
@@ -542,6 +568,10 @@ const formatEventDate = (date: string) => {
           onReady: (event: any) => {
             // BGMなので主張しすぎないよう、デフォルト音量を少し下げておく。
             event.target.setVolume(BGM_DEFAULT_VOLUME);
+            // ブラウザによっては「無音でなら自動再生を許可する」ため、あえて
+            // ミュート状態から始まっていることがある。明示的にミュート解除を
+            // 試みておく(効かない場合はarmAutoplayCheckでユーザーに気付かせる)。
+            event.target.unMute();
             // playerVars.autoplayだけだとブラウザの自動再生ポリシーで再生されない
             // ことがあるため、準備完了時点でも明示的にplayVideo()を呼んでおく。
             event.target.playVideo();
@@ -553,12 +583,10 @@ const formatEventDate = (date: string) => {
               playBgmIndex(bgmIndex + 1);
             } else if (event.data === (window as any).YT.PlayerState.PLAYING) {
               bgmErrorStreak = 0;
-              clearBgmStatus();
-              bgmTogglePlayButton.textContent = "⏸";
-              bgmTogglePlayButton.setAttribute("aria-label", "一時停止");
+              if (!bgmPlayer.isMuted()) clearBgmStatus();
+              updateToggleButtonUi();
             } else if (event.data === (window as any).YT.PlayerState.PAUSED) {
-              bgmTogglePlayButton.textContent = "▶";
-              bgmTogglePlayButton.setAttribute("aria-label", "再生");
+              updateToggleButtonUi();
             }
           },
           onError: () => {
@@ -607,14 +635,24 @@ const formatEventDate = (date: string) => {
     bgmTogglePlayButton.addEventListener("click", () => {
       if (!bgmPlayer) return;
       const state = bgmPlayer.getPlayerState();
-      if (state === (window as any).YT.PlayerState.PLAYING) {
+      const playing = state === (window as any).YT.PlayerState.PLAYING;
+      if (playing && bgmPlayer.isMuted()) {
+        // 「再生中(PLAYING)だがミュート」= ブラウザが無音でだけ自動再生を許可した
+        // 状態。このクリックは確実なユーザー操作なので、ここでのミュート解除は
+        // 通る。
+        bgmPlayer.unMute();
+        bgmPlayer.setVolume(BGM_DEFAULT_VOLUME);
+        clearBgmStatus();
+      } else if (playing) {
         bgmPlayer.pauseVideo();
       } else {
         // このクリック自体が確実な(信頼できる)ユーザー操作なので、
         // 自動再生ブロックで止まっていた場合もここで再生できるはず。
+        bgmPlayer.unMute();
         bgmPlayer.playVideo();
         armAutoplayCheck();
       }
+      updateToggleButtonUi();
     });
 
     bgmSkipButton.addEventListener("click", () => {
