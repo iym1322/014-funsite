@@ -452,6 +452,8 @@ const formatEventDate = (date: string) => {
     }
   });
 
+  const BGM_DEFAULT_VOLUME = 60; // 0-100。BGMなので控えめな音量にしておく。
+
   function getYouTubeId(url: string | null): string | null {
     if (!url) return null;
     const match = url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
@@ -495,6 +497,8 @@ const formatEventDate = (date: string) => {
         playerVars: { autoplay: 1, playsinline: 1 },
         events: {
           onReady: (event: any) => {
+            // BGMなので主張しすぎないよう、デフォルト音量を少し下げておく。
+            event.target.setVolume(BGM_DEFAULT_VOLUME);
             // playerVars.autoplayだけだとブラウザの自動再生ポリシーで再生されない
             // ことがあるため、準備完了時点でも明示的にplayVideo()を呼んでおく。
             event.target.playVideo();
