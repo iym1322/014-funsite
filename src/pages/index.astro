@@ -155,6 +155,7 @@ const formatEventDate = (date: string) => {
     <div class="bgm-info">
       <p class="bgm-eyebrow">今日のBGM(今日の1曲・4曲ループ)</p>
       <p class="bgm-title" id="bgm-current-title"></p>
+      <p class="bgm-status" id="bgm-status" hidden></p>
       <div class="bgm-buttons">
         <button type="button" class="bgm-icon-button" id="bgm-toggle-play" aria-label="一時停止">⏸</button>
         <button type="button" class="bgm-icon-button" id="bgm-skip" aria-label="次の曲">⏭</button>
@@ -469,6 +470,7 @@ const formatEventDate = (date: string) => {
   if (bgmSongs.length > 0 && bgmLaunchButton) {
     const bgmWidget = document.getElementById("bgm-widget") as HTMLDivElement;
     const bgmTitleEl = document.getElementById("bgm-current-title") as HTMLParagraphElement;
+    const bgmStatusEl = document.getElementById("bgm-status") as HTMLParagraphElement;
     const bgmTogglePlayButton = document.getElementById("bgm-toggle-play") as HTMLButtonElement;
     const bgmSkipButton = document.getElementById("bgm-skip") as HTMLButtonElement;
     const bgmCloseButton = document.getElementById("bgm-close") as HTMLButtonElement;
@@ -478,10 +480,22 @@ const formatEventDate = (date: string) => {
     let bgmApiReady = false;
     let bgmStarted = false;
     let bgmPendingStart = false;
+    let bgmErrorStreak = 0;
+    let bgmAutoplayCheckTimer: ReturnType<typeof setTimeout> | null = null;
 
     function updateBgmTitle() {
       const current = bgmSongs[bgmIndex];
       bgmTitleEl.textContent = `${current.song.title}(${current.song.group})`;
+    }
+
+    function showBgmStatus(message: string) {
+      bgmStatusEl.textContent = message;
+      bgmStatusEl.hidden = false;
+    }
+
+    function clearBgmStatus() {
+      bgmStatusEl.hidden = true;
+      bgmStatusEl.textContent = "";
     }
 
     function playBgmIndex(index: number) {
@@ -490,8 +504,37 @@ const formatEventDate = (date: string) => {
       if (bgmPlayer) bgmPlayer.loadVideoById(bgmSongs[bgmIndex].videoId);
     }
 
+    // 埋め込み再生が許可されていない動画(公式チャンネルが埋め込みを禁止している場合)は
+    // onErrorが発生するため、その曲は諦めて次の曲へ自動的に切り替える。
+    // 全曲失敗した場合(bgmErrorStreak が曲数に達したら)は諦めてメッセージを出す。
+    function handleBgmError() {
+      bgmErrorStreak++;
+      if (bgmErrorStreak >= bgmSongs.length) {
+        showBgmStatus("今日の曲を再生できませんでした。時間をおいて再度お試しください。");
+        return;
+      }
+      playBgmIndex(bgmIndex + 1);
+    }
+
+    // 自動再生がブラウザにブロックされていると、再生状態が変わらないまま止まる。
+    // 数秒待っても再生が始まらなければ、確実にユーザー操作起点になる
+    // 「タップして再生」ボタンを出して手動再開を促す。
+    function armAutoplayCheck() {
+      if (bgmAutoplayCheckTimer) clearTimeout(bgmAutoplayCheckTimer);
+      bgmAutoplayCheckTimer = setTimeout(() => {
+        if (!bgmPlayer) return;
+        const state = bgmPlayer.getPlayerState();
+        const playing = (window as any).YT.PlayerState.PLAYING;
+        const buffering = (window as any).YT.PlayerState.BUFFERING;
+        if (state !== playing && state !== buffering) {
+          showBgmStatus("自動再生がブロックされました。もう一度ボタンを押してください。");
+        }
+      }, 2500);
+    }
+
     function createBgmPlayer() {
       updateBgmTitle();
+      clearBgmStatus();
       bgmPlayer = new (window as any).YT.Player("bgm-yt-player", {
         videoId: bgmSongs[bgmIndex].videoId,
         playerVars: { autoplay: 1, playsinline: 1 },
@@ -502,17 +545,24 @@ const formatEventDate = (date: string) => {
             // playerVars.autoplayだけだとブラウザの自動再生ポリシーで再生されない
             // ことがあるため、準備完了時点でも明示的にplayVideo()を呼んでおく。
             event.target.playVideo();
+            armAutoplayCheck();
           },
           onStateChange: (event: any) => {
             if (event.data === (window as any).YT.PlayerState.ENDED) {
+              bgmErrorStreak = 0;
               playBgmIndex(bgmIndex + 1);
             } else if (event.data === (window as any).YT.PlayerState.PLAYING) {
+              bgmErrorStreak = 0;
+              clearBgmStatus();
               bgmTogglePlayButton.textContent = "⏸";
               bgmTogglePlayButton.setAttribute("aria-label", "一時停止");
             } else if (event.data === (window as any).YT.PlayerState.PAUSED) {
               bgmTogglePlayButton.textContent = "▶";
               bgmTogglePlayButton.setAttribute("aria-label", "再生");
             }
+          },
+          onError: () => {
+            handleBgmError();
           },
         },
       });
@@ -560,16 +610,24 @@ const formatEventDate = (date: string) => {
       if (state === (window as any).YT.PlayerState.PLAYING) {
         bgmPlayer.pauseVideo();
       } else {
+        // このクリック自体が確実な(信頼できる)ユーザー操作なので、
+        // 自動再生ブロックで止まっていた場合もここで再生できるはず。
         bgmPlayer.playVideo();
+        armAutoplayCheck();
       }
     });
 
     bgmSkipButton.addEventListener("click", () => {
+      bgmErrorStreak = 0;
       playBgmIndex(bgmIndex + 1);
-      if (bgmPlayer) bgmPlayer.playVideo();
+      if (bgmPlayer) {
+        bgmPlayer.playVideo();
+        armAutoplayCheck();
+      }
     });
 
     bgmCloseButton.addEventListener("click", () => {
+      if (bgmAutoplayCheckTimer) clearTimeout(bgmAutoplayCheckTimer);
       if (bgmPlayer) bgmPlayer.pauseVideo();
       bgmWidget.hidden = true;
       bgmLaunchButton.hidden = false;
@@ -1439,6 +1497,13 @@ const formatEventDate = (date: string) => {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .bgm-status {
+    margin: 0.2rem 0 0;
+    color: #a3663f;
+    font-size: 0.7rem;
+    line-height: 1.5;
   }
 
   .bgm-buttons {
