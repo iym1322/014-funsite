@@ -160,6 +160,15 @@ const formatEventDate = (date: string) => {
       <div class="bgm-buttons">
         <button type="button" class="bgm-icon-button" id="bgm-toggle-play" aria-label="再生">▶</button>
         <button type="button" class="bgm-icon-button" id="bgm-skip" aria-label="次の曲">⏭</button>
+        <input
+          type="range"
+          class="bgm-volume"
+          id="bgm-volume"
+          min="0"
+          max="100"
+          value="40"
+          aria-label="音量"
+        />
         <button type="button" class="bgm-icon-button bgm-close" id="bgm-close" aria-label="閉じる">×</button>
       </div>
     </div>
@@ -475,6 +484,7 @@ const formatEventDate = (date: string) => {
     const bgmSkipButton = document.getElementById("bgm-skip") as HTMLButtonElement;
     const bgmCloseButton = document.getElementById("bgm-close") as HTMLButtonElement;
     const bgmReopenButton = document.getElementById("bgm-reopen-button") as HTMLButtonElement;
+    const bgmVolumeSlider = document.getElementById("bgm-volume") as HTMLInputElement;
 
     let bgmIndex = 0;
     let bgmPlayer: any = null;
@@ -589,8 +599,9 @@ const formatEventDate = (date: string) => {
         playerVars: { autoplay: 1, playsinline: 1 },
         events: {
           onReady: (event: any) => {
-            // BGMなので主張しすぎないよう、デフォルト音量を少し下げておく。
-            event.target.setVolume(BGM_DEFAULT_VOLUME);
+            // BGMなので主張しすぎないよう、デフォルト音量を少し下げておく
+            // (音量バーで事前に調整されていればその値を使う)。
+            event.target.setVolume(Number(bgmVolumeSlider.value));
             // ブラウザによっては「無音でなら自動再生を許可する」ため、あえて
             // ミュート状態から始まっていることがある。明示的にミュート解除を
             // 試みておく(効かない場合はarmAutoplayCheckでユーザーに気付かせる)。
@@ -674,7 +685,7 @@ const formatEventDate = (date: string) => {
         // 状態。このクリックは確実なユーザー操作なので、ここでのミュート解除は
         // 通る。
         bgmPlayer.unMute();
-        bgmPlayer.setVolume(BGM_DEFAULT_VOLUME);
+        bgmPlayer.setVolume(Number(bgmVolumeSlider.value));
         clearBgmStatus();
       } else if (playing) {
         bgmPlayer.pauseVideo();
@@ -712,6 +723,12 @@ const formatEventDate = (date: string) => {
       bgmReopenButton.hidden = true;
       bgmWidget.hidden = false;
       if (!bgmStarted) startBgmPlayback();
+    });
+
+    bgmVolumeSlider.addEventListener("input", () => {
+      if (!bgmPlayer) return;
+      bgmPlayer.setVolume(Number(bgmVolumeSlider.value));
+      if (bgmPlayer.isMuted()) bgmPlayer.unMute();
     });
   }
 </script>
@@ -1619,6 +1636,13 @@ const formatEventDate = (date: string) => {
   .bgm-icon-button:hover {
     border-color: var(--color-accent);
     color: var(--color-accent);
+  }
+
+  .bgm-volume {
+    width: 4rem;
+    height: 1.1rem;
+    accent-color: var(--color-accent);
+    cursor: pointer;
   }
 
   @media (max-width: 700px) {
