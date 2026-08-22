@@ -640,20 +640,29 @@ const formatEventDate = (date: string) => {
 
     preloadYouTubeApi();
 
-    bgmLaunchButton.hidden = false;
-    bgmLaunchButton.addEventListener("click", () => {
+    // 「再生ボタンを押す」以外の、ページ内での最初の操作(クリック/タップ/
+    // キー入力)もBGM開始のきっかけにする。ブラウザの自動再生ポリシーが
+    // 求めているのは「専用ボタンのクリック」ではなく「ユーザーによる何らかの
+    // 意図的な操作」なので、これでも音声付き再生は許可される。
+    function startBgmPlayback() {
+      if (bgmStarted) return;
+      bgmStarted = true;
       bgmLaunchButton.hidden = true;
       bgmWidget.hidden = false;
-      if (!bgmStarted) {
-        bgmStarted = true;
-        armLoadCheck();
-        if (bgmApiReady) {
-          createBgmPlayer();
-        } else {
-          bgmPendingStart = true;
-        }
+      armLoadCheck();
+      if (bgmApiReady) {
+        createBgmPlayer();
+      } else {
+        bgmPendingStart = true;
       }
-    });
+    }
+
+    bgmLaunchButton.hidden = false;
+    bgmLaunchButton.addEventListener("click", startBgmPlayback);
+
+    for (const eventName of ["click", "keydown", "touchstart"]) {
+      document.addEventListener(eventName, startBgmPlayback, { once: true, passive: true });
+    }
 
     bgmTogglePlayButton.addEventListener("click", () => {
       if (!bgmPlayer) return;
