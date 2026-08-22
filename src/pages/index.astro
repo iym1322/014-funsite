@@ -645,10 +645,12 @@ const formatEventDate = (date: string) => {
     // 求めているのは「専用ボタンのクリック」ではなく「ユーザーによる何らかの
     // 意図的な操作」なので、これでも音声付き再生は許可される。
     function startBgmPlayback() {
-      if (bgmStarted) return;
-      bgmStarted = true;
+      // ウィジェットの表示切り替えは、既に一度始めていて閉じただけの場合(再オープン)
+      // でも毎回行う必要がある。実際にプレイヤーを新規生成するのは初回だけでよい。
       bgmLaunchButton.hidden = true;
       bgmWidget.hidden = false;
+      if (bgmStarted) return;
+      bgmStarted = true;
       armLoadCheck();
       if (bgmApiReady) {
         createBgmPlayer();
