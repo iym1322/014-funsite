@@ -149,12 +149,13 @@ const formatEventDate = (date: string) => {
 
   <script type="application/json" id="featured-pool-data" set:html={JSON.stringify(featuredPool)} />
 
-  <button type="button" class="bgm-launch-button" id="bgm-launch-button" hidden>🎵 今日のBGMを再生</button>
   <div class="bgm-widget" id="bgm-widget" hidden>
-    <div class="bgm-video" id="bgm-yt-player"></div>
+    <div class="bgm-video" id="bgm-yt-player">
+      <span class="bgm-placeholder-icon" aria-hidden="true">🎵</span>
+    </div>
     <div class="bgm-info">
       <p class="bgm-eyebrow">今日のBGM(今日の1曲・4曲ループ)</p>
-      <p class="bgm-title" id="bgm-current-title"></p>
+      <p class="bgm-title" id="bgm-current-title">クリックすると再生されます</p>
       <p class="bgm-status" id="bgm-status" hidden></p>
       <div class="bgm-buttons">
         <button type="button" class="bgm-icon-button" id="bgm-toggle-play" aria-label="再生">▶</button>
@@ -465,9 +466,7 @@ const formatEventDate = (date: string) => {
     .map((song) => ({ song, videoId: getYouTubeId(song.youtube) }))
     .filter((entry): entry is { song: FeaturedSong; videoId: string } => entry.videoId !== null);
 
-  const bgmLaunchButton = document.getElementById("bgm-launch-button") as HTMLButtonElement | null;
-
-  if (bgmSongs.length > 0 && bgmLaunchButton) {
+  if (bgmSongs.length > 0) {
     const bgmWidget = document.getElementById("bgm-widget") as HTMLDivElement;
     const bgmTitleEl = document.getElementById("bgm-current-title") as HTMLParagraphElement;
     const bgmStatusEl = document.getElementById("bgm-status") as HTMLParagraphElement;
@@ -640,15 +639,11 @@ const formatEventDate = (date: string) => {
 
     preloadYouTubeApi();
 
-    // 「再生ボタンを押す」以外の、ページ内での最初の操作(クリック/タップ/
-    // キー入力)もBGM開始のきっかけにする。ブラウザの自動再生ポリシーが
-    // 求めているのは「専用ボタンのクリック」ではなく「ユーザーによる何らかの
-    // 意図的な操作」なので、これでも音声付き再生は許可される。
+    // 起動用の専用ボタンは持たず、ウィジェット自体を最初から表示しておく。
+    // ブラウザの自動再生ポリシーが求めているのは「専用ボタンのクリック」では
+    // なく「ユーザーによる何らかの意図的な操作」なので、ページ内で最初に
+    // 起きたクリック/タップ/キー入力ならどれでも再生開始のきっかけにできる。
     function startBgmPlayback() {
-      // ウィジェットの表示切り替えは、既に一度始めていて閉じただけの場合(再オープン)
-      // でも毎回行う必要がある。実際にプレイヤーを新規生成するのは初回だけでよい。
-      bgmLaunchButton.hidden = true;
-      bgmWidget.hidden = false;
       if (bgmStarted) return;
       bgmStarted = true;
       armLoadCheck();
@@ -659,15 +654,17 @@ const formatEventDate = (date: string) => {
       }
     }
 
-    bgmLaunchButton.hidden = false;
-    bgmLaunchButton.addEventListener("click", startBgmPlayback);
+    bgmWidget.hidden = false;
 
     for (const eventName of ["click", "keydown", "touchstart"]) {
       document.addEventListener(eventName, startBgmPlayback, { once: true, passive: true });
     }
 
     bgmTogglePlayButton.addEventListener("click", () => {
-      if (!bgmPlayer) return;
+      if (!bgmPlayer) {
+        startBgmPlayback();
+        return;
+      }
       const state = bgmPlayer.getPlayerState();
       const playing = state === (window as any).YT.PlayerState.PLAYING;
       if (playing && bgmPlayer.isMuted()) {
@@ -690,20 +687,24 @@ const formatEventDate = (date: string) => {
     });
 
     bgmSkipButton.addEventListener("click", () => {
+      if (!bgmPlayer) {
+        startBgmPlayback();
+        return;
+      }
       bgmErrorStreak = 0;
       playBgmIndex(bgmIndex + 1);
-      if (bgmPlayer) {
-        bgmPlayer.playVideo();
-        armAutoplayCheck();
-      }
+      bgmPlayer.playVideo();
+      armAutoplayCheck();
     });
 
+    // ウィジェットを常時表示にしたため、起動用の専用ボタンに戻す先が無い。
+    // 閉じるボタンは「このページ滞在中は表示しない」扱いとし、リロードするまで
+    // 再表示はしない(いわゆる通知の「閉じる」と同じ挙動)。
     bgmCloseButton.addEventListener("click", () => {
       if (bgmAutoplayCheckTimer) clearTimeout(bgmAutoplayCheckTimer);
       if (bgmLoadCheckTimer) clearTimeout(bgmLoadCheckTimer);
       if (bgmPlayer) bgmPlayer.pauseVideo();
       bgmWidget.hidden = true;
-      bgmLaunchButton.hidden = false;
     });
   }
 </script>
@@ -1508,22 +1509,6 @@ const formatEventDate = (date: string) => {
     font-size: 0.75rem;
   }
 
-  .bgm-launch-button {
-    position: fixed;
-    right: 1.25rem;
-    bottom: 1.25rem;
-    z-index: 40;
-    padding: 0.7rem 1.25rem;
-    border: none;
-    border-radius: 999px;
-    background: var(--color-accent);
-    color: var(--color-surface);
-    font-family: inherit;
-    font-size: 0.85rem;
-    box-shadow: 0 8px 24px rgb(47 44 40 / 18%);
-    cursor: pointer;
-  }
-
   .bgm-widget {
     position: fixed;
     right: 1.25rem;
@@ -1552,6 +1537,15 @@ const formatEventDate = (date: string) => {
     border-radius: 8px;
     overflow: hidden;
     background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bgm-placeholder-icon {
+    color: var(--color-surface);
+    font-size: 1.5rem;
+    opacity: 0.7;
   }
 
   .bgm-info {
