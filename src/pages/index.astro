@@ -441,6 +441,17 @@ const formatEventDate = (date: string) => {
 
   // 「今日のBGM」: 上の「今日の1曲」カルーセルと同じ4曲(名義ごとの日替わり1曲)を
   // YouTube埋め込みでループ再生する。YouTubeリンクが無い曲はBGM対象から外す。
+
+  // ブラウザの「戻る/進む」キャッシュ(bfcache)からページが復元されると、
+  // BGMウィジェットのDOM(すでにdivからiframeへ書き換わった状態)がそのまま
+  // 復元される一方でスクリプトの変数は初期状態に戻ってしまい、再生が壊れる。
+  // このケースを検知したら、ページを丸ごと再読み込みしてクリーンな状態に戻す。
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+      location.reload();
+    }
+  });
+
   function getYouTubeId(url: string | null): string | null {
     if (!url) return null;
     const match = url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
