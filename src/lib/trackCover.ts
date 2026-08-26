@@ -14,14 +14,14 @@ function normalizeName(value: string) {
 export function resolveTrackCoverSrc(
   image: string | undefined,
   title: string,
-  fallbackImages: string[] = []
+  fallbackImages: string[] = [],
+  preferFallback = false
 ): string | null {
   if (!fs.existsSync(worksDir)) return null;
 
   const files = fs.readdirSync(worksDir);
-  const candidates = [image, title, ...fallbackImages].filter(
-    (candidate): candidate is string => Boolean(candidate)
-  );
+  const ordered = preferFallback ? [...fallbackImages, image, title] : [image, title, ...fallbackImages];
+  const candidates = ordered.filter((candidate): candidate is string => Boolean(candidate));
 
   for (const candidate of candidates) {
     const normalizedCandidate = normalizeName(candidate);

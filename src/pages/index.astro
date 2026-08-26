@@ -76,7 +76,7 @@ const featuredPool = featuredGroups
         group: t.group,
         date: t.date,
         description: t.description ?? t.tieIn ?? null,
-        coverSrc: resolveTrackCoverSrc(t.image, t.title, getAlbumCoverImages(t)),
+        coverSrc: resolveTrackCoverSrc(t.image, t.title, getAlbumCoverImages(t), t.preferAlbumCover),
         youtube: t.youtube ?? null,
       })),
   }))
@@ -104,7 +104,7 @@ const trackTitleLookup = tracks
   .map((t) => ({
     slug: t.slug as string,
     title: t.title,
-    coverSrc: resolveTrackCoverSrc(t.image, t.title, getAlbumCoverImages(t)),
+    coverSrc: resolveTrackCoverSrc(t.image, t.title, getAlbumCoverImages(t), t.preferAlbumCover),
   }));
 
 const today = new Date().toISOString().slice(0, 10);
@@ -186,7 +186,12 @@ const formatEventDate = (date: string) => {
     <div class="song-rail" aria-label="新着楽曲一覧">
       {latestSongs.map((track) => (
         <a class="song-card" href={`/works/${track.slug}`}>
-          <TrackCover image={track.image} fallbackImages={getAlbumCoverImages(track)} title={track.title} />
+          <TrackCover
+            image={track.image}
+            fallbackImages={getAlbumCoverImages(track)}
+            title={track.title}
+            preferFallback={track.preferAlbumCover}
+          />
           <strong>{track.title}</strong>
           <span>{track.group} ・ {track.date}</span>
         </a>

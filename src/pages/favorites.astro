@@ -15,7 +15,7 @@ const trackOptions = tracks
   .map((t) => ({
     slug: t.slug as string,
     title: t.title,
-    coverSrc: resolveTrackCoverSrc(t.image, t.title, getAlbumCoverImages(t)),
+    coverSrc: resolveTrackCoverSrc(t.image, t.title, getAlbumCoverImages(t), t.preferAlbumCover),
   }))
   .sort((a, b) => a.title.localeCompare(b.title, "ja"));
 ---

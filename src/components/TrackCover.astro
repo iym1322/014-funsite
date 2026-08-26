@@ -11,11 +11,12 @@ interface Props {
   fallbackImages?: string[];
   title: string;
   aspect?: "square" | "wide";
+  preferFallback?: boolean;
 }
 
-const { image, fallbackImages = [], title, aspect = "square" } = Astro.props;
+const { image, fallbackImages = [], title, aspect = "square", preferFallback = false } = Astro.props;
 
-const resolvedSrc = resolveTrackCoverSrc(image, title, fallbackImages);
+const resolvedSrc = resolveTrackCoverSrc(image, title, fallbackImages, preferFallback);
 ---
 
 {resolvedSrc ? (

@@ -98,7 +98,12 @@ const sources = [
     <div class="recommend-scroll">
       {recommendedTracks.map((track) => (
         <a class="recommend-card" href={`/works/${track.slug}`}>
-          <TrackCover image={track.image} fallbackImages={getAlbumCoverImages(track)} title={track.title} />
+          <TrackCover
+            image={track.image}
+            fallbackImages={getAlbumCoverImages(track)}
+            title={track.title}
+            preferFallback={track.preferAlbumCover}
+          />
           <div class="recommend-body">
             <p class="recommend-title">{track.title}</p>
             <p class="recommend-meta">{track.group} ・ {track.date}</p>

@@ -65,7 +65,12 @@ const relatedRankingQuestionsForClient = relatedRankingQuestions.map((q) => ({
 
   <article class="track-detail">
     <div class="cover-col">
-      <TrackCover image={track.image} fallbackImages={getAlbumCoverImages(track)} title={track.title} />
+      <TrackCover
+        image={track.image}
+        fallbackImages={getAlbumCoverImages(track)}
+        title={track.title}
+        preferFallback={track.preferAlbumCover}
+      />
     </div>
 
     <div class="info-col">
