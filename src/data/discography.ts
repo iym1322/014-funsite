@@ -429,6 +429,8 @@ const yomiOverrides: Record<string, string> = {
   "hoshiiro-no-kaleidoscope": "ほしいろのかれいどすこーぷ", // 星色のカレイドスコープ
   "isekai-showtime": "いせかいしょーたいむ", // 異世界ショータイム
   "isekai-concerto": "いせかいこんちぇると", // 異世界こんちぇると
+  "isekai-quartet": "いせかいかるてっと", // 異世界かるてっと
+  "peten-shi-no-yuutsu": "ぺてんしのゆううつ", // ペテン師の憂鬱
 };
 
 const soundSong = (
@@ -1820,7 +1822,7 @@ const raw: Omit<Track, "sortDate">[] = [
   {
     group: "オーイシマサヨシ",
     type: "アルバム",
-    date: "2026.08",
+    date: "2026.08.26",
     title: "仮歌Ⅲ",
     note: "セルフカバーアルバム第3弾",
     slug: "kagauta-3",
@@ -1834,10 +1836,10 @@ const raw: Omit<Track, "sortDate">[] = [
       { title: "ハッピーエンドプリンセス", slug: "happy-end-princess" },
       { title: "かかった魔法はアマノジャク", slug: "kakatta-mahou-wa-amanojaku" },
       { title: "名探偵キミに告ぐ", slug: "meitantei-kimi-ni-tsugu" },
-      { title: "ペテン師の憂鬱" },
-      { title: "The Show Must Go On!" },
-      { title: "異世界かるてっと" },
-      { title: "なんてカラフルな世界！" },
+      { title: "ペテン師の憂鬱", slug: "peten-shi-no-yuutsu" },
+      { title: "The Show Must Go On!", slug: "the-show-must-go-on" },
+      { title: "異世界かるてっと", slug: "isekai-quartet" },
+      { title: "なんてカラフルな世界！", slug: "nante-colorful-na-sekai" },
     ],
   },
   {
@@ -3046,8 +3048,8 @@ const raw: Omit<Track, "sortDate">[] = [
   { group: "楽曲提供", type: "提供曲", date: "2020.11.15", title: "サヨナラから始まる物語", subject: "IDOLY PRIDE", role: "作詞・作曲(編曲: 大石昌良・岸田勇気)", slug: "sayonara-kara-hajimaru-monogatari", image: "sayonara-kara-hajimaru-monogatari", description: "『IDOLY PRIDE』の新人アイドル10名が歌うイメージソング。大石昌良が作詞・作曲を担当した。", spotify: "https://open.spotify.com/track/0v4aUn7ToZ3Wx9QTOqYyHr", appleMusic: "https://music.apple.com/jp/album/%E3%82%B5%E3%83%A8%E3%83%8A%E3%83%A9%E3%81%8B%E3%82%89%E5%A7%8B%E3%81%BE%E3%82%8B%E7%89%A9%E8%AA%9E/1537523659?i=1537523661" },
   { group: "楽曲提供", type: "提供曲", date: "2024.08.12", title: "星色のカレイドスコープ", subject: "IDOLY PRIDE", role: "作曲(共作: 岸田勇気)", note: "3周年記念楽曲", slug: "hoshiiro-no-kaleidoscope", image: "hoshiiro-no-kaleidoscope", description: "『IDOLY PRIDE』3周年記念楽曲。星見プロダクションが歌唱し、大石昌良が岸田勇気との共作で作曲を担当した。", spotify: "https://open.spotify.com/intl-ja/track/2t590OG8GJcEnQg5dTFOkZ", appleMusic: "https://music.apple.com/jp/album/%E6%98%9F%E8%89%B2%E3%81%AE%E3%82%AB%E3%83%AC%E3%82%A4%E3%83%89%E3%82%B9%E3%82%B3%E3%83%BC%E3%83%97-single/1759291100", youtube: "https://www.youtube.com/watch?v=FgP0PYPxM2E" },
   { group: "楽曲提供", type: "提供曲", date: "", title: "☆(きらりん)トリルで始まっちゃう!", subject: "アニソン!プレミアム!", role: "作曲" },
-  { group: "楽曲提供", type: "提供曲", date: "", title: "なんてカラフルな世界!", subject: "Animelo Summer Live 2020/2021 -COLORS-", role: "作詞・作曲・編曲", spotify: "https://open.spotify.com/track/4CVSdX1F4imXA3p9p2u0mj" },
-  { group: "楽曲提供", type: "提供曲", date: "2019.05.29", title: "異世界かるてっと", subject: "アインズ・カズマ・スバル・ターニャ", role: "作詞・作曲・編曲", tieIn: "TVアニメ「異世界かるてっと」OPテーマ" },
+  { group: "楽曲提供", type: "提供曲", date: "", title: "なんてカラフルな世界!", subject: "Animelo Summer Live 2020/2021 -COLORS-", role: "作詞・作曲・編曲", slug: "nante-colorful-na-sekai", description: "『Animelo Summer Live 2020/2021 -COLORS-』のテーマソング。大石昌良が作詞・作曲・編曲を担当した。", spotify: "https://open.spotify.com/track/4CVSdX1F4imXA3p9p2u0mj" },
+  { group: "楽曲提供", type: "提供曲", date: "2019.05.29", title: "異世界かるてっと", subject: "アインズ・カズマ・スバル・ターニャ", role: "作詞・作曲・編曲", tieIn: "TVアニメ「異世界かるてっと」OPテーマ", slug: "isekai-quartet", description: "TVアニメ『異世界かるてっと』のオープニングテーマ。大石昌良が作詞・作曲・編曲を担当した。" },
   { group: "楽曲提供", type: "提供曲", date: "2020.02.05", title: "異世界ショータイム", subject: "アインズ・カズマ・スバル・ターニャ", role: "作詞・作曲・編曲", tieIn: "TVアニメ「異世界かるてっと2」OPテーマ", slug: "isekai-showtime", image: "isekai-showtime", description: "TVアニメ『異世界かるてっと2』のオープニングテーマ。大石昌良が作詞・作曲・編曲を担当した。", spotify: "https://open.spotify.com/track/0srkS1bT4M7Q39Jo9iX6g2", appleMusic: "https://music.apple.com/us/song/%E7%95%B0%E4%B8%96%E7%95%8C%E3%82%B7%E3%83%A7%E3%83%BC%E3%82%BF%E3%82%A4%E3%83%A0/1495926928", youtube: "https://www.youtube.com/watch?v=qLn6wgRKAaY", youtubeAudioOnly: true },
   { group: "楽曲提供", type: "提供曲", date: "2025.10.14", title: "異世界こんちぇると", subject: "異世界かるてっと3", role: "作曲", tieIn: "TVアニメ「異世界かるてっと3」OPテーマ", slug: "isekai-concerto", image: "isekai-concerto", description: "TVアニメ『異世界かるてっと3』のオープニングテーマ。アインズ・カズマ・スバル・ターニャが歌唱し、大石昌良が作曲を担当した。", spotify: "https://open.spotify.com/track/24S0UdUOvWmnyrpHz7wADg", appleMusic: "https://music.apple.com/jp/album/1843003117?i=1843003244", youtube: "https://www.youtube.com/watch?v=NwSaAjwNBrw" },
   { group: "楽曲提供", type: "提供曲", date: "2024.05.24", title: "Ready!! Steady!! Derby!!", subject: "ジャングルポケット・アグネスタキオン・マンハッタンカフェ・ダンツフレーム", role: "作詞・作曲", tieIn: "劇場版「ウマ娘 プリティーダービー 新時代の扉」主題歌", slug: "ready-steady-derby", image: "ready-steady-derby", description: "劇場版『ウマ娘 プリティーダービー 新時代の扉』の主題歌。大石昌良がウマ娘シリーズに初めて楽曲提供した作品で、作詞・作曲を担当した。", spotify: "https://open.spotify.com/intl-ja/track/1QdPcAm3glkADSlljQBSUV", appleMusic: "https://music.apple.com/jp/album/ready-steady-derby/1813854824?i=1813854825", youtube: "https://www.youtube.com/watch?v=i8HMGZmhbSk" },
@@ -3057,9 +3059,9 @@ const raw: Omit<Track, "sortDate">[] = [
   { group: "楽曲提供", type: "提供曲", date: "2017.10.04", title: "ワンダーランド・ア・ゴーゴー!!", subject: "アリス&帽子屋", role: "作詞・作曲・編曲", tieIn: "ゲーム「A3!」春組キャラクターソング" },
   { group: "楽曲提供", type: "提供曲", date: "2017.11.01", title: "奇天烈ポエマー", subject: "有栖川誉(CV:豊永利行)", role: "作詞・作曲", tieIn: "ゲーム「A3!」キャラクターソング" },
   { group: "楽曲提供", type: "提供曲", date: "2018.03.07", title: "春夏秋冬☆Blooming!", subject: "A3ders!", role: "作詞・作曲・編曲", tieIn: "ゲーム「A3!」第二部主題歌", spotify: "https://open.spotify.com/track/45RpTPKeWsGGRkX5onDCf4" },
-  { group: "楽曲提供", type: "提供曲", date: "2018.04.25", title: "ペテン師の憂鬱", subject: "A3ders!", role: "作詞・作曲", tieIn: "ゲーム「A3!」キャラクターソング" },
+  { group: "楽曲提供", type: "提供曲", date: "2018.04.25", title: "ペテン師の憂鬱", subject: "A3ders!", role: "作詞・作曲", tieIn: "ゲーム「A3!」キャラクターソング", slug: "peten-shi-no-yuutsu", description: "ゲーム『A3!』のキャラクターソング。大石昌良が作詞・作曲を担当した。" },
   { group: "楽曲提供", type: "提供曲", date: "2019.06.26", title: "Ever☆Blooming!", subject: "A3ders!", role: "作詞・作曲・編曲", tieIn: "ゲーム「A3!」春組・夏組ミニアルバム『BRIGHT EP』収録曲" },
-  { group: "楽曲提供", type: "提供曲", date: "2018.11.21", title: "The Show Must Go On!", subject: "MANKAI STAGE『A3!』出演者", role: "作詞・作曲・編曲", tieIn: "舞台「A3!」メインテーマ", note: "「MANKAI STAGE『A3!』~SPRING & SUMMER 2018~」MUSIC Collection収録曲としての発売日" },
+  { group: "楽曲提供", type: "提供曲", date: "2018.11.21", title: "The Show Must Go On!", subject: "MANKAI STAGE『A3!』出演者", role: "作詞・作曲・編曲", tieIn: "舞台「A3!」メインテーマ", note: "「MANKAI STAGE『A3!』~SPRING & SUMMER 2018~」MUSIC Collection収録曲としての発売日", slug: "the-show-must-go-on", description: "舞台『A3!』のメインテーマ。大石昌良が作詞・作曲・編曲を担当した。" },
   { group: "楽曲提供", type: "提供曲", date: "2023.07.05", title: "サインはB", subject: "アニメ「【推しの子】」", role: "作詞・作曲", note: "「サインはB -アイ Solo Ver.-」としてキャラクターソングCD Vol.1収録", slug: "sign-wa-b", image: "sign-wa-b", description: "TVアニメ『【推しの子】』のキャラクターソング。アイ(高橋李依)のソロバージョンとしてキャラクターソングCD Vol.1に収録され、大石昌良が作詞・作曲を担当した。", spotify: "https://open.spotify.com/track/3xFQL262WHl5XNigU4rgW0", appleMusic: "https://music.apple.com/jp/song/%E3%82%B5%E3%82%A4%E3%83%B3%E3%81%AFb-%E3%82%A2%E3%82%A4-solo-ver/1692697523" },
   { group: "楽曲提供", type: "提供曲", date: "2026.01.15", title: "Bのリベンジ", subject: "アニメ「【推しの子】」", role: "作詞・作曲・編曲", tieIn: "アニメ「【推しの子】」第3期挿入歌", note: "先行配信日。CD(キャラクターソングCD Vol.5)は2026.03.25発売", slug: "b-no-revenge", image: "b-no-revenge", description: "TVアニメ『【推しの子】』第3期の挿入歌。B小町の新曲として、「サインはB」に続き大石昌良が作詞・作曲・編曲を担当した。", spotify: "https://open.spotify.com/track/1Ql4e2TPr2I9c8MdELvxho", appleMusic: "https://music.apple.com/jp/song/1866462975", youtube: "https://www.youtube.com/watch?v=5B-ZPcq8KxQ" },
   { group: "楽曲提供", type: "提供曲", date: "2020.04.27", title: "おばけずかんのうた〜いつでもどこでも〜", subject: "水樹奈々", role: "作曲(作詞: 斉藤洋)", tieIn: "TVアニメ「おばけずかん」主題歌", slug: "obakezukan-no-uta-itsudemo-dokodemo", image: "obakezukan-no-uta-itsudemo-dokodemo", description: "TVアニメ『おばけずかん』の主題歌。水樹奈々が歌唱し、大石昌良が作曲を担当した。", spotify: "https://open.spotify.com/track/7iJN37eaT9ecD3cw5Wjg7d", appleMusic: "https://music.apple.com/jp/album/%E3%81%8A%E3%81%B0%E3%81%91%E3%81%9A%E3%81%8B%E3%82%93%E3%81%AE%E3%81%86%E3%81%9F-%E3%81%84%E3%81%A4%E3%81%A7%E3%82%82-%E3%81%A9%E3%81%93%E3%81%A7%E3%82%82/1508094617?i=1508094618" },
