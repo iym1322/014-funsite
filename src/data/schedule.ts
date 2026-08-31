@@ -110,8 +110,11 @@ export const schedule: ScheduleEvent[] = [
   { date: "2026-08-10", title: "LuckyFes’26", type: "live", note: "国営ひたち海浜公園 WING STAGE", sourceUrl: officialLiveSchedule },
   { date: "2026-08-20", title: "「仮歌Ⅲ」発売記念オンラインサイン会", type: "event", sourceUrl: officialLiveSchedule },
   { date: "2026-08-26", title: "「仮歌Ⅲ」CD・配信リリース", type: "release", href: "/works/kagauta-3" },
+  { date: "2026-08-30", title: "「仮歌Ⅲ」発売記念フリーライブ", type: "event", note: "神奈川", sourceUrl: officialLiveSchedule },
+  { date: "2026-09-05", title: "「仮歌Ⅲ」発売記念フリーライブ", type: "event", note: "岡山", sourceUrl: officialLiveSchedule },
   { date: "2026-09-06", title: "AZUR LANE MUSI9 FES. SPECIAL MUSI9 LIVE", type: "live", sourceUrl: officialLiveSchedule },
   { date: "2026-09-09", title: "「嗚呼、素晴らしき日常」CD・配信リリース", type: "release", note: "大石昌良名義", href: "/works/aa-subarashiki-nichijou" },
+  { date: "2026-09-19", title: "「仮歌Ⅲ」発売記念フリーライブ", type: "event", note: "愛知", sourceUrl: officialLiveSchedule },
   { date: "2026-09-22", title: "オーイシ武道館 Vol.3", type: "live", note: "日本武道館", sourceUrl: "https://www.014014.jp/schedules/7265" },
   { date: "2026-09-23", title: "大石武道館", type: "live", note: "日本武道館", sourceUrl: officialLiveSchedule },
   { date: "2026-09-26", title: "OxT ダイヤのA actⅡ -SS- The Talk & Live", type: "live", sourceUrl: officialLiveSchedule },
@@ -121,6 +124,7 @@ export const schedule: ScheduleEvent[] = [
   { date: "2026-10-11", title: "高槻魂!!2026", type: "live", sourceUrl: officialLiveSchedule },
   { date: "2026-10-17", title: "IPU・環太平洋大学「環太祭2026」", type: "live", sourceUrl: "https://www.014014.jp/news/7669" },
   { date: "2026-10-18", title: "DIALOGUE＋WITH vol.8 －オーイシマサヨシ－", type: "live", sourceUrl: officialLiveSchedule },
+  { date: "2026-11-01", title: "大分大学「2026 蒼稜祭 Special Live」", type: "live", sourceUrl: officialLiveSchedule },
   { date: "2026-11-21", title: "ANIMAX MUSIX 2026 supported by Lemino", type: "live", sourceUrl: officialLiveSchedule },
 
   // 2027（現時点で発表済みの予定）
