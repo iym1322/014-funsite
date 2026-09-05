@@ -124,6 +124,8 @@ export const schedule: ScheduleEvent[] = [
   { date: "2026-10-11", title: "高槻魂!!2026", type: "live", sourceUrl: officialLiveSchedule },
   { date: "2026-10-17", title: "IPU・環太平洋大学「環太祭2026」", type: "live", sourceUrl: "https://www.014014.jp/news/7669" },
   { date: "2026-10-18", title: "DIALOGUE＋WITH vol.8 －オーイシマサヨシ－", type: "live", sourceUrl: officialLiveSchedule },
+  { date: "2026-10-25", title: "「ポケモンカードゲーム30th CELEBRATION EVENT」出演", type: "live", note: "幕張メッセ(千葉会場のみ出演)", sourceUrl: "https://www.014014.jp/news/7921" },
+  { date: "2026-10-30", title: "文教大学「第59回藍蓼祭 オーイシマサヨシ Special Live」", type: "live", sourceUrl: "https://www.014014.jp/news/7669" },
   { date: "2026-10-31", title: "総合フェスティバル2026 愛顔えひめの文化祭2028 2年前プレイベント", type: "live", note: "愛媛県県民文化会館メインホール(スペシャルゲスト出演)", sourceUrl: "https://www.014014.jp/news/7916" },
   { date: "2026-11-01", title: "大分大学「2026 蒼稜祭 Special Live」", type: "live", sourceUrl: officialLiveSchedule },
   { date: "2026-11-21", title: "ANIMAX MUSIX 2026 supported by Lemino", type: "live", sourceUrl: officialLiveSchedule },
