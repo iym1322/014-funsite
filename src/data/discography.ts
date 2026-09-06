@@ -2351,6 +2351,15 @@ const raw: Omit<Track, "sortDate">[] = [
     spotify: "https://open.spotify.com/track/08wiYF42f2wVoEW0xZfzAl",
   },
   {
+    group: "オーイシマサヨシ",
+    type: "シングル",
+    date: "2026.09.04",
+    title: "ポケモンオールスターズ1025",
+    note: "フルコーラス版。1,025匹全てのポケモンの名前が歌詞・映像に登場する約22分の長編MV。",
+    tieIn: "ポケモン新シリーズを記念した楽曲企画「ポケモンオールスターズ1025」",
+    description: "「ポケモンオールスターズ1025 (213/1025)」に続く、全1,025匹のポケモンが総出演するフルコーラス版。作詞は大石昌良・eba・Pokémon Music Spotlight、作曲・編曲は大石昌良・eba・高尾奏之介・岸田勇気・うたたね歌菜が担当。",
+  },
+  {
     group: "大石昌良",
     type: "シングル",
     date: "2026.09.09",
