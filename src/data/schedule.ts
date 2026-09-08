@@ -128,9 +128,11 @@ export const schedule: ScheduleEvent[] = [
   { date: "2026-10-30", title: "文教大学 越谷キャンパス 第59回藍蓼祭「オーイシマサヨシ Special Live in 文教大学」", type: "live", sourceUrl: "https://www.014014.jp/news/7669" },
   { date: "2026-10-31", title: "総合フェスティバル2026 愛顔えひめの文化祭2028 2年前プレイベント", type: "live", note: "愛媛県県民文化会館メインホール(スペシャルゲスト出演)", sourceUrl: "https://www.014014.jp/news/7916" },
   { date: "2026-11-01", title: "大分大学「2026 蒼稜祭 Special Live」", type: "live", sourceUrl: officialLiveSchedule },
+  { date: "2026-11-07", title: "日本福祉大学 第74回福祉大学祭 オーイシマサヨシ Special Live", type: "live", note: "美浜キャンパス文化ホール", sourceUrl: "https://www.014014.jp/news/7669" },
   { date: "2026-11-21", title: "ANIMAX MUSIX 2026 supported by Lemino", type: "live", sourceUrl: officialLiveSchedule },
 
   // 2027（現時点で発表済みの予定）
+  { date: "2027-01-30", title: "スガ シカオ 30th ANNIVERSARY TOUR「ACOUSTIC SUPERNOVA」30周年応援ゲスト出演", type: "live", note: "トークネットホール仙台・大石昌良名義", sourceUrl: "https://www.014014.jp/news/7932" },
   { date: "2027-02-27", title: "オーイシ横アリ Day1", type: "live", note: "横浜アリーナ", sourceUrl: officialLiveSchedule },
   { date: "2027-02-28", title: "オーイシ横アリ Day2", type: "live", note: "横浜アリーナ", sourceUrl: officialLiveSchedule },
 ].sort((a, b) => a.date.localeCompare(b.date));
