@@ -114,7 +114,7 @@ export const schedule: ScheduleEvent[] = [
   { date: "2026-09-05", title: "「仮歌Ⅲ」発売記念フリーライブ", type: "event", note: "岡山", sourceUrl: officialLiveSchedule },
   { date: "2026-09-06", title: "AZUR LANE MUSI9 FES. SPECIAL MUSI9 LIVE", type: "live", sourceUrl: officialLiveSchedule },
   { date: "2026-09-09", title: "「嗚呼、素晴らしき日常」CD・配信リリース", type: "release", note: "大石昌良名義", href: "/works/aa-subarashiki-nichijou" },
-  { date: "2026-09-19", title: "「仮歌Ⅲ」発売記念フリーライブ", type: "event", note: "愛知", sourceUrl: officialLiveSchedule },
+  { date: "2026-09-19", title: "「仮歌Ⅲ」発売記念フリーライブ＆特典会", type: "event", note: "イオンモール豊川", sourceUrl: "https://www.014014.jp/news/7890" },
   { date: "2026-09-22", title: "オーイシ武道館 Vol.3", type: "live", note: "日本武道館", sourceUrl: "https://www.014014.jp/schedules/7265" },
   { date: "2026-09-23", title: "大石武道館", type: "live", note: "日本武道館", sourceUrl: officialLiveSchedule },
   { date: "2026-09-26", title: "OxT ダイヤのA actⅡ -SS- The Talk & Live", type: "live", sourceUrl: officialLiveSchedule },
@@ -128,9 +128,13 @@ export const schedule: ScheduleEvent[] = [
   { date: "2026-10-30", title: "文教大学 越谷キャンパス 第59回藍蓼祭「オーイシマサヨシ Special Live in 文教大学」", type: "live", sourceUrl: "https://www.014014.jp/news/7669" },
   { date: "2026-10-31", title: "総合フェスティバル2026 愛顔えひめの文化祭2028 2年前プレイベント", type: "live", note: "愛媛県県民文化会館メインホール(スペシャルゲスト出演)", sourceUrl: "https://www.014014.jp/news/7916" },
   { date: "2026-11-01", title: "大分大学「2026 蒼稜祭 Special Live」", type: "live", sourceUrl: officialLiveSchedule },
+  { date: "2026-11-07", title: "日本福祉大学「第74回福祉大学祭」", type: "live", note: "美浜キャンパス 文化ホール", sourceUrl: "https://www.014014.jp/news/7669" },
   { date: "2026-11-21", title: "ANIMAX MUSIX 2026 supported by Lemino", type: "live", sourceUrl: officialLiveSchedule },
+  { date: "2026-11-28", title: "配信者ハイパーゲーム大会 FINAL [DAY1]", type: "event", note: "東京ドーム。テーマソング制作担当・出演決定", sourceUrl: "https://www.014014.jp/news/7938" },
+  { date: "2026-11-29", title: "配信者ハイパーゲーム大会 FINAL [DAY2]", type: "event", note: "東京ドーム。テーマソング制作担当・出演決定", sourceUrl: "https://www.014014.jp/news/7938" },
 
   // 2027（現時点で発表済みの予定）
+  { date: "2027-01-30", title: "スガ シカオ 30th ANNIVERSARY TOUR 2027 “ACOUSTIC SUPERNOVA” 宮城公演", type: "live", note: "トークネットホール仙台(大石昌良ゲスト出演)", sourceUrl: "https://www.014014.jp/news/7932" },
   { date: "2027-02-27", title: "オーイシ横アリ Day1", type: "live", note: "横浜アリーナ", sourceUrl: officialLiveSchedule },
   { date: "2027-02-28", title: "オーイシ横アリ Day2", type: "live", note: "横浜アリーナ", sourceUrl: officialLiveSchedule },
 ].sort((a, b) => a.date.localeCompare(b.date));
