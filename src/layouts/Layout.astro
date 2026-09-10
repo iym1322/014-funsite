@@ -7,9 +7,11 @@ import "../styles/global.css";
 interface Props {
   title: string;
   description?: string;
+  ogImage?: string;
 }
 
-const { title, description = "オーイシマサヨシさんの非公式ファンサイトです。" } = Astro.props;
+const { title, description = "オーイシマサヨシさんの非公式ファンサイトです。", ogImage } = Astro.props;
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <html lang="ja">
@@ -20,6 +22,12 @@ const { title, description = "オーイシマサヨシさんの非公式ファ�
     <meta name="description" content={description} />
     <meta name="google-site-verification" content="Dzy-PyxGh8xgx8TZ4_4Ji7_Ay-6C4vL_Vysm12ac_MQ" />
     <meta name="generator" content={Astro.generator} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
     <title>{title}</title>
   </head>
   <body>

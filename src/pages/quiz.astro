@@ -111,11 +111,13 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     </div>
 
     <div class="quiz-explanation" id="quiz-explanation" hidden>
-      <p class="quiz-verdict" id="quiz-verdict"></p>
+      <div class="verdict-row">
+        <p class="quiz-verdict" id="quiz-verdict"></p>
+        <button type="button" class="next-button" id="next-button"></button>
+      </div>
       <p class="quiz-explanation-text" id="quiz-explanation-text"></p>
       <a class="related-link" id="related-link" href="#" hidden>関連ページを見る →</a>
       <div class="explanation-footer">
-        <button type="button" class="next-button" id="next-button"></button>
         <button type="button" class="flag-button" id="flag-button">⚠ この解説、事実と違うかも</button>
       </div>
     </div>
@@ -349,6 +351,10 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   let questionRevealTimer: ReturnType<typeof setInterval> | null = null;
   let lastAverageTimeMs = 0;
   let lastRankingMode: string | null = null;
+  let lastTierRank = "";
+  // ランキングに記録した直後だけ、OGPカード付きのシェア用固有URLが手に入る。
+  let lastShareRecordId: string | null = null;
+  let lastShareNickname = "名無し";
 
   function shuffle<T>(items: T[]): T[] {
     const arr = [...items];
@@ -590,6 +596,8 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     resultPanel.dataset.tier = tier.key;
     resultRankEl.textContent = tier.rank;
     resultMessageEl.textContent = tier.message;
+    lastTierRank = tier.rank;
+    lastShareRecordId = null;
 
     lastAverageTimeMs =
       answerTimes.length > 0 ? answerTimes.reduce((a, b) => a + b, 0) / answerTimes.length : 0;
@@ -721,18 +729,25 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
       return;
     }
     rankingSubmitButton.disabled = true;
-    const { error } = await supabase.from("quiz_ranking").insert({
-      mode: lastRankingMode,
-      nickname,
-      score,
-      total_questions: questions.length,
-      average_time_ms: Math.round(lastAverageTimeMs),
-    });
+    const { data, error } = await supabase
+      .from("quiz_ranking")
+      .insert({
+        mode: lastRankingMode,
+        nickname,
+        score,
+        total_questions: questions.length,
+        average_time_ms: Math.round(lastAverageTimeMs),
+      })
+      .select("id")
+      .single();
     if (error) {
       rankingFormMessage.textContent = "記録に失敗しました。時間をおいて試してください。";
       rankingSubmitButton.disabled = false;
       return;
     }
+    // ランキングに記録できた場合だけ、OGPカード付きのシェア用固有URLを発行できる。
+    lastShareRecordId = data?.id ?? null;
+    lastShareNickname = nickname;
     rankingFormMessage.textContent = "ランキングに記録しました！ありがとうございます。";
     await loadRankingBoard(lastRankingMode);
   });
@@ -762,11 +777,21 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     }
     rankingBoardList.innerHTML = "";
     data.forEach(
-      (row: { nickname: string; score: number; total_questions: number; average_time_ms: number }) => {
+      (row: { nickname: string; score: number; total_questions: number; average_time_ms: number }, index: number) => {
+        const rank = index + 1;
         const li = document.createElement("li");
         li.className = "ranking-row";
+        if (rank <= 3) li.classList.add(`is-rank-${rank}`);
         const avgSec = (row.average_time_ms / 1000).toFixed(1);
-        li.innerHTML = `<span class="ranking-nickname">${escapeHtml(row.nickname)}</span><span class="ranking-score">${row.score}/${row.total_questions}問正解</span><span class="ranking-avg">平均${avgSec}秒</span>`;
+        const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `${rank}`;
+        li.innerHTML = `
+          <span class="ranking-position">${medal}</span>
+          <span class="ranking-nickname">${escapeHtml(row.nickname)}</span>
+          <span class="ranking-stats">
+            <span class="ranking-score">${row.score}/${row.total_questions}問正解</span>
+            <span class="ranking-avg">平均${avgSec}秒</span>
+          </span>
+        `;
         rankingBoardList.appendChild(li);
       }
     );
@@ -779,11 +804,27 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   loadRankingBoard("10");
 
   // =========================================
-  // Xでのシェア(画像は使わず、テキストのみでXの投稿画面へ直接遷移する)
+  // Xでのシェア
   // =========================================
+  // ランキングに記録済みなら、OGPカードが展開される専用の結果ページへのリンクを
+  // 使う。未記録(または絞り込みありで記録対象外)の場合はテキストのみで共有する。
   shareButton.addEventListener("click", () => {
-    const shareText = `オーイシ検定で${questions.length}問中${score}問正解！(平均解答タイム${(lastAverageTimeMs / 1000).toFixed(1)}秒) #オーイシ検定 #014BASE`;
-    const shareUrl = "https://014-funsite.vercel.app/quiz";
+    const avgSec = (lastAverageTimeMs / 1000).toFixed(1);
+    let shareText = `オーイシ検定で${questions.length}問中${score}問正解！(平均解答タイム${avgSec}秒) #オーイシ検定 #014BASE`;
+    let shareUrl = "https://014-funsite.vercel.app/quiz";
+
+    if (lastShareRecordId) {
+      const params = new URLSearchParams({
+        score: String(score),
+        total: String(questions.length),
+        time: avgSec,
+        nickname: lastShareNickname,
+        rank: lastTierRank,
+      });
+      shareUrl = `https://014-funsite.vercel.app/quiz/result/${lastShareRecordId}?${params.toString()}`;
+      shareText = `${questions.length}問中${score}問正解｜${avgSec}秒\n\nオーイシマサヨシ/大石昌良の曲、何問わかる？\nあなたも挑戦\n\n#オーイシ検定 #オーイシマサヨシ`;
+    }
+
     const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
     window.open(intentUrl, "_blank", "noopener,noreferrer");
   });
@@ -1280,8 +1321,17 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     border-top: 1px solid var(--color-border);
   }
 
+  .verdict-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    margin: 0 0 0.75rem;
+  }
+
   .quiz-verdict {
-    margin: 0 0 0.5rem;
+    margin: 0;
     font-weight: 700;
   }
 
@@ -1312,12 +1362,15 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   }
 
   .next-button {
-    padding: 0.6rem 1.5rem;
+    padding: 0.5rem 1.25rem;
     border: none;
     border-radius: 999px;
     background: var(--color-accent);
     color: var(--color-surface);
     font-family: inherit;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    flex-shrink: 0;
     cursor: pointer;
   }
 
@@ -1468,10 +1521,14 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
 
   .quiz-ranking-board {
     margin-top: 2.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
   }
 
   .quiz-ranking-board h2 {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     margin: 0 0 0.5rem;
   }
 
@@ -1479,17 +1536,24 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin: 0.75rem 0 1rem;
+    margin: 1rem 0 1.25rem;
   }
 
   .ranking-tab {
-    padding: 0.4rem 1rem;
+    padding: 0.45rem 1.1rem;
     border: 1px solid var(--color-border);
     border-radius: 999px;
-    background: var(--color-surface);
+    background: var(--color-bg);
     color: var(--color-text-muted);
     font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
     cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .ranking-tab:hover {
+    border-color: var(--color-accent);
   }
 
   .ranking-tab.is-active {
@@ -1504,27 +1568,81 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.6rem;
   }
 
   .ranking-row {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.6rem 0.9rem;
+    display: grid;
+    grid-template-columns: 2.25rem 1fr auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
     border: 1px solid var(--color-border);
-    border-radius: 8px;
+    border-radius: 10px;
+    background: var(--color-bg);
     font-size: 0.9rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .ranking-row:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  }
+
+  .ranking-position {
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--color-text-muted);
   }
 
   .ranking-nickname {
     font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .ranking-score,
-  .ranking-avg {
+  .ranking-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+    font-size: 0.8rem;
     color: var(--color-text-muted);
+    text-align: right;
+  }
+
+  .ranking-score {
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  .ranking-row.is-rank-1 {
+    border-color: #e6b93d;
+    background: linear-gradient(135deg, var(--color-surface), #fff6da);
+  }
+
+  .ranking-row.is-rank-1 .ranking-position {
+    font-size: 1.4rem;
+  }
+
+  .ranking-row.is-rank-2 {
+    border-color: #b8bfc7;
+    background: linear-gradient(135deg, var(--color-surface), #eef1f4);
+  }
+
+  .ranking-row.is-rank-2 .ranking-position {
+    font-size: 1.3rem;
+  }
+
+  .ranking-row.is-rank-3 {
+    border-color: #cd8a5c;
+    background: linear-gradient(135deg, var(--color-surface), #fbeee2);
+  }
+
+  .ranking-row.is-rank-3 .ranking-position {
+    font-size: 1.3rem;
   }
 </style>
 
