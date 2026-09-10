@@ -142,12 +142,10 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     </div>
 
     <div class="result-actions">
-      <button type="button" class="share-button" id="share-button">結果画像をXでシェア</button>
+      <button type="button" class="share-button" id="share-button">結果をXでシェア</button>
       <button type="button" class="retry-button" id="retry-button">もう一度挑戦する</button>
     </div>
   </div>
-
-  <canvas id="share-canvas" width="1200" height="630" hidden></canvas>
 
   <section class="quiz-ranking-board">
     <h2>ランキング</h2>
@@ -338,7 +336,6 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   const rankingSubmitButton = document.getElementById("ranking-submit-button") as HTMLButtonElement;
   const rankingFormMessage = document.getElementById("ranking-form-message") as HTMLParagraphElement;
   const shareButton = document.getElementById("share-button") as HTMLButtonElement;
-  const shareCanvas = document.getElementById("share-canvas") as HTMLCanvasElement;
   const rankingBoardList = document.getElementById("ranking-board-list") as HTMLOListElement;
   const rankingTabs = Array.from(document.querySelectorAll<HTMLButtonElement>(".ranking-tab"));
   const countLockNote = document.getElementById("count-lock-note") as HTMLParagraphElement;
@@ -782,69 +779,13 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   loadRankingBoard("10");
 
   // =========================================
-  // 結果画像の生成・Xでのシェア
+  // Xでのシェア(画像は使わず、テキストのみでXの投稿画面へ直接遷移する)
   // =========================================
-  function drawResultImage(): Promise<Blob | null> {
-    const ctx = shareCanvas.getContext("2d");
-    if (!ctx) return Promise.resolve(null);
-    const w = shareCanvas.width;
-    const h = shareCanvas.height;
-
-    const gradient = ctx.createLinearGradient(0, 0, w, h);
-    gradient.addColorStop(0, "#1b1030");
-    gradient.addColorStop(1, "#3a1f5c");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.textAlign = "center";
-
-    ctx.font = "bold 44px sans-serif";
-    ctx.fillText("オーイシ検定", w / 2, 120);
-
-    ctx.font = "bold 84px sans-serif";
-    ctx.fillText(`${score} / ${questions.length} 問正解`, w / 2, 300);
-
-    ctx.font = "48px sans-serif";
-    ctx.fillText(`平均解答タイム ${(lastAverageTimeMs / 1000).toFixed(1)}秒`, w / 2, 400);
-
-    ctx.font = "32px sans-serif";
-    ctx.fillStyle = "#d8c8f0";
-    ctx.fillText("014 BASE - オーイシマサヨシ非公式ファンサイト", w / 2, h - 60);
-
-    return new Promise((resolve) => shareCanvas.toBlob((blob) => resolve(blob), "image/png"));
-  }
-
-  shareButton.addEventListener("click", async () => {
-    shareButton.disabled = true;
-    const blob = await drawResultImage();
+  shareButton.addEventListener("click", () => {
     const shareText = `オーイシ検定で${questions.length}問中${score}問正解！(平均解答タイム${(lastAverageTimeMs / 1000).toFixed(1)}秒) #オーイシ検定 #014BASE`;
     const shareUrl = "https://014-funsite.vercel.app/quiz";
-
-    try {
-      if (blob) {
-        const file = new File([blob], "oishi-quiz-result.png", { type: "image/png" });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ text: shareText, url: shareUrl, files: [file] });
-          shareButton.disabled = false;
-          return;
-        }
-      }
-    } catch {
-      // ユーザーによるキャンセル等は無視してフォールバックへ進む
-    }
-
-    if (blob) {
-      const objectUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = objectUrl;
-      a.download = "oishi-quiz-result.png";
-      a.click();
-      URL.revokeObjectURL(objectUrl);
-    }
     const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
     window.open(intentUrl, "_blank", "noopener,noreferrer");
-    shareButton.disabled = false;
   });
 
   // =========================================

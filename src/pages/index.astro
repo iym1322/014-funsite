@@ -155,7 +155,7 @@ const formatEventDate = (date: string) => {
     </div>
     <div class="bgm-info">
       <p class="bgm-eyebrow">今日のBGM(今日の1曲・4曲ループ)</p>
-      <p class="bgm-title" id="bgm-current-title">クリックすると再生されます</p>
+      <p class="bgm-title" id="bgm-current-title">▶を押すと再生されます</p>
       <p class="bgm-status" id="bgm-status" hidden></p>
       <div class="bgm-buttons">
         <button type="button" class="bgm-icon-button" id="bgm-toggle-play" aria-label="再生">▶</button>
@@ -657,10 +657,8 @@ const formatEventDate = (date: string) => {
 
     preloadYouTubeApi();
 
-    // 起動用の専用ボタンは持たず、ウィジェット自体を最初から表示しておく。
-    // ブラウザの自動再生ポリシーが求めているのは「専用ボタンのクリック」では
-    // なく「ユーザーによる何らかの意図的な操作」なので、ページ内で最初に
-    // 起きたクリック/タップ/キー入力ならどれでも再生開始のきっかけにできる。
+    // 再生開始は、プレイヤー本体の▶(再生)または⏭(次の曲)ボタンを押した
+    // ときだけに限定する(ページ内の無関係なクリック等では自動再生しない)。
     function startBgmPlayback() {
       if (bgmStarted) return;
       bgmStarted = true;
@@ -673,10 +671,6 @@ const formatEventDate = (date: string) => {
     }
 
     bgmWidget.hidden = false;
-
-    for (const eventName of ["click", "keydown", "touchstart"]) {
-      document.addEventListener(eventName, startBgmPlayback, { once: true, passive: true });
-    }
 
     bgmTogglePlayButton.addEventListener("click", () => {
       if (!bgmPlayer) {
