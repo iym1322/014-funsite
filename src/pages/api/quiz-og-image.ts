@@ -12,22 +12,35 @@
 // おり、Node実行時はharfbuzzjs自身の素のCommonJSコードとして解決されるため、
 // 上記の壊れたバンドル経路を通らない。resvg-jsもWASMではなくネイティブ
 // バイナリ(N-API)なので同種の問題が起きない。
+//
+// フォントは可変フォント(fvarテーブルあり)ではなく、Regular/Boldの
+// 静的ウェイトファイルを別々に使う。satoriが使うopentype.jsのフォーク
+// (@shuding/opentype.js)はfvarテーブルのaxis名解決時にfont.namesを
+// 参照するが、このビルドではname table自体が実装されておらずfont.namesが
+// 常にundefinedのため、可変フォントを渡すと必ずクラッシュする
+// (本番で実際に確認済み)。
 import type { APIRoute } from "astro";
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
-import notoSansJpVariableUrl from "../../assets/fonts/NotoSansJP-Variable.ttf?url";
+import notoSansJpRegularUrl from "../../assets/fonts/NotoSansJP-Regular.ttf?url";
+import notoSansJpBoldUrl from "../../assets/fonts/NotoSansJP-Bold.ttf?url";
 
 export const prerender = false;
 
-let cachedFontData: ArrayBuffer | null = null;
+let cachedFonts: { regular: ArrayBuffer; bold: ArrayBuffer } | null = null;
 
-async function loadFontData(origin: string): Promise<ArrayBuffer> {
-  if (cachedFontData) return cachedFontData;
-  const fontUrl = new URL(notoSansJpVariableUrl, origin);
-  const response = await fetch(fontUrl);
-  if (!response.ok) throw new Error("フォントの読み込みに失敗しました");
-  cachedFontData = await response.arrayBuffer();
-  return cachedFontData;
+async function loadFontData(origin: string): Promise<{ regular: ArrayBuffer; bold: ArrayBuffer }> {
+  if (cachedFonts) return cachedFonts;
+  const [regularRes, boldRes] = await Promise.all([
+    fetch(new URL(notoSansJpRegularUrl, origin)),
+    fetch(new URL(notoSansJpBoldUrl, origin)),
+  ]);
+  if (!regularRes.ok || !boldRes.ok) throw new Error("フォントの読み込みに失敗しました");
+  cachedFonts = {
+    regular: await regularRes.arrayBuffer(),
+    bold: await boldRes.arrayBuffer(),
+  };
+  return cachedFonts;
 }
 
 function el(type: string, props: Record<string, unknown> = {}, children?: unknown) {
@@ -47,7 +60,7 @@ export const GET: APIRoute = async ({ url }) => {
   const scoreText = `${score} / ${total} 問正解`;
   const timeText = `平均解答タイム ${timeSec.toFixed(1)}秒`;
 
-  let fontData: ArrayBuffer;
+  let fontData: { regular: ArrayBuffer; bold: ArrayBuffer };
   try {
     fontData = await loadFontData(url.origin);
   } catch (err) {
@@ -107,8 +120,8 @@ export const GET: APIRoute = async ({ url }) => {
       width: 1200,
       height: 630,
       fonts: [
-        { name: "Noto Sans JP", data: fontData, weight: 400, style: "normal" },
-        { name: "Noto Sans JP", data: fontData, weight: 700, style: "normal" },
+        { name: "Noto Sans JP", data: fontData.regular, weight: 400, style: "normal" },
+        { name: "Noto Sans JP", data: fontData.bold, weight: 700, style: "normal" },
       ],
     });
 
