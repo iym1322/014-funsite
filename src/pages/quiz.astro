@@ -366,6 +366,7 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   let lastAverageTimeMs = 0;
   let lastRankingMode: string | null = null;
   let lastTierRank = "";
+  let lastTierMessage = "";
 
   function shuffle<T>(items: T[]): T[] {
     const arr = [...items];
@@ -608,6 +609,7 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     resultRankEl.textContent = tier.rank;
     resultMessageEl.textContent = tier.message;
     lastTierRank = tier.rank;
+    lastTierMessage = tier.message;
 
     lastAverageTimeMs =
       answerTimes.length > 0 ? answerTimes.reduce((a, b) => a + b, 0) / answerTimes.length : 0;
@@ -812,14 +814,14 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   // ランキングに記録済みなら、OGPカードが展開される専用の結果ページへのリンクを
   // 使う。未記録(または絞り込みありで記録対象外)の場合はテキストのみで共有する。
   shareButton.addEventListener("click", () => {
-    const avgSec = (lastAverageTimeMs / 1000).toFixed(1);
     // URLは本文中に直接埋め込む(intentの&url=は使わない。使うと本文の末尾に
     // 二重でURLが付いてしまうため)。
     const shareText = [
-      `${score}/${questions.length}問正解｜${avgSec}秒｜${lastTierRank}`,
+      `【オーイシ検定】${score}/${questions.length}問正解でした！`,
+      `称号：${lastTierRank}`,
+      lastTierMessage,
       "",
-      "オーイシマサヨシ/大石昌良に関する検定、あなたは何問わかる？",
-      "あなたも挑戦",
+      "あなたは何問わかる？",
       "https://014-funsite.vercel.app/quiz",
       "",
       "#オーイシ検定 #オーイシマサヨシ",
