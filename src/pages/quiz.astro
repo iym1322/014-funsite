@@ -6,7 +6,7 @@ import Layout from "../layouts/Layout.astro";
 import { quizQuestions } from "../data/quiz_fun";
 
 // 出題数の候補ライン。総問題数を上回るものはJS側で非表示にする。
-const countBreakpoints = [10, 20, 100];
+const countBreakpoints = [10, 20, 50, 100];
 
 // みんなの投稿問題は一時的に非表示(コードは残し、フォーム・一覧の表示と
 // 出題プールへの合流だけ止めている)。復活させる際はこれをtrueに戻すだけでよい。
@@ -128,7 +128,9 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     <p class="result-message" id="result-message"></p>
 
     <div class="result-ranking" id="result-ranking" hidden>
-      <p class="field-help">100問・全部モードのみ、記録を任意でランキングに残せます。</p>
+      <p class="field-help">
+        難易度・ジャンルをどちらも「すべて」で選んだ場合のみ、記録を任意でランキングに残せます。
+      </p>
       <form id="ranking-form">
         <label>
           ニックネーム
@@ -150,10 +152,13 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   <section class="quiz-ranking-board">
     <h2>ランキング</h2>
     <p class="note">
-      100問・全部モードで、ランキング掲載を選んだ人の記録です。平均解答タイムが速い順に表示しています。
+      難易度・ジャンルを絞り込まずにプレイし、ランキング掲載を選んだ人の記録です。平均解答タイムが速い順に表示しています。
     </p>
     <div class="ranking-tabs">
-      <button type="button" class="ranking-tab is-active" id="ranking-tab-100" data-mode="100">100問</button>
+      <button type="button" class="ranking-tab is-active" id="ranking-tab-10" data-mode="10">10問</button>
+      <button type="button" class="ranking-tab" id="ranking-tab-20" data-mode="20">20問</button>
+      <button type="button" class="ranking-tab" id="ranking-tab-50" data-mode="50">50問</button>
+      <button type="button" class="ranking-tab" id="ranking-tab-100" data-mode="100">100問</button>
       <button type="button" class="ranking-tab" id="ranking-tab-all" data-mode="all">全部</button>
     </div>
     <ol id="ranking-board-list" class="ranking-board-list">
@@ -346,7 +351,7 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   let questionStartTime = 0;
   let questionRevealTimer: ReturnType<typeof setInterval> | null = null;
   let lastAverageTimeMs = 0;
-  let lastRankingMode: "100" | "all" | null = null;
+  let lastRankingMode: string | null = null;
 
   function shuffle<T>(items: T[]): T[] {
     const arr = [...items];
@@ -593,8 +598,11 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
       answerTimes.length > 0 ? answerTimes.reduce((a, b) => a + b, 0) / answerTimes.length : 0;
     resultTimeEl.textContent = `平均解答タイム: ${(lastAverageTimeMs / 1000).toFixed(1)}秒`;
 
+    // ランキングは、出題数を問わず「難易度・ジャンルどちらも絞り込んでいない」場合のみ対象。
+    // 絞り込みがあると回答者ごとに問題プールが変わってしまい、タイム比較が公平でなくなるため。
     const countValue = document.querySelector<HTMLInputElement>('input[name="quiz-count"]:checked')?.value ?? "all";
-    lastRankingMode = countValue === "100" ? "100" : countValue === "all" ? "all" : null;
+    const rankingEligible = selectedDifficulty() === "all" && genreAllInput.checked;
+    lastRankingMode = rankingEligible ? countValue : null;
     resultRanking.hidden = lastRankingMode === null;
     rankingForm.reset();
     rankingSubmitButton.disabled = false;
@@ -705,7 +713,7 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   updatePickerLock();
 
   // =========================================
-  // ランキング(100問・全部モード限定、任意記録)
+  // ランキング(難易度・ジャンルとも「すべて」の場合のみ、任意記録)
   // =========================================
   rankingForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -738,7 +746,7 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     return div.innerHTML;
   }
 
-  async function loadRankingBoard(mode: "100" | "all") {
+  async function loadRankingBoard(mode: string) {
     rankingTabs.forEach((tab) => tab.classList.toggle("is-active", tab.dataset.mode === mode));
     rankingBoardList.innerHTML = `<li class="loading-message">読み込み中...</li>`;
     const { data, error } = await supabase
@@ -768,10 +776,10 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   }
 
   rankingTabs.forEach((tab) => {
-    tab.addEventListener("click", () => loadRankingBoard(tab.dataset.mode === "all" ? "all" : "100"));
+    tab.addEventListener("click", () => loadRankingBoard(tab.dataset.mode ?? "10"));
   });
 
-  loadRankingBoard("100");
+  loadRankingBoard("10");
 
   // =========================================
   // 結果画像の生成・Xでのシェア
@@ -1528,6 +1536,7 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
 
   .ranking-tabs {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
     margin: 0.75rem 0 1rem;
   }

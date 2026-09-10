@@ -398,14 +398,16 @@ create policy "quiz_submissions_insert_public"
 grant select, insert on public.quiz_submissions to anon;
 
 -- =========================================
--- オーイシ検定 ランキング(100問・全部モード限定)
+-- オーイシ検定 ランキング(難易度・ジャンルとも絞り込みなしの場合のみ)
 -- =========================================
--- 出題数を「100問」または「全部」で選んだ人だけが、結果を残したい場合に任意で
--- 記録できるランキング。ニックネームは自己申告のみ(認証なし)で、更新・削除は
--- 用意していない(荒らし投稿はSupabaseダッシュボードから手動削除する運用)。
+-- 難易度・ジャンルをどちらも「すべて」で選んだ場合だけ、結果を残したい人が任意で
+-- 記録できるランキング(出題数10/20/50/100/全部いずれでも対象)。絞り込みがあると
+-- 回答者ごとに問題プールが変わりタイム比較が公平でなくなるため、絞り込みなしに限定している。
+-- ニックネームは自己申告のみ(認証なし)で、更新・削除は用意していない
+-- (荒らし投稿はSupabaseダッシュボードから手動削除する運用)。
 create table if not exists public.quiz_ranking (
   id uuid primary key default gen_random_uuid(),
-  mode text not null check (mode in ('100', 'all')),
+  mode text not null check (mode in ('10', '20', '50', '100', 'all')),
   nickname text not null check (char_length(nickname) between 1 and 20),
   score integer not null check (score >= 0),
   total_questions integer not null check (total_questions > 0 and score <= total_questions),
