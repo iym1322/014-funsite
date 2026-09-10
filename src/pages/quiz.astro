@@ -144,7 +144,7 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     </div>
 
     <div class="result-actions">
-      <button type="button" class="share-button" id="share-button">結果をXでシェア</button>
+      <button type="button" class="share-button" id="share-button" hidden>結果をXでシェア</button>
       <button type="button" class="retry-button" id="retry-button">もう一度挑戦する</button>
     </div>
   </div>
@@ -152,7 +152,7 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   <section class="quiz-ranking-board">
     <h2>ランキング</h2>
     <p class="note">
-      難易度・ジャンルを絞り込まずにプレイし、ランキング掲載を選んだ人の記録です。平均解答タイムが速い順に表示しています。
+      難易度・ジャンルを絞り込まずにプレイし、ランキング掲載を選んだ人の記録です。正解数が多い順、同数の場合は平均解答タイムが速い順に表示しています。
     </p>
     <div class="ranking-tabs">
       <button type="button" class="ranking-tab is-active" id="ranking-tab-10" data-mode="10">10問</button>
@@ -161,9 +161,23 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
       <button type="button" class="ranking-tab" id="ranking-tab-100" data-mode="100">100問</button>
       <button type="button" class="ranking-tab" id="ranking-tab-all" data-mode="all">全部</button>
     </div>
-    <ol id="ranking-board-list" class="ranking-board-list">
-      <li class="loading-message">読み込み中...</li>
-    </ol>
+    <div class="ranking-table-wrap">
+      <table class="ranking-board-table">
+        <thead>
+          <tr>
+            <th class="col-rank">順位</th>
+            <th class="col-nickname">ニックネーム</th>
+            <th class="col-score">正解数</th>
+            <th class="col-time">タイム</th>
+          </tr>
+        </thead>
+        <tbody id="ranking-board-list">
+          <tr>
+            <td class="loading-message" colspan="4">読み込み中...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 
   <section class="submission-list" hidden={!submissionsVisible}>
@@ -338,7 +352,7 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   const rankingSubmitButton = document.getElementById("ranking-submit-button") as HTMLButtonElement;
   const rankingFormMessage = document.getElementById("ranking-form-message") as HTMLParagraphElement;
   const shareButton = document.getElementById("share-button") as HTMLButtonElement;
-  const rankingBoardList = document.getElementById("ranking-board-list") as HTMLOListElement;
+  const rankingBoardList = document.getElementById("ranking-board-list") as HTMLTableSectionElement;
   const rankingTabs = Array.from(document.querySelectorAll<HTMLButtonElement>(".ranking-tab"));
   const countLockNote = document.getElementById("count-lock-note") as HTMLParagraphElement;
 
@@ -598,6 +612,8 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     resultMessageEl.textContent = tier.message;
     lastTierRank = tier.rank;
     lastShareRecordId = null;
+    // シェアはランキングに記録してからだけ可能にする(記録するまでは非表示)。
+    shareButton.hidden = true;
 
     lastAverageTimeMs =
       answerTimes.length > 0 ? answerTimes.reduce((a, b) => a + b, 0) / answerTimes.length : 0;
@@ -748,6 +764,7 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     // ランキングに記録できた場合だけ、OGPカード付きのシェア用固有URLを発行できる。
     lastShareRecordId = data?.id ?? null;
     lastShareNickname = nickname;
+    shareButton.hidden = false;
     rankingFormMessage.textContent = "ランキングに記録しました！ありがとうございます。";
     await loadRankingBoard(lastRankingMode);
   });
@@ -760,39 +777,39 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
 
   async function loadRankingBoard(mode: string) {
     rankingTabs.forEach((tab) => tab.classList.toggle("is-active", tab.dataset.mode === mode));
-    rankingBoardList.innerHTML = `<li class="loading-message">読み込み中...</li>`;
+    rankingBoardList.innerHTML = `<tr><td class="loading-message" colspan="4">読み込み中...</td></tr>`;
+    // 正解数が多い順を優先し、同数の場合は平均解答タイムが速い順に並べる。
     const { data, error } = await supabase
       .from("quiz_ranking")
       .select("nickname, score, total_questions, average_time_ms")
       .eq("mode", mode)
+      .order("score", { ascending: false })
       .order("average_time_ms", { ascending: true })
       .limit(20);
     if (error || !data) {
-      rankingBoardList.innerHTML = `<li class="loading-message">読み込みに失敗しました。</li>`;
+      rankingBoardList.innerHTML = `<tr><td class="loading-message" colspan="4">読み込みに失敗しました。</td></tr>`;
       return;
     }
     if (data.length === 0) {
-      rankingBoardList.innerHTML = `<li class="loading-message">まだ記録がありません。最初の記録者になりませんか？</li>`;
+      rankingBoardList.innerHTML = `<tr><td class="loading-message" colspan="4">まだ記録がありません。最初の記録者になりませんか？</td></tr>`;
       return;
     }
     rankingBoardList.innerHTML = "";
     data.forEach(
       (row: { nickname: string; score: number; total_questions: number; average_time_ms: number }, index: number) => {
         const rank = index + 1;
-        const li = document.createElement("li");
-        li.className = "ranking-row";
-        if (rank <= 3) li.classList.add(`is-rank-${rank}`);
+        const tr = document.createElement("tr");
+        tr.className = "ranking-row";
+        if (rank <= 3) tr.classList.add(`is-rank-${rank}`);
         const avgSec = (row.average_time_ms / 1000).toFixed(1);
         const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `${rank}`;
-        li.innerHTML = `
-          <span class="ranking-position">${medal}</span>
-          <span class="ranking-nickname">${escapeHtml(row.nickname)}</span>
-          <span class="ranking-stats">
-            <span class="ranking-score">${row.score}/${row.total_questions}問正解</span>
-            <span class="ranking-avg">平均${avgSec}秒</span>
-          </span>
+        tr.innerHTML = `
+          <td class="col-rank"><span class="ranking-position">${medal}</span></td>
+          <td class="col-nickname">${escapeHtml(row.nickname)}</td>
+          <td class="col-score">${row.score}/${row.total_questions}</td>
+          <td class="col-time">${avgSec}秒</td>
         `;
-        rankingBoardList.appendChild(li);
+        rankingBoardList.appendChild(tr);
       }
     );
   }
@@ -809,23 +826,29 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   // ランキングに記録済みなら、OGPカードが展開される専用の結果ページへのリンクを
   // 使う。未記録(または絞り込みありで記録対象外)の場合はテキストのみで共有する。
   shareButton.addEventListener("click", () => {
+    if (!lastShareRecordId) return;
     const avgSec = (lastAverageTimeMs / 1000).toFixed(1);
-    let shareText = `オーイシ検定で${questions.length}問中${score}問正解！(平均解答タイム${avgSec}秒) #オーイシ検定 #014BASE`;
-    let shareUrl = "https://014-funsite.vercel.app/quiz";
+    const params = new URLSearchParams({
+      score: String(score),
+      total: String(questions.length),
+      time: avgSec,
+      nickname: lastShareNickname,
+      rank: lastTierRank,
+    });
+    const shareUrl = `https://014-funsite.vercel.app/quiz/result/${lastShareRecordId}?${params.toString()}`;
+    // URLは本文中に直接埋め込む(intentの&url=は使わない。使うと本文の末尾に
+    // 二重でURLが付いてしまうため)。
+    const shareText = [
+      `${score}/${questions.length}問正解｜${avgSec}秒`,
+      "",
+      "オーイシマサヨシ/大石昌良に関する検定、あなたは何問わかる？",
+      "あなたも挑戦",
+      shareUrl,
+      "",
+      "#オーイシ検定 #オーイシマサヨシ",
+    ].join("\n");
 
-    if (lastShareRecordId) {
-      const params = new URLSearchParams({
-        score: String(score),
-        total: String(questions.length),
-        time: avgSec,
-        nickname: lastShareNickname,
-        rank: lastTierRank,
-      });
-      shareUrl = `https://014-funsite.vercel.app/quiz/result/${lastShareRecordId}?${params.toString()}`;
-      shareText = `${questions.length}問中${score}問正解｜${avgSec}秒\n\nオーイシマサヨシ/大石昌良の曲、何問わかる？\nあなたも挑戦\n\n#オーイシ検定 #オーイシマサヨシ`;
-    }
-
-    const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+    const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
     window.open(intentUrl, "_blank", "noopener,noreferrer");
   });
 
@@ -1562,64 +1585,75 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     color: var(--color-surface);
   }
 
-  .ranking-board-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
+  .ranking-table-wrap {
+    overflow-x: auto;
   }
 
-  .ranking-row {
-    display: grid;
-    grid-template-columns: 2.25rem 1fr auto;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: 10px;
-    background: var(--color-bg);
+  .ranking-board-table {
+    width: 100%;
+    border-collapse: collapse;
     font-size: 0.9rem;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
 
-  .ranking-row:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  .ranking-board-table thead th {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 2px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .ranking-board-table .col-rank {
+    text-align: center;
+    width: 3.5rem;
+  }
+
+  .ranking-board-table .col-score,
+  .ranking-board-table .col-time {
+    text-align: right;
+  }
+
+  .ranking-row td {
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+    transition: background 0.15s ease;
+  }
+
+  .ranking-row:hover td {
+    background: var(--color-bg);
+  }
+
+  .ranking-row .loading-message {
+    text-align: center;
+    padding: 1.25rem 0.75rem;
   }
 
   .ranking-position {
     font-size: 1.1rem;
     font-weight: 700;
-    text-align: center;
     color: var(--color-text-muted);
   }
 
-  .ranking-nickname {
+  .col-nickname {
     font-weight: 700;
+    max-width: 12rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .ranking-stats {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.15rem;
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
-    text-align: right;
-  }
-
-  .ranking-score {
+  .col-score {
     font-weight: 700;
     color: var(--color-text);
   }
 
-  .ranking-row.is-rank-1 {
-    border-color: #e6b93d;
+  .col-time {
+    color: var(--color-text-muted);
+  }
+
+  .ranking-row.is-rank-1 td {
     background: linear-gradient(135deg, var(--color-surface), #fff6da);
   }
 
@@ -1627,8 +1661,7 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     font-size: 1.4rem;
   }
 
-  .ranking-row.is-rank-2 {
-    border-color: #b8bfc7;
+  .ranking-row.is-rank-2 td {
     background: linear-gradient(135deg, var(--color-surface), #eef1f4);
   }
 
@@ -1636,8 +1669,7 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     font-size: 1.3rem;
   }
 
-  .ranking-row.is-rank-3 {
-    border-color: #cd8a5c;
+  .ranking-row.is-rank-3 td {
     background: linear-gradient(135deg, var(--color-surface), #fbeee2);
   }
 

@@ -84,12 +84,24 @@ export const GET: APIRoute = async ({ url }) => {
     ]
   );
 
-  return new ImageResponse(tree as never, {
+  const imageResponse = new ImageResponse(tree as never, {
     width: 1200,
     height: 630,
     fonts: [
       { name: "Noto Sans JP", data: fontData, weight: 400, style: "normal" },
       { name: "Noto Sans JP", data: fontData, weight: 700, style: "normal" },
     ],
+  });
+
+  // ImageResponseが返すReadableStreamのボディは、Vercelの(Edgeではなく)
+  // Node.jsサーバーレス関数経由だと空のまま届いてしまうことがあるため、
+  // 一度バッファに読み切ってから通常のResponseとして返す。
+  const buffer = await imageResponse.arrayBuffer();
+  return new Response(buffer, {
+    status: 200,
+    headers: {
+      "Content-Type": "image/png",
+      "Cache-Control": "public, immutable, no-transform, max-age=31536000",
+    },
   });
 };
