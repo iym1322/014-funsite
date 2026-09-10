@@ -3,12 +3,21 @@
 // 静的な四択クイズで、投稿・投票のようなSupabase連携は不要(全問クライアント内で完結)。
 // 問題順・選択肢順は毎回シャッフルし、周回プレイでも新鮮に楽しめるようにしている。
 import Layout from "../layouts/Layout.astro";
-import { quizQuestions } from "../data/quiz";
+import { quizQuestions } from "../data/quiz_fun";
 
-// 出題数の候補ライン。総問題数を上回るものはJS側で非表示にする
-// (現状10問しか無いため今は「全部(10問)」のみ表示されるが、問題を増やせば
-// 自動的に選択肢が増える)。
-const countBreakpoints = [10, 20, 30];
+// 出題数の候補ライン。総問題数を上回るものはJS側で非表示にする。
+const countBreakpoints = [10, 20, 100];
+
+// みんなの投稿問題は一時的に非表示(コードは残し、フォーム・一覧の表示と
+// 出題プールへの合流だけ止めている)。復活させる際はこれをtrueに戻すだけでよい。
+// script側の SUBMISSIONS_ENABLED と必ず合わせること。
+const submissionsVisible = false;
+
+// ジャンル(categories)は問題データから動的に抽出する(固定の選択肢にすると
+// 問題を追加するたびにページ側の修正が必要になってしまうため)。1問が複数
+// ジャンルにまたがることもあるため flatMap で展開してから重複を除く。
+// 出現順(=quiz.ts内の並び順)をそのままジャンルの表示順にする。
+const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
 ---
 
 <Layout title="オーイシ検定 | 014 BASE">
@@ -16,9 +25,7 @@ const countBreakpoints = [10, 20, 30];
   <p class="note">
     オーイシマサヨシ／大石昌良に関する四択クイズです。全{quizQuestions.length}問、
     間違えても大丈夫。1問ごとに解説つきなので、クイズを通して知識を深められます。
-    ファンから投稿された問題(事後確認となります)も出題されることがあり、
-    その場合は問題文の横に「投稿問題」バッジが表示されます。内容が事実と違うと思ったら、
-    解説の下にある通報ボタンからお知らせください。
+    内容が事実と違うと思ったら、解説の下にある通報ボタンからお知らせください。
   </p>
 
   <div class="quiz-start" id="quiz-start">
@@ -35,6 +42,9 @@ const countBreakpoints = [10, 20, 30];
         <input type="radio" name="quiz-count" value="all" checked />
         <span class="count-label"></span>
       </label>
+      <p class="field-help" id="count-lock-note" hidden>
+        100問・全部を選んだ場合、出題数を確保するためジャンル・難易度は「すべて」に固定されます。
+      </p>
     </fieldset>
     <fieldset class="difficulty-picker">
       <legend>難易度</legend>
@@ -56,7 +66,23 @@ const countBreakpoints = [10, 20, 30];
       </label>
       <p class="field-help">
         みんなの正答率が一定数たまった問題だけ難易度で絞り込まれます。データが少ない問題はどの難易度でも出題されます。
+        初級・上級を選ぶと、橋渡しとして中級の問題も2割ほど混ざります。
       </p>
+    </fieldset>
+    <fieldset class="genre-picker">
+      <legend>ジャンル(複数選択可)</legend>
+      <label class="genre-option">
+        <input type="checkbox" name="quiz-genre" value="all" data-all checked />
+        すべて
+        <span class="genre-count"></span>
+      </label>
+      {categories.map((c) => (
+        <label class="genre-option">
+          <input type="checkbox" name="quiz-genre" value={c} checked />
+          {c}
+          <span class="genre-count"></span>
+        </label>
+      ))}
     </fieldset>
     <button type="button" class="start-button" id="start-button">検定をはじめる</button>
   </div>
@@ -64,8 +90,8 @@ const countBreakpoints = [10, 20, 30];
   <div class="quiz-panel" id="quiz-panel" hidden>
     <p class="quiz-progress" id="quiz-progress"></p>
     <div class="quiz-meta-row">
-      <p class="quiz-category" id="quiz-category"></p>
-      <span class="submitted-badge" id="submitted-badge" hidden>投稿問題</span>
+      <span class="difficulty-badge" id="difficulty-badge" hidden></span>
+      <div class="quiz-category-list" id="quiz-category"></div>
     </div>
     <h2 class="quiz-question" id="quiz-question"></h2>
 
@@ -96,12 +122,46 @@ const countBreakpoints = [10, 20, 30];
   </div>
 
   <div class="quiz-result" id="quiz-result" hidden>
+    <p class="result-rank" id="result-rank"></p>
     <p class="result-score" id="result-score"></p>
+    <p class="result-time" id="result-time"></p>
     <p class="result-message" id="result-message"></p>
-    <button type="button" class="retry-button" id="retry-button">もう一度挑戦する</button>
+
+    <div class="result-ranking" id="result-ranking" hidden>
+      <p class="field-help">100問・全部モードのみ、記録を任意でランキングに残せます。</p>
+      <form id="ranking-form">
+        <label>
+          ニックネーム
+          <input type="text" id="ranking-nickname" maxlength="20" required placeholder="例: 014ファン" />
+        </label>
+        <button type="submit" id="ranking-submit-button">ランキングに記録する</button>
+        <p class="form-message" id="ranking-form-message" role="status"></p>
+      </form>
+    </div>
+
+    <div class="result-actions">
+      <button type="button" class="share-button" id="share-button">結果画像をXでシェア</button>
+      <button type="button" class="retry-button" id="retry-button">もう一度挑戦する</button>
+    </div>
   </div>
 
-  <section class="submission-list">
+  <canvas id="share-canvas" width="1200" height="630" hidden></canvas>
+
+  <section class="quiz-ranking-board">
+    <h2>ランキング</h2>
+    <p class="note">
+      100問・全部モードで、ランキング掲載を選んだ人の記録です。平均解答タイムが速い順に表示しています。
+    </p>
+    <div class="ranking-tabs">
+      <button type="button" class="ranking-tab is-active" id="ranking-tab-100" data-mode="100">100問</button>
+      <button type="button" class="ranking-tab" id="ranking-tab-all" data-mode="all">全部</button>
+    </div>
+    <ol id="ranking-board-list" class="ranking-board-list">
+      <li class="loading-message">読み込み中...</li>
+    </ol>
+  </section>
+
+  <section class="submission-list" hidden={!submissionsVisible}>
     <h2>みんなの投稿問題</h2>
     <p class="note">
       ファンのみなさんが投稿したオリジナル問題です。内容の確認は事後確認となります
@@ -113,7 +173,7 @@ const countBreakpoints = [10, 20, 30];
     <ul id="submission-items"></ul>
   </section>
 
-  <section class="submission-form">
+  <section class="submission-form" hidden={!submissionsVisible}>
     <h2>問題を投稿する</h2>
     <form id="submission-form">
       <label>
@@ -176,7 +236,7 @@ const countBreakpoints = [10, 20, 30];
 
   type QuizQuestion = {
     id: string;
-    category: string;
+    categories: string[];
     question: string;
     choices: string[];
     answerIndex: number;
@@ -184,11 +244,12 @@ const countBreakpoints = [10, 20, 30];
     relatedHref?: string;
     relatedLabel?: string;
     isSubmitted?: boolean;
+    difficulty?: "初級" | "中級" | "上級";
   };
 
   type ShuffledQuestion = {
     id: string;
-    category: string;
+    categories: string[];
     question: string;
     choices: string[];
     answerIndex: number;
@@ -196,17 +257,21 @@ const countBreakpoints = [10, 20, 30];
     relatedHref?: string;
     relatedLabel?: string;
     isSubmitted?: boolean;
+    difficulty: "初級" | "中級" | "上級" | null;
   };
 
   type Difficulty = "初級" | "中級" | "上級";
 
   const allQuestions: QuizQuestion[] = JSON.parse(document.getElementById("quiz-data")!.textContent!);
+  // みんなの投稿問題は一時的に無効化中(コードは残す)。復活させる際はtrueに戻す。
+  // src/pages/quiz.astro frontmatterの submissionsVisible と必ず合わせること。
+  const SUBMISSIONS_ENABLED = false;
   // ユーザーが投稿した問題(未検証)。読み込み後、検定本編の出題プールにも合流させる
   // (「投稿問題」バッジで見分けられるようにした上で、混ぜてよいという方針にしたため)。
   let submittedQuestions: QuizQuestion[] = [];
 
   function playableQuestions(): QuizQuestion[] {
-    return [...allQuestions, ...submittedQuestions];
+    return SUBMISSIONS_ENABLED ? [...allQuestions, ...submittedQuestions] : allQuestions;
   }
 
   // 難易度は「みんなの正答率」から動的に決める。サンプル数が少ない質問は
@@ -228,10 +293,12 @@ const countBreakpoints = [10, 20, 30];
     );
   }
 
-  // サンプル不足の質問はnullを返す(呼び出し側で「どの難易度でも対象」として扱う)。
-  function computedDifficulty(questionId: string): Difficulty | null {
-    const stats = statsByQuestionId.get(questionId);
-    if (!stats || stats.total < MIN_SAMPLES) return null;
+  // サンプル不足の質問は、データ側にあらかじめ設定したdifficulty(仮の難易度)を
+  // 使う。それも無ければnullを返し(呼び出し側で「どの難易度でも対象」として扱う)、
+  // 20件以上たまったらみんなの正答率による判定に切り替える。
+  function computedDifficulty(question: QuizQuestion): Difficulty | null {
+    const stats = statsByQuestionId.get(question.id);
+    if (!stats || stats.total < MIN_SAMPLES) return question.difficulty ?? null;
     const rate = stats.correct / stats.total;
     if (rate >= EASY_RATE) return "初級";
     if (rate >= HARD_RATE) return "中級";
@@ -243,8 +310,8 @@ const countBreakpoints = [10, 20, 30];
   const countOptions = Array.from(document.querySelectorAll<HTMLLabelElement>(".count-option"));
   const quizPanel = document.getElementById("quiz-panel") as HTMLDivElement;
   const progressEl = document.getElementById("quiz-progress") as HTMLParagraphElement;
-  const categoryEl = document.getElementById("quiz-category") as HTMLParagraphElement;
-  const submittedBadge = document.getElementById("submitted-badge") as HTMLSpanElement;
+  const categoryEl = document.getElementById("quiz-category") as HTMLDivElement;
+  const difficultyBadge = document.getElementById("difficulty-badge") as HTMLSpanElement;
   const questionEl = document.getElementById("quiz-question") as HTMLHeadingElement;
   const choiceButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(".choice-button"));
   const explanationPanel = document.getElementById("quiz-explanation") as HTMLDivElement;
@@ -255,14 +322,31 @@ const countBreakpoints = [10, 20, 30];
   const flagButton = document.getElementById("flag-button") as HTMLButtonElement;
   const FLAG_BUTTON_DEFAULT_TEXT = "⚠ この解説、事実と違うかも";
   const resultPanel = document.getElementById("quiz-result") as HTMLDivElement;
+  const resultRankEl = document.getElementById("result-rank") as HTMLParagraphElement;
   const resultScoreEl = document.getElementById("result-score") as HTMLParagraphElement;
+  const resultTimeEl = document.getElementById("result-time") as HTMLParagraphElement;
   const resultMessageEl = document.getElementById("result-message") as HTMLParagraphElement;
   const retryButton = document.getElementById("retry-button") as HTMLButtonElement;
+  const resultRanking = document.getElementById("result-ranking") as HTMLDivElement;
+  const rankingForm = document.getElementById("ranking-form") as HTMLFormElement;
+  const rankingNicknameInput = document.getElementById("ranking-nickname") as HTMLInputElement;
+  const rankingSubmitButton = document.getElementById("ranking-submit-button") as HTMLButtonElement;
+  const rankingFormMessage = document.getElementById("ranking-form-message") as HTMLParagraphElement;
+  const shareButton = document.getElementById("share-button") as HTMLButtonElement;
+  const shareCanvas = document.getElementById("share-canvas") as HTMLCanvasElement;
+  const rankingBoardList = document.getElementById("ranking-board-list") as HTMLOListElement;
+  const rankingTabs = Array.from(document.querySelectorAll<HTMLButtonElement>(".ranking-tab"));
+  const countLockNote = document.getElementById("count-lock-note") as HTMLParagraphElement;
 
   let questions: ShuffledQuestion[] = [];
   let currentIndex = 0;
   let score = 0;
   let answered = false;
+  let answerTimes: number[] = [];
+  let questionStartTime = 0;
+  let questionRevealTimer: ReturnType<typeof setInterval> | null = null;
+  let lastAverageTimeMs = 0;
+  let lastRankingMode: "100" | "all" | null = null;
 
   function shuffle<T>(items: T[]): T[] {
     const arr = [...items];
@@ -302,14 +386,70 @@ const countBreakpoints = [10, 20, 30];
     return (checked?.value as Difficulty | "all") ?? "all";
   }
 
-  // 選ばれた難易度で問題プールを絞り込む。データ不足(判定null)の質問は
-  // 「どの難易度でも出題対象」として、選んだ難易度に関わらず含める。
-  function filterByDifficulty(difficulty: Difficulty | "all"): QuizQuestion[] {
-    const pool = playableQuestions();
+  // 初級・上級を選んだ場合は、橋渡しとして中級の問題も2割ほど混ぜる
+  // (初級⇔上級の難易度差が急すぎないようにするため)。中級を選んだ場合は
+  // 中級のみで絞り込む。データ不足(判定null)の質問は「どの難易度でも出題対象」
+  // として、選んだ難易度に関わらず含める。
+  const MID_DIFFICULTY_MIX_RATIO = 0.2;
+
+  function filterByDifficulty(pool: QuizQuestion[], difficulty: Difficulty | "all"): QuizQuestion[] {
     if (difficulty === "all") return pool;
-    return pool.filter((q) => {
-      const level = computedDifficulty(q.id);
-      return level === null || level === difficulty;
+
+    const matchesLevel = (q: QuizQuestion, level: Difficulty) => {
+      const l = computedDifficulty(q);
+      return l === null || l === level;
+    };
+
+    const target = pool.filter((q) => matchesLevel(q, difficulty));
+    if (difficulty === "中級") return target;
+
+    // 中級ちょうどの質問(判定null除く)だけを混ぜる候補にする。
+    const midCandidates = pool.filter((q) => computedDifficulty(q) === "中級");
+    const mixCount = Math.round((target.length * MID_DIFFICULTY_MIX_RATIO) / (1 - MID_DIFFICULTY_MIX_RATIO));
+    const mixedIn = shuffle(midCandidates).slice(0, mixCount);
+    return [...target, ...mixedIn];
+  }
+
+  // ジャンルは「すべて」チェックボックスと個別ジャンルのチェックボックスを
+  // 相互連動させる(全部チェック⇔「すべて」チェックが常に一致するようにする)。
+  const genreAllInput = document.querySelector<HTMLInputElement>('input[name="quiz-genre"][data-all]')!;
+  const genreItemInputs = Array.from(
+    document.querySelectorAll<HTMLInputElement>('input[name="quiz-genre"]:not([data-all])')
+  );
+
+  function selectedGenres(): string[] {
+    return genreItemInputs.filter((input) => input.checked).map((input) => input.value);
+  }
+
+  function filterByGenre(pool: QuizQuestion[], genres: string[]): QuizQuestion[] {
+    if (genres.length === 0 || genres.length === genreItemInputs.length) return pool;
+    const set = new Set(genres);
+    return pool.filter((q) => q.categories.some((c) => set.has(c)));
+  }
+
+  genreAllInput.addEventListener("change", () => {
+    genreItemInputs.forEach((input) => (input.checked = genreAllInput.checked));
+    refreshCountOptions();
+  });
+
+  genreItemInputs.forEach((input) => {
+    input.addEventListener("change", () => {
+      genreAllInput.checked = genreItemInputs.every((i) => i.checked);
+      refreshCountOptions();
+    });
+  });
+
+  // ジャンルごとの問題数を表示する。現在選ばれている難易度で絞り込んだ数を出す
+  // (どのジャンルにチェックが入っているかには依存させない=「これを選んだら何問か」がわかるようにする)。
+  function updateGenreCounts() {
+    const basePool = filterByDifficulty(playableQuestions(), selectedDifficulty());
+    const allCountEl = genreAllInput.closest("label")?.querySelector(".genre-count") as HTMLElement | null;
+    if (allCountEl) allCountEl.textContent = `(${basePool.length}問)`;
+    genreItemInputs.forEach((input) => {
+      const countEl = input.closest("label")?.querySelector(".genre-count") as HTMLElement | null;
+      if (!countEl) return;
+      const n = basePool.filter((q) => q.categories.includes(input.value)).length;
+      countEl.textContent = `(${n}問)`;
     });
   }
 
@@ -320,7 +460,7 @@ const countBreakpoints = [10, 20, 30];
         const order = shuffle(q.choices.map((_, i) => i));
         return {
           id: q.id,
-          category: q.category,
+          categories: q.categories,
           question: q.question,
           choices: order.map((i) => q.choices[i]),
           answerIndex: order.indexOf(q.answerIndex),
@@ -328,17 +468,51 @@ const countBreakpoints = [10, 20, 30];
           relatedHref: q.relatedHref,
           relatedLabel: q.relatedLabel,
           isSubmitted: q.isSubmitted,
+          difficulty: computedDifficulty(q),
         };
       });
+  }
+
+  // 問題文を一文字ずつ表示する演出。表示が始まった瞬間を解答タイムの起点にする。
+  const QUESTION_REVEAL_MS_PER_CHAR = 45;
+
+  function revealQuestionText(text: string) {
+    if (questionRevealTimer !== null) {
+      clearInterval(questionRevealTimer);
+      questionRevealTimer = null;
+    }
+    questionEl.textContent = "";
+    questionStartTime = performance.now();
+    let shown = 0;
+    questionRevealTimer = setInterval(() => {
+      shown++;
+      questionEl.textContent = text.slice(0, shown);
+      if (shown >= text.length && questionRevealTimer !== null) {
+        clearInterval(questionRevealTimer);
+        questionRevealTimer = null;
+      }
+    }, QUESTION_REVEAL_MS_PER_CHAR);
   }
 
   function showQuestion() {
     answered = false;
     const q = questions[currentIndex];
     progressEl.textContent = `問 ${currentIndex + 1} / ${questions.length}`;
-    categoryEl.textContent = q.category;
-    submittedBadge.hidden = !q.isSubmitted;
-    questionEl.textContent = q.question;
+    categoryEl.innerHTML = "";
+    for (const category of q.categories) {
+      const badge = document.createElement("span");
+      badge.className = "quiz-category";
+      badge.textContent = category;
+      categoryEl.appendChild(badge);
+    }
+    if (q.difficulty) {
+      difficultyBadge.hidden = false;
+      difficultyBadge.textContent = q.difficulty;
+      difficultyBadge.dataset.level = q.difficulty;
+    } else {
+      difficultyBadge.hidden = true;
+    }
+    revealQuestionText(q.question);
     choiceButtons.forEach((button, i) => {
       const textEl = button.querySelector(".choice-text") as HTMLElement;
       textEl.textContent = q.choices[i] ?? "";
@@ -354,6 +528,15 @@ const countBreakpoints = [10, 20, 30];
     if (answered) return;
     answered = true;
     const q = questions[currentIndex];
+
+    // 表示演出の途中で解答された場合は、残りを即座に全文表示にしてから計測を締める。
+    if (questionRevealTimer !== null) {
+      clearInterval(questionRevealTimer);
+      questionRevealTimer = null;
+      questionEl.textContent = q.question;
+    }
+    answerTimes.push(performance.now() - questionStartTime);
+
     const correct = index === q.answerIndex;
     if (correct) score++;
 
@@ -380,19 +563,42 @@ const countBreakpoints = [10, 20, 30];
     explanationPanel.hidden = false;
   }
 
-  function resultMessage(correctCount: number, total: number): string {
+  type ResultTier = { key: string; rank: string; message: string };
+
+  function resultTier(correctCount: number, total: number): ResultTier {
     const rate = correctCount / total;
-    if (rate === 1) return "パーフェクト！あなたは立派なオーイシ博士です🎓";
-    if (rate >= 0.7) return "かなりのオーイシ通ですね！";
-    if (rate >= 0.4) return "まずまず！もっと深掘りしてみよう。";
-    return "これから知っていけば大丈夫、サイトを見て予習しよう！";
+    if (rate === 1) {
+      return { key: "s", rank: "オーイシマサヨシ級", message: "パーフェクト！あなたは立派なオーイシ博士です🎓" };
+    }
+    if (rate >= 0.7) {
+      return { key: "a", rank: "量産型オーイシ級", message: "なかなかやりますね。これはかなりのオーイシ通！" };
+    }
+    if (rate >= 0.4) {
+      return { key: "b", rank: "オーマイゴシゴシ級", message: "まずまず！オーイシ沼にはまれるチャンス！" };
+    }
+    return { key: "c", rank: "一般オタク級", message: "まだまだこれから！あなたの知らないオーイシがたくさんいますよ！" };
   }
 
   function showResult() {
     quizPanel.hidden = true;
     resultPanel.hidden = false;
     resultScoreEl.textContent = `${questions.length}問中 ${score}問正解！`;
-    resultMessageEl.textContent = resultMessage(score, questions.length);
+
+    const tier = resultTier(score, questions.length);
+    resultPanel.dataset.tier = tier.key;
+    resultRankEl.textContent = tier.rank;
+    resultMessageEl.textContent = tier.message;
+
+    lastAverageTimeMs =
+      answerTimes.length > 0 ? answerTimes.reduce((a, b) => a + b, 0) / answerTimes.length : 0;
+    resultTimeEl.textContent = `平均解答タイム: ${(lastAverageTimeMs / 1000).toFixed(1)}秒`;
+
+    const countValue = document.querySelector<HTMLInputElement>('input[name="quiz-count"]:checked')?.value ?? "all";
+    lastRankingMode = countValue === "100" ? "100" : countValue === "all" ? "all" : null;
+    resultRanking.hidden = lastRankingMode === null;
+    rankingForm.reset();
+    rankingSubmitButton.disabled = false;
+    rankingFormMessage.textContent = "";
   }
 
   function showStart() {
@@ -401,12 +607,19 @@ const countBreakpoints = [10, 20, 30];
     resultPanel.hidden = true;
   }
 
+  // ジャンル→難易度の順で問題プールを絞り込む(順序による結果の違いはない)。
+  function filteredPool(): QuizQuestion[] {
+    const genrePool = filterByGenre(playableQuestions(), selectedGenres());
+    return filterByDifficulty(genrePool, selectedDifficulty());
+  }
+
   function startQuiz() {
-    const pool = filterByDifficulty(selectedDifficulty());
+    const pool = filteredPool();
     const count = selectedCount(pool.length);
     questions = buildQuestions(count, pool);
     currentIndex = 0;
     score = 0;
+    answerTimes = [];
     quizStart.hidden = true;
     quizPanel.hidden = false;
     resultPanel.hidden = true;
@@ -450,12 +663,181 @@ const countBreakpoints = [10, 20, 30];
   });
 
   function refreshCountOptions() {
-    setupCountOptions(filterByDifficulty(selectedDifficulty()).length);
+    setupCountOptions(filteredPool().length);
+    updateGenreCounts();
   }
 
   loadStats().then(refreshCountOptions);
   setupCountOptions(allQuestions.length);
+  updateGenreCounts();
   showStart();
+
+  // 出題数で「100問」「全部」を選んだ場合は、出題数を確保するためジャンル・
+  // 難易度の絞り込みを不可能にする(選択肢を強制的に「すべて」に戻す)。
+  const countInputs = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="quiz-count"]'));
+
+  function updatePickerLock() {
+    const checked = document.querySelector<HTMLInputElement>('input[name="quiz-count"]:checked');
+    const value = checked?.value ?? "all";
+    const shouldLock = value === "100" || value === "all";
+    countLockNote.hidden = !shouldLock;
+
+    difficultyInputs.forEach((input) => {
+      input.disabled = shouldLock;
+    });
+    genreAllInput.disabled = shouldLock;
+    genreItemInputs.forEach((input) => {
+      input.disabled = shouldLock;
+    });
+
+    if (shouldLock) {
+      const allDifficultyInput = difficultyInputs.find((input) => input.value === "all");
+      if (allDifficultyInput) allDifficultyInput.checked = true;
+      genreAllInput.checked = true;
+      genreItemInputs.forEach((input) => (input.checked = true));
+    }
+    refreshCountOptions();
+  }
+
+  countInputs.forEach((input) => {
+    input.addEventListener("change", updatePickerLock);
+  });
+  updatePickerLock();
+
+  // =========================================
+  // ランキング(100問・全部モード限定、任意記録)
+  // =========================================
+  rankingForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!lastRankingMode) return;
+    const nickname = rankingNicknameInput.value.trim();
+    if (!nickname) {
+      rankingFormMessage.textContent = "ニックネームを入力してください。";
+      return;
+    }
+    rankingSubmitButton.disabled = true;
+    const { error } = await supabase.from("quiz_ranking").insert({
+      mode: lastRankingMode,
+      nickname,
+      score,
+      total_questions: questions.length,
+      average_time_ms: Math.round(lastAverageTimeMs),
+    });
+    if (error) {
+      rankingFormMessage.textContent = "記録に失敗しました。時間をおいて試してください。";
+      rankingSubmitButton.disabled = false;
+      return;
+    }
+    rankingFormMessage.textContent = "ランキングに記録しました！ありがとうございます。";
+    await loadRankingBoard(lastRankingMode);
+  });
+
+  function escapeHtml(str: string): string {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  async function loadRankingBoard(mode: "100" | "all") {
+    rankingTabs.forEach((tab) => tab.classList.toggle("is-active", tab.dataset.mode === mode));
+    rankingBoardList.innerHTML = `<li class="loading-message">読み込み中...</li>`;
+    const { data, error } = await supabase
+      .from("quiz_ranking")
+      .select("nickname, score, total_questions, average_time_ms")
+      .eq("mode", mode)
+      .order("average_time_ms", { ascending: true })
+      .limit(20);
+    if (error || !data) {
+      rankingBoardList.innerHTML = `<li class="loading-message">読み込みに失敗しました。</li>`;
+      return;
+    }
+    if (data.length === 0) {
+      rankingBoardList.innerHTML = `<li class="loading-message">まだ記録がありません。最初の記録者になりませんか？</li>`;
+      return;
+    }
+    rankingBoardList.innerHTML = "";
+    data.forEach(
+      (row: { nickname: string; score: number; total_questions: number; average_time_ms: number }) => {
+        const li = document.createElement("li");
+        li.className = "ranking-row";
+        const avgSec = (row.average_time_ms / 1000).toFixed(1);
+        li.innerHTML = `<span class="ranking-nickname">${escapeHtml(row.nickname)}</span><span class="ranking-score">${row.score}/${row.total_questions}問正解</span><span class="ranking-avg">平均${avgSec}秒</span>`;
+        rankingBoardList.appendChild(li);
+      }
+    );
+  }
+
+  rankingTabs.forEach((tab) => {
+    tab.addEventListener("click", () => loadRankingBoard(tab.dataset.mode === "all" ? "all" : "100"));
+  });
+
+  loadRankingBoard("100");
+
+  // =========================================
+  // 結果画像の生成・Xでのシェア
+  // =========================================
+  function drawResultImage(): Promise<Blob | null> {
+    const ctx = shareCanvas.getContext("2d");
+    if (!ctx) return Promise.resolve(null);
+    const w = shareCanvas.width;
+    const h = shareCanvas.height;
+
+    const gradient = ctx.createLinearGradient(0, 0, w, h);
+    gradient.addColorStop(0, "#1b1030");
+    gradient.addColorStop(1, "#3a1f5c");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "center";
+
+    ctx.font = "bold 44px sans-serif";
+    ctx.fillText("オーイシ検定", w / 2, 120);
+
+    ctx.font = "bold 84px sans-serif";
+    ctx.fillText(`${score} / ${questions.length} 問正解`, w / 2, 300);
+
+    ctx.font = "48px sans-serif";
+    ctx.fillText(`平均解答タイム ${(lastAverageTimeMs / 1000).toFixed(1)}秒`, w / 2, 400);
+
+    ctx.font = "32px sans-serif";
+    ctx.fillStyle = "#d8c8f0";
+    ctx.fillText("014 BASE - オーイシマサヨシ非公式ファンサイト", w / 2, h - 60);
+
+    return new Promise((resolve) => shareCanvas.toBlob((blob) => resolve(blob), "image/png"));
+  }
+
+  shareButton.addEventListener("click", async () => {
+    shareButton.disabled = true;
+    const blob = await drawResultImage();
+    const shareText = `オーイシ検定で${questions.length}問中${score}問正解！(平均解答タイム${(lastAverageTimeMs / 1000).toFixed(1)}秒) #オーイシ検定 #014BASE`;
+    const shareUrl = "https://014-funsite.vercel.app/quiz";
+
+    try {
+      if (blob) {
+        const file = new File([blob], "oishi-quiz-result.png", { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ text: shareText, url: shareUrl, files: [file] });
+          shareButton.disabled = false;
+          return;
+        }
+      }
+    } catch {
+      // ユーザーによるキャンセル等は無視してフォールバックへ進む
+    }
+
+    if (blob) {
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = "oishi-quiz-result.png";
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+    }
+    const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+    window.open(intentUrl, "_blank", "noopener,noreferrer");
+    shareButton.disabled = false;
+  });
 
   // =========================================
   // みんなの投稿問題
@@ -604,7 +986,7 @@ const countBreakpoints = [10, 20, 30];
     // 投稿問題は「投稿問題」バッジ付きで検定本編の出題プールにも合流させる。
     submittedQuestions = rows.map((item) => ({
       id: item.id,
-      category: item.category,
+      categories: [item.category],
       question: item.question,
       choices: item.choices,
       answerIndex: item.answer_index,
@@ -680,7 +1062,7 @@ const countBreakpoints = [10, 20, 30];
     await loadSubmissions();
   });
 
-  loadSubmissions();
+  if (SUBMISSIONS_ENABLED) loadSubmissions();
 </script>
 
 <style>
@@ -764,11 +1146,55 @@ const countBreakpoints = [10, 20, 30];
     width: auto;
   }
 
-  .difficulty-picker .field-help {
+  .difficulty-picker .field-help,
+  .count-picker .field-help,
+  .result-ranking .field-help {
     flex-basis: 100%;
     margin: 0.25rem 0 0;
     color: var(--color-text-muted);
     font-size: 0.75rem;
+  }
+
+  .difficulty-option:has(input:disabled),
+  .genre-option:has(input:disabled) {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .genre-picker {
+    margin: 0 0 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+  }
+
+  .genre-picker legend {
+    padding: 0 0.35rem;
+    color: var(--color-text);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .genre-option {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  .genre-option input {
+    width: auto;
+  }
+
+  .genre-count {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
   }
 
   .start-button {
@@ -798,8 +1224,15 @@ const countBreakpoints = [10, 20, 30];
   .quiz-meta-row {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.5rem;
     margin: 0 0 0.75rem;
+  }
+
+  .quiz-category-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
   }
 
   .quiz-category {
@@ -812,14 +1245,26 @@ const countBreakpoints = [10, 20, 30];
     font-weight: 700;
   }
 
-  .submitted-badge {
+  .difficulty-badge {
     display: inline-block;
     padding: 0.15rem 0.6rem;
     border-radius: 999px;
-    background: #a3663f;
-    color: var(--color-surface);
     font-size: 0.75rem;
     font-weight: 700;
+    color: var(--color-surface);
+    background: #8a8a8a;
+  }
+
+  .difficulty-badge[data-level="初級"] {
+    background: #4caf7d;
+  }
+
+  .difficulty-badge[data-level="中級"] {
+    background: #3f8fd4;
+  }
+
+  .difficulty-badge[data-level="上級"] {
+    background: #d4544a;
   }
 
   .quiz-question {
@@ -945,6 +1390,46 @@ const countBreakpoints = [10, 20, 30];
     border-radius: 8px;
     background: var(--color-surface);
     text-align: center;
+    transition: box-shadow 0.3s ease;
+  }
+
+  /* 正答率が高いほど、結果カードの見た目を少し豪華にしていく。 */
+  .quiz-result[data-tier="a"] {
+    border-color: var(--color-accent);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .quiz-result[data-tier="s"] {
+    border: 2px solid #e6b93d;
+    background: linear-gradient(160deg, var(--color-surface), #fff6da 60%, #ffe9a8);
+    box-shadow: 0 0 28px rgba(230, 185, 61, 0.4), 0 6px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .result-rank {
+    display: inline-block;
+    margin: 0 0 0.75rem;
+    padding: 0.3rem 1.1rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+  }
+
+  .quiz-result[data-tier="b"] .result-rank {
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  .quiz-result[data-tier="a"] .result-rank {
+    background: var(--color-accent);
+    color: var(--color-surface);
+  }
+
+  .quiz-result[data-tier="s"] .result-rank {
+    background: linear-gradient(90deg, #f0b429, #ffdf7e);
+    color: #5c3d00;
+    box-shadow: 0 2px 10px rgba(230, 185, 61, 0.55);
   }
 
   .result-score {
@@ -966,6 +1451,130 @@ const countBreakpoints = [10, 20, 30];
     color: var(--color-surface);
     font-family: inherit;
     cursor: pointer;
+  }
+
+  .result-time {
+    margin: 0 0 1rem;
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+  }
+
+  .result-ranking {
+    margin: 0 0 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    text-align: left;
+  }
+
+  .result-ranking form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .result-ranking label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  .result-ranking input {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-family: inherit;
+  }
+
+  #ranking-submit-button {
+    padding: 0.5rem 1.2rem;
+    border: 1px solid var(--color-accent);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-accent);
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .result-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  .share-button {
+    padding: 0.6rem 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .quiz-ranking-board {
+    margin-top: 2.5rem;
+  }
+
+  .quiz-ranking-board h2 {
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .ranking-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0.75rem 0 1rem;
+  }
+
+  .ranking-tab {
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .ranking-tab.is-active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-surface);
+  }
+
+  .ranking-board-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .ranking-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+  }
+
+  .ranking-nickname {
+    font-weight: 700;
+  }
+
+  .ranking-score,
+  .ranking-avg {
+    color: var(--color-text-muted);
   }
 </style>
 
