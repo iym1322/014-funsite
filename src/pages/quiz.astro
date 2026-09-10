@@ -144,7 +144,7 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     </div>
 
     <div class="result-actions">
-      <button type="button" class="share-button" id="share-button" hidden>結果をXでシェア</button>
+      <button type="button" class="share-button" id="share-button">結果をXでシェア</button>
       <button type="button" class="retry-button" id="retry-button">もう一度挑戦する</button>
     </div>
   </div>
@@ -366,9 +366,6 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   let lastAverageTimeMs = 0;
   let lastRankingMode: string | null = null;
   let lastTierRank = "";
-  // ランキングに記録した直後だけ、OGPカード付きのシェア用固有URLが手に入る。
-  let lastShareRecordId: string | null = null;
-  let lastShareNickname = "名無し";
 
   function shuffle<T>(items: T[]): T[] {
     const arr = [...items];
@@ -611,9 +608,6 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
     resultRankEl.textContent = tier.rank;
     resultMessageEl.textContent = tier.message;
     lastTierRank = tier.rank;
-    lastShareRecordId = null;
-    // シェアはランキングに記録してからだけ可能にする(記録するまでは非表示)。
-    shareButton.hidden = true;
 
     lastAverageTimeMs =
       answerTimes.length > 0 ? answerTimes.reduce((a, b) => a + b, 0) / answerTimes.length : 0;
@@ -745,26 +739,18 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
       return;
     }
     rankingSubmitButton.disabled = true;
-    const { data, error } = await supabase
-      .from("quiz_ranking")
-      .insert({
-        mode: lastRankingMode,
-        nickname,
-        score,
-        total_questions: questions.length,
-        average_time_ms: Math.round(lastAverageTimeMs),
-      })
-      .select("id")
-      .single();
+    const { error } = await supabase.from("quiz_ranking").insert({
+      mode: lastRankingMode,
+      nickname,
+      score,
+      total_questions: questions.length,
+      average_time_ms: Math.round(lastAverageTimeMs),
+    });
     if (error) {
       rankingFormMessage.textContent = "記録に失敗しました。時間をおいて試してください。";
       rankingSubmitButton.disabled = false;
       return;
     }
-    // ランキングに記録できた場合だけ、OGPカード付きのシェア用固有URLを発行できる。
-    lastShareRecordId = data?.id ?? null;
-    lastShareNickname = nickname;
-    shareButton.hidden = false;
     rankingFormMessage.textContent = "ランキングに記録しました！ありがとうございます。";
     await loadRankingBoard(lastRankingMode);
   });
@@ -826,24 +812,15 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
   // ランキングに記録済みなら、OGPカードが展開される専用の結果ページへのリンクを
   // 使う。未記録(または絞り込みありで記録対象外)の場合はテキストのみで共有する。
   shareButton.addEventListener("click", () => {
-    if (!lastShareRecordId) return;
     const avgSec = (lastAverageTimeMs / 1000).toFixed(1);
-    const params = new URLSearchParams({
-      score: String(score),
-      total: String(questions.length),
-      time: avgSec,
-      nickname: lastShareNickname,
-      rank: lastTierRank,
-    });
-    const shareUrl = `https://014-funsite.vercel.app/quiz/result/${lastShareRecordId}?${params.toString()}`;
     // URLは本文中に直接埋め込む(intentの&url=は使わない。使うと本文の末尾に
     // 二重でURLが付いてしまうため)。
     const shareText = [
-      `${score}/${questions.length}問正解｜${avgSec}秒`,
+      `${score}/${questions.length}問正解｜${avgSec}秒｜${lastTierRank}`,
       "",
       "オーイシマサヨシ/大石昌良に関する検定、あなたは何問わかる？",
       "あなたも挑戦",
-      shareUrl,
+      "https://014-funsite.vercel.app/quiz",
       "",
       "#オーイシ検定 #オーイシマサヨシ",
     ].join("\n");
