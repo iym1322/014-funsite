@@ -1,11 +1,20 @@
 // オーイシ検定の結果シェア用OGP画像を動的生成するAPI。
 // クエリパラメータ(score/total/time/nickname/rank)を受け取り、PNG画像を返す。
-// satori(@vercel/ogが内部で使用)はCJKフォントを内蔵していないため、
-// リクエスト時にネットワーク越しにフォントを取得する構成は避け、
-// 可変フォント(Noto Sans JP)をビルド時にバンドルして使う(weightごとに
-// 同じデータを指定すると、satoriがその太さを可変フォントから描画してくれる)。
+//
+// @vercel/ogは内部でsatori+resvgをEdge Runtime向けにバンドルしており、
+// そのNode.js版ビルド(dist/index.node.js)はharfbuzzjsのコードをesbuildで
+// ESM形式にインライン展開している。この際、harfbuzzjs内の`require("fs")`が
+// 静的解析できずesbuildの「Dynamic require of ... is not supported」という
+// 常にthrowするスタブに置き換えられてしまい、Vercel上のNode.jsサーバーレス
+// 関数で実行すると例外になる(本番で実際に確認済み)。
+// これを避けるため、@vercel/ogを使わず、satoriとresvg-jsを直接使用する。
+// satoriは公式ビルドでharfbuzzjsを外部パッケージとして通常のimportで参照して
+// おり、Node実行時はharfbuzzjs自身の素のCommonJSコードとして解決されるため、
+// 上記の壊れたバンドル経路を通らない。resvg-jsもWASMではなくネイティブ
+// バイナリ(N-API)なので同種の問題が起きない。
 import type { APIRoute } from "astro";
-import { ImageResponse } from "@vercel/og";
+import satori from "satori";
+import { Resvg } from "@resvg/resvg-js";
 import notoSansJpVariableUrl from "../../assets/fonts/NotoSansJP-Variable.ttf?url";
 
 export const prerender = false;
@@ -94,7 +103,7 @@ export const GET: APIRoute = async ({ url }) => {
   );
 
   try {
-    const imageResponse = new ImageResponse(tree as never, {
+    const svg = await satori(tree as never, {
       width: 1200,
       height: 630,
       fonts: [
@@ -103,17 +112,17 @@ export const GET: APIRoute = async ({ url }) => {
       ],
     });
 
-    // ImageResponseが返すReadableStreamのボディは、Vercelの(Edgeではなく)
-    // Node.jsサーバーレス関数経由だと空のまま届いてしまうことがあるため、
-    // 一度バッファに読み切ってから通常のResponseとして返す。
-    const buffer = await imageResponse.arrayBuffer();
-    if (buffer.byteLength === 0) {
-      return new Response("EMPTY_IMAGE_BUFFER: ImageResponse produced 0 bytes", {
+    const resvg = new Resvg(svg, { fitTo: { mode: "width", value: 1200 } });
+    const pngBuffer = resvg.render().asPng();
+
+    if (pngBuffer.byteLength === 0) {
+      return new Response("EMPTY_IMAGE_BUFFER: render produced 0 bytes", {
         status: 500,
         headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
       });
     }
-    return new Response(buffer, {
+
+    return new Response(pngBuffer, {
       status: 200,
       headers: {
         "Content-Type": "image/png",
