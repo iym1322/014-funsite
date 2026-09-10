@@ -38,7 +38,16 @@ export const GET: APIRoute = async ({ url }) => {
   const scoreText = `${score} / ${total} 問正解`;
   const timeText = `平均解答タイム ${timeSec.toFixed(1)}秒`;
 
-  const fontData = await loadFontData(url.origin);
+  let fontData: ArrayBuffer;
+  try {
+    fontData = await loadFontData(url.origin);
+  } catch (err) {
+    const message = err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err);
+    return new Response(`FONT_LOAD_ERROR: ${message}`, {
+      status: 500,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+    });
+  }
 
   const tree = el(
     "div",
@@ -84,24 +93,38 @@ export const GET: APIRoute = async ({ url }) => {
     ]
   );
 
-  const imageResponse = new ImageResponse(tree as never, {
-    width: 1200,
-    height: 630,
-    fonts: [
-      { name: "Noto Sans JP", data: fontData, weight: 400, style: "normal" },
-      { name: "Noto Sans JP", data: fontData, weight: 700, style: "normal" },
-    ],
-  });
+  try {
+    const imageResponse = new ImageResponse(tree as never, {
+      width: 1200,
+      height: 630,
+      fonts: [
+        { name: "Noto Sans JP", data: fontData, weight: 400, style: "normal" },
+        { name: "Noto Sans JP", data: fontData, weight: 700, style: "normal" },
+      ],
+    });
 
-  // ImageResponseが返すReadableStreamのボディは、Vercelの(Edgeではなく)
-  // Node.jsサーバーレス関数経由だと空のまま届いてしまうことがあるため、
-  // 一度バッファに読み切ってから通常のResponseとして返す。
-  const buffer = await imageResponse.arrayBuffer();
-  return new Response(buffer, {
-    status: 200,
-    headers: {
-      "Content-Type": "image/png",
-      "Cache-Control": "public, immutable, no-transform, max-age=31536000",
-    },
-  });
+    // ImageResponseが返すReadableStreamのボディは、Vercelの(Edgeではなく)
+    // Node.jsサーバーレス関数経由だと空のまま届いてしまうことがあるため、
+    // 一度バッファに読み切ってから通常のResponseとして返す。
+    const buffer = await imageResponse.arrayBuffer();
+    if (buffer.byteLength === 0) {
+      return new Response("EMPTY_IMAGE_BUFFER: ImageResponse produced 0 bytes", {
+        status: 500,
+        headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+      });
+    }
+    return new Response(buffer, {
+      status: 200,
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=3600",
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err);
+    return new Response(`RENDER_ERROR: ${message}`, {
+      status: 500,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+    });
+  }
 };

@@ -35,12 +35,13 @@ const pageDescription =
   <h1>オーイシ検定の結果</h1>
   <p class="note">「{nickname}」さんがオーイシ検定に挑戦した記録です(ID: {id})。</p>
 
-  <div class:list={["result-share-card", { "is-perfect": isPerfect }]}>
-    {rank && <p class="rank">{rank}</p>}
-    <p class="score">{score} / {total} 問正解</p>
-    <p class="time">平均解答タイム {timeSec.toFixed(1)}秒</p>
-    <p class="nickname">記録者: {nickname}</p>
-  </div>
+  <img
+    class:list={["result-share-image", { "is-perfect": isPerfect }]}
+    src={ogImage}
+    width="1200"
+    height="630"
+    alt={`${nickname}さんの結果: ${score}/${total}問正解(${timeSec.toFixed(1)}秒)`}
+  />
 
   <a class="cta-button" href="/quiz">自分も挑戦してみる →</a>
 </Layout>
@@ -51,52 +52,19 @@ const pageDescription =
     font-size: 0.9rem;
   }
 
-  .result-share-card {
+  .result-share-image {
+    display: block;
+    width: 100%;
+    max-width: 600px;
+    height: auto;
     margin: 1.5rem 0;
-    padding: 2rem 1.5rem;
-    border: 1px solid var(--color-border);
     border-radius: 8px;
-    background: var(--color-surface);
-    text-align: center;
+    border: 1px solid var(--color-border);
   }
 
-  .result-share-card.is-perfect {
+  .result-share-image.is-perfect {
     border: 2px solid #e6b93d;
-    background: linear-gradient(160deg, var(--color-surface), #fff6da 60%, #ffe9a8);
     box-shadow: 0 0 28px rgba(230, 185, 61, 0.4), 0 6px 20px rgba(0, 0, 0, 0.1);
-  }
-
-  .rank {
-    display: inline-block;
-    margin: 0 0 0.75rem;
-    padding: 0.3rem 1.1rem;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    background: var(--color-bg);
-    color: var(--color-text-muted);
-  }
-
-  .is-perfect .rank {
-    background: linear-gradient(90deg, #f0b429, #ffdf7e);
-    color: #5c3d00;
-  }
-
-  .score {
-    margin: 0 0 0.5rem;
-    font-size: 1.75rem;
-    font-weight: 700;
-  }
-
-  .time {
-    margin: 0 0 1rem;
-    color: var(--color-text-muted);
-  }
-
-  .nickname {
-    margin: 0;
-    font-size: 0.9rem;
-    color: var(--color-text-muted);
   }
 
   .cta-button {
