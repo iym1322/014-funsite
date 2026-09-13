@@ -577,7 +577,7 @@ const raw: Omit<Track, "sortDate">[] = [
     ],
   },
   {
-    group: "Sound Schedule", type: "アルバム", date: "2002.07.10", title: "イマココニアルモノ", slug: "ima-koko-ni-aru-mono-album", appleMusic: "https://music.apple.com/jp/album/ima-koko-ni-aru-mono/1681160195", spotify: "https://open.spotify.com/album/2EVkdRdHNqS5r2WLaE8MU2", description: "Sound Scheduleのメジャー1stアルバム。全12トラックを収録。",
+    group: "Sound Schedule", type: "アルバム", date: "2002.07.10", title: "イマココニアルモノ", slug: "ima-koko-ni-aru-mono-album", image: "イマココニアルモノ", appleMusic: "https://music.apple.com/jp/album/%E3%82%A4%E3%83%9E%E3%82%B3%E3%82%B3%E3%83%8B%E3%82%A2%E3%83%AB%E3%83%A2%E3%83%8E/307992740", spotify: "https://open.spotify.com/album/2EVkdRdHNqS5r2WLaE8MU2", description: "Sound Scheduleのメジャー1stアルバム。全12トラックを収録。",
     tracklist: [
       { title: "幼なじみ", slug: "osananajimi" }, { title: "世直しブッダ", slug: "yonaoshi-buddha" }, { title: "月が落ちる前に…", slug: "tsuki-ga-ochiru-mae-ni" }, { title: "ちょっとだけ", slug: "chotto-dake" }, { title: "君という花", slug: "kimi-to-iu-hana" }, { title: "大学物語", slug: "daigaku-monogatari" }, { title: "流星群（sound effects）" }, { title: "愛のかたち", slug: "ai-no-katachi" }, { title: "マザーコンプレックス", slug: "mother-complex" }, { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" }, { title: "恋焦がれ", slug: "koi-kogare" }, { title: "今ココにあるもの", slug: "ima-koko-ni-aru-mono" },
     ],
