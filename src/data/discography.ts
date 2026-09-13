@@ -561,7 +561,7 @@ const raw: Omit<Track, "sortDate">[] = [
     ],
   },
   {
-    group: "Sound Schedule", type: "アルバム", date: "2012.09.05", title: "FUTURE", slug: "future-album-sound-schedule", description: "新曲、既発曲のリマスター、ボーナストラックを収めた企画アルバム。",
+    group: "Sound Schedule", type: "アルバム", date: "2012.09.05", title: "FUTURE", slug: "future-album-sound-schedule", description: "新曲、既発曲のリマスター、ボーナストラックを収めた企画アルバム。", appleMusic: "https://music.apple.com/jp/album/future/554921708", spotify: "https://open.spotify.com/album/7ucoRKdJDAqx2VUUqrNPVT",
     tracklist: [
       { title: "グッドモーニング", slug: "good-morning-sound-schedule" }, { title: "エイリアン", slug: "alien-sound-schedule" }, { title: "その愛を止めないで", slug: "sono-ai-wo-tomenaide" }, { title: "僕らの足跡～はじめのいっぽ～", slug: "bokura-no-ashiato" }, { title: "コモリウタ", slug: "komoriuta" }, { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" }, { title: "僕らの行方", slug: "bokura-no-yukue" }, { title: "結末のない二人", slug: "ketsumatsu-no-nai-futari" }, { title: "ハイライト", slug: "highlight-sound-schedule" }, { title: "エピローグ", slug: "epilogue-sound-schedule" }, { title: "コンタクト", slug: "contact-sound-schedule" }, { title: "コンパス", slug: "compass-sound-schedule" }, { title: "同じ空の下で", slug: "onaji-sora-no-shita-de" }, { title: "スマイル", slug: "smile-sound-schedule" },
     ],
@@ -584,7 +584,7 @@ const raw: Omit<Track, "sortDate">[] = [
   soundSong("スペシャルナンバー", "2004.06.09", "special-number"), soundSong("わけあり", "2004.06.09", "wakeari"), soundSong("アンサー", "2005.01.19", "answer-sound-schedule"), soundSong("ミーティング", "2005.01.19", "meeting-sound-schedule"), soundSong("コンパス", "2005.01.19", "compass-sound-schedule", { tieIn: "ジュビロ磐田イメージソング" }), soundSong("ビオトープ", "2005.03.02", "biotope-song"), soundSong("ハイライト", "2005.03.02", "highlight-sound-schedule"), soundSong("真夜中のID", "2005.03.02", "mayonaka-no-id"), soundSong("ヘイ！ヘイ！", "2005.03.02", "hey-hey-sound-schedule"), soundSong("境界線にて", "2005.03.02", "kyoukaisen-nite"), soundSong("僕らの逃避行", "2005.03.02", "bokura-no-touhikou"), soundSong("エピローグ", "2005.03.02", "epilogue-sound-schedule"), soundSong("コンタクト", "2005.03.02", "contact-sound-schedule"), soundSong("君のためにできること", "2005.03.02", "kimi-no-tame-ni-dekiru-koto"),
   soundSong("甘い夜", "2006.02.08", "amai-yoru"), soundSong("同じ空の下で", "2006.09.20", "onaji-sora-no-shita-de"), soundSong("クライマックス", "2006.09.20", "climax-sound-schedule", { tieIn: "ジュビロ磐田イメージソング" }), soundSong("黄金レシピ", "2006.09.20", "ougon-recipe"),
   soundSong("グッドタイムコミュニケーション", "2011.09.14", "good-time-communication"), soundSong("たそがれスターライト", "2011.09.14", "tasogare-starlight"), soundSong("言葉以上に", "2011.09.14", "kotoba-ijou-ni"), soundSong("しあわせの文字", "2011.09.14", "shiawase-no-moji"), soundSong("超能力少年", "2011.09.14", "chounouryoku-shounen"), soundSong("ロックンロール", "2011.09.14", "rock-n-roll-sound-schedule"),
-  soundSong("グッドモーニング", "2012.09.05", "good-morning-sound-schedule"), soundSong("エイリアン", "2012.09.05", "alien-sound-schedule"), soundSong("その愛を止めないで", "2012.09.05", "sono-ai-wo-tomenaide"), soundSong("僕らの足跡～はじめのいっぽ～", "2012.09.05", "bokura-no-ashiato"), soundSong("スマイル", "2012.09.05", "smile-sound-schedule"), soundSong("銀河ステーション", "2014.09.17", "ginga-station", { appleMusic: "https://music.apple.com/jp/album/%E9%8A%80%E6%B2%B3%E3%82%B9%E3%83%86%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3/912262056?i=912262059", spotify: "https://open.spotify.com/track/5NnINOwuYv7BzkjZc8JtTu" }), soundSong("フリーハンド", "2014.09.17", "free-hand", { appleMusic: "https://music.apple.com/jp/album/%E3%83%95%E3%83%AA%E3%83%BC%E3%83%8F%E3%83%B3%E3%83%89/912262056?i=912262060", spotify: "https://open.spotify.com/track/5IciEHLgATEWxX7J3mQUt6" }), soundSong("ミラクル", "2014.09.17", "miracle-sound-schedule", { appleMusic: "https://music.apple.com/jp/album/%E3%83%9F%E3%83%A9%E3%82%AF%E3%83%AB/912262056?i=912262061", spotify: "https://open.spotify.com/track/1nXtyHUN3tRwZRBA5dYk8w" }), soundSong("目隠し鬼", "2014.09.17", "mekakushi-oni", { spotify: "https://open.spotify.com/track/0GFaoHNqxGLkkJaJRijoRA" }), soundSong("ありがとう", "2014.09.17", "arigatou-sound-schedule", { appleMusic: "https://music.apple.com/jp/album/%E3%81%82%E3%82%8A%E3%81%8C%E3%81%A8%E3%81%86/912262056?i=912262065", spotify: "https://open.spotify.com/track/2xjy21teMrvbeVXNI8v7Gi" }), soundSong("タイムマシーン", "2016.09", "time-machine", { note: "会場限定シングル『TIME MACHINE』表題曲。", appleMusic: "https://music.apple.com/jp/album/%E3%82%BF%E3%82%A4%E3%83%A0%E3%83%9E%E3%82%B7%E3%83%BC%E3%83%B3/1241821536?i=1241821539", spotify: "https://open.spotify.com/track/1Lx4Def8YfFQcxib3yD5Gp" }), soundSong("あさがお", "2016.09", "asagao", { image: "asagao", appleMusic: "https://music.apple.com/jp/album/%E3%81%82%E3%81%95%E3%81%8C%E3%81%8A/1241821536?i=1241821540", spotify: "https://open.spotify.com/track/5vlAJJrlZRsWTusdI5qgHD" }),
+  soundSong("グッドモーニング", "2012.09.05", "good-morning-sound-schedule", { appleMusic: "https://music.apple.com/jp/song/554921897", spotify: "https://open.spotify.com/track/1u91eyRS8zBh4nUfOivgtf" }), soundSong("エイリアン", "2012.09.05", "alien-sound-schedule", { appleMusic: "https://music.apple.com/jp/song/554921898", spotify: "https://open.spotify.com/track/2gIfZ1YM6rqd52uvV5PydH" }), soundSong("その愛を止めないで", "2012.09.05", "sono-ai-wo-tomenaide", { appleMusic: "https://music.apple.com/jp/song/554921899", spotify: "https://open.spotify.com/track/4PxFUwfETk627UjRdMfKsj" }), soundSong("僕らの足跡～はじめのいっぽ～", "2012.09.05", "bokura-no-ashiato", { appleMusic: "https://music.apple.com/jp/song/554921900", spotify: "https://open.spotify.com/track/1cO1qa4PDTwaXlXo6kfHrb" }), soundSong("スマイル", "2012.09.05", "smile-sound-schedule", { appleMusic: "https://music.apple.com/jp/song/554921950", spotify: "https://open.spotify.com/track/4ZgYDRl74irnnuNVY9k92I" }), soundSong("銀河ステーション", "2014.09.17", "ginga-station", { appleMusic: "https://music.apple.com/jp/album/%E9%8A%80%E6%B2%B3%E3%82%B9%E3%83%86%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3/912262056?i=912262059", spotify: "https://open.spotify.com/track/5NnINOwuYv7BzkjZc8JtTu" }), soundSong("フリーハンド", "2014.09.17", "free-hand", { appleMusic: "https://music.apple.com/jp/album/%E3%83%95%E3%83%AA%E3%83%BC%E3%83%8F%E3%83%B3%E3%83%89/912262056?i=912262060", spotify: "https://open.spotify.com/track/5IciEHLgATEWxX7J3mQUt6" }), soundSong("ミラクル", "2014.09.17", "miracle-sound-schedule", { appleMusic: "https://music.apple.com/jp/album/%E3%83%9F%E3%83%A9%E3%82%AF%E3%83%AB/912262056?i=912262061", spotify: "https://open.spotify.com/track/1nXtyHUN3tRwZRBA5dYk8w" }), soundSong("目隠し鬼", "2014.09.17", "mekakushi-oni", { spotify: "https://open.spotify.com/track/0GFaoHNqxGLkkJaJRijoRA" }), soundSong("ありがとう", "2014.09.17", "arigatou-sound-schedule", { appleMusic: "https://music.apple.com/jp/album/%E3%81%82%E3%82%8A%E3%81%8C%E3%81%A8%E3%81%86/912262056?i=912262065", spotify: "https://open.spotify.com/track/2xjy21teMrvbeVXNI8v7Gi" }), soundSong("タイムマシーン", "2016.09", "time-machine", { note: "会場限定シングル『TIME MACHINE』表題曲。", appleMusic: "https://music.apple.com/jp/album/%E3%82%BF%E3%82%A4%E3%83%A0%E3%83%9E%E3%82%B7%E3%83%BC%E3%83%B3/1241821536?i=1241821539", spotify: "https://open.spotify.com/track/1Lx4Def8YfFQcxib3yD5Gp" }), soundSong("あさがお", "2016.09", "asagao", { image: "asagao", appleMusic: "https://music.apple.com/jp/album/%E3%81%82%E3%81%95%E3%81%8C%E3%81%8A/1241821536?i=1241821540", spotify: "https://open.spotify.com/track/5vlAJJrlZRsWTusdI5qgHD" }),
 
   { group: "Sound Schedule", type: "映像", date: "2005.08.24", title: "SS FILMS “The Clips of Singles”", slug: "ss-films" },
   { group: "Sound Schedule", type: "映像", date: "2006.02.08", title: "SS LIVES 〜Sound Schedule Live Tour \"you can't beat that.\"〜", slug: "ss-lives", isLive: true },
@@ -866,6 +866,8 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "magical-music-tour",
     image: "magical-music-tour",
     description: "大石昌良のソロ4thアルバム。",
+    appleMusic: "https://music.apple.com/jp/album/magical-music-tour/1443001539",
+    youtube: "https://www.youtube.com/watch?v=C5zT69USnTI",
     tracklist: [
       { title: "ピエロ", slug: "pierrot-oishi" },
       { title: "Jump!!", slug: "jump-oishi" },
@@ -1424,6 +1426,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "ohayou-oishi",
     description: "3か月連続配信企画の第3弾として発表され、後に大石昌良のソロ4thアルバム『マジカルミュージックツアー』へ収録された楽曲。",
     appleMusic: "https://music.apple.com/jp/album/magical-music-tour/1443001539",
+    youtube: "https://www.youtube.com/watch?v=m6kTM0hmmEc",
   },
   {
     group: "大石昌良",
@@ -1434,6 +1437,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "nemurenu-machi-no-boogieman-dance",
     description: "大石昌良のソロ4thアルバム『マジカルミュージックツアー』に収録された楽曲。",
     appleMusic: "https://music.apple.com/jp/album/magical-music-tour/1443001539",
+    youtube: "https://www.youtube.com/watch?v=un9DLg6iemE",
   },
   {
     group: "大石昌良",
@@ -1680,7 +1684,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "kagikko-noel",
     description: "大石昌良のソロ5作目のシングル「ダイヤモンド」のカップリング曲。後にリテイク音源がアルバム『マジカルミュージックツアー』にも収録された。",
   },
-  { group: "大石昌良", type: "シングル", date: "2013.03", title: "MAGICAL ACOUSTIC TOUR", caution: true, slug: "magical-acoustic-tour", description: "大石昌良名義でのアコースティックツアーに際して発表されたシングル。" },
+  { group: "大石昌良", type: "シングル", date: "2013.03", title: "MAGICAL ACOUSTIC TOUR", caution: true, slug: "magical-acoustic-tour", image: "magical-acoustic-tour", description: "大石昌良名義でのアコースティックツアーに際して発表されたシングル。ツアー会場限定で頒布されたミニCD。" },
   {
     group: "大石昌良",
     type: "シングル",
@@ -3281,7 +3285,7 @@ const raw: Omit<Track, "sortDate">[] = [
   { group: "楽曲提供", type: "提供曲", date: "2023.03.08", title: "トーキョーラビリンス", subject: "CUBERS", role: "作詞・作曲・編曲(共作: 園田健太郎)", note: "アルバム『MAJOR OF CUBERS 2』収録曲", slug: "tokyo-labyrinth", image: "tokyo-labyrinth", description: "CUBERSのメジャー2ndアルバム『MAJOR OF CUBERS 2』収録曲。大石昌良が園田健太郎との共作で作詞・作曲・編曲を担当した。", appleMusic: "https://music.apple.com/jp/album/%E3%83%88%E3%83%BC%E3%82%AD%E3%83%A7%E3%83%BC%E3%83%A9%E3%83%93%E3%83%AA%E3%83%B3%E3%82%B9/1673661691?i=1673661699", youtube: "https://www.youtube.com/watch?v=2oezbdpf4PA", spotify: "https://open.spotify.com/track/7x6F70WqcTnNVI0S5x1Pk4" },
   { group: "楽曲提供", type: "提供曲", date: "2013.10.12", title: "reborn", subject: "工藤圭一", role: "プロデュース・コーラス", slug: "reborn-kudo", description: "工藤圭一の楽曲。大石昌良がプロデュース・コーラスを担当した。" },
   { group: "楽曲提供", type: "提供曲", date: "2013.10.12", title: "ルーキー", subject: "工藤圭一", role: "プロデュース・コーラス", slug: "rookie-kudo", description: "工藤圭一の楽曲。大石昌良がプロデュース・コーラスを担当した。" },
-  { group: "楽曲提供", type: "提供曲", date: "2012.04", title: "バトン", subject: "KEISUKE", role: "作詞・作曲・編曲", slug: "baton-keisuke", description: "KEISUKEの楽曲。大石昌良が作詞・作曲・編曲を担当した。" },
+  { group: "楽曲提供", type: "提供曲", date: "2012.04", title: "バトン", subject: "KEISUKE", role: "作詞・作曲・編曲", slug: "baton-keisuke", youtube: "https://www.youtube.com/watch?v=qhhiykHi-7Y", description: "KEISUKEの楽曲。大石昌良が作詞・作曲・編曲を担当した。youtubeは大石昌良自身によるセルフカバー弾き語り映像。" },
   { group: "楽曲提供", type: "提供曲", date: "2017.07.26", title: "ベイビーミュージックライダー", subject: "Gero", role: "作詞・作曲・編曲", note: "アルバム『EGOIST』収録曲", slug: "baby-music-rider", image: "baby-music-rider", spotify: "https://open.spotify.com/track/49d0wOCvHXQWe3IflSeZ0E", description: "Geroのアルバム『EGOIST』収録曲。大石昌良が作詞・作曲・編曲を担当した。" },
   { group: "楽曲提供", type: "提供曲", date: "2009.04.22", title: "一期一会", subject: "koume", role: "作曲・編曲(作詞: koume)", slug: "ichigo-ichie", description: "koumeの楽曲。koumeが作詞、大石昌良が作曲・編曲を担当した。" },
   { group: "楽曲提供", type: "提供曲", date: "2017.06.07", title: "フィッシュストーリー", subject: "斉藤壮馬", role: "作詞・作曲・編曲", note: "斉藤壮馬1stシングル(デビュー曲)", slug: "fish-story", description: "斉藤壮馬のデビューシングル(1stシングル)表題曲。大石昌良が作詞・作曲・編曲を担当した。" },
