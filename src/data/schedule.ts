@@ -132,6 +132,7 @@ export const schedule: ScheduleEvent[] = [
   { date: "2026-11-21", title: "ANIMAX MUSIX 2026 supported by Lemino", type: "live", sourceUrl: officialLiveSchedule },
   { date: "2026-11-28", title: "配信者ハイパーゲーム大会 FINAL [DAY1]", type: "event", note: "東京ドーム。テーマソング制作担当・出演決定", sourceUrl: "https://www.014014.jp/news/7938" },
   { date: "2026-11-29", title: "配信者ハイパーゲーム大会 FINAL [DAY2]", type: "event", note: "東京ドーム。テーマソング制作担当・出演決定", sourceUrl: "https://www.014014.jp/news/7938" },
+  { date: "2026-12-16", title: "森口博子「ANISON COVERS 3」リリース", type: "release", note: "オーイシマサヨシがゲスト歌唱参加(「CARNIVAL・BABEL ～カルナバル・バベル～」)", sourceUrl: "https://www.014014.jp/news/7973" },
 
   // 2027（現時点で発表済みの予定）
   { date: "2027-01-30", title: "スガ シカオ 30th ANNIVERSARY TOUR 2027 “ACOUSTIC SUPERNOVA” 宮城公演", type: "live", note: "トークネットホール仙台(大石昌良ゲスト出演)", sourceUrl: "https://www.014014.jp/news/7932" },
