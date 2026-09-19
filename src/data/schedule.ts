@@ -116,6 +116,7 @@ export const schedule: ScheduleEvent[] = [
   { date: "2026-09-09", title: "「嗚呼、素晴らしき日常」CD・配信リリース", type: "release", note: "大石昌良名義", href: "/works/aa-subarashiki-nichijou" },
   { date: "2026-09-19", title: "「仮歌Ⅲ」発売記念フリーライブ＆特典会", type: "event", note: "イオンモール豊川", sourceUrl: "https://www.014014.jp/news/7890" },
   { date: "2026-09-22", title: "オーイシ武道館 Vol.3", type: "live", note: "日本武道館", sourceUrl: "https://www.014014.jp/schedules/7265" },
+  { date: "2026-10-06", title: "「シュガーソルト」デジタルリリース", type: "release", note: "TVアニメ『塩対応の佐藤さんが俺にだけ甘い』オープニングテーマ", href: "/works/sugar-salt", sourceUrl: "https://www.014014.jp/news/7988" },
   { date: "2026-09-23", title: "大石武道館", type: "live", note: "日本武道館", sourceUrl: officialLiveSchedule },
   { date: "2026-09-26", title: "OxT ダイヤのA actⅡ -SS- The Talk & Live", type: "live", sourceUrl: officialLiveSchedule },
   { date: "2026-10-03", title: "Sound Schedule Live Tour “PLACE 2026”", type: "live", note: "心斎橋BIGCAT", sourceUrl: officialLiveSchedule },

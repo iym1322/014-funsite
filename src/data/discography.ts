@@ -2481,6 +2481,16 @@ const raw: Omit<Track, "sortDate">[] = [
   {
     group: "オーイシマサヨシ",
     type: "シングル",
+    date: "2026.10.06",
+    title: "シュガーソルト",
+    tieIn: "TVアニメ『塩対応の佐藤さんが俺にだけ甘い』オープニングテーマ",
+    slug: "sugar-salt",
+    image: "sugar-salt",
+    description: "2026年10月6日放送開始のTVアニメ『塩対応の佐藤さんが俺にだけ甘い』のオープニングテーマとして書き下ろされた新曲。作詞・作曲・編曲は大石昌良。",
+  },
+  {
+    group: "オーイシマサヨシ",
+    type: "シングル",
     date: "2025.09.01",
     title: "Butter-Fly - From THE FIRST TAKE",
     note: "angela、オーイシマサヨシ、奥井雅美、TrySail、FLOWによる合同歌唱",
