@@ -139,4 +139,6 @@ export const schedule: ScheduleEvent[] = [
   { date: "2027-01-30", title: "スガ シカオ 30th ANNIVERSARY TOUR 2027 “ACOUSTIC SUPERNOVA” 宮城公演", type: "live", note: "トークネットホール仙台(大石昌良ゲスト出演)", sourceUrl: "https://www.014014.jp/news/7932" },
   { date: "2027-02-27", title: "オーイシ横アリ Day1", type: "live", note: "横浜アリーナ", sourceUrl: officialLiveSchedule },
   { date: "2027-02-28", title: "オーイシ横アリ Day2", type: "live", note: "横浜アリーナ", sourceUrl: officialLiveSchedule },
+  { date: "2027-10-23", title: "オーイシ武道館 Vol.4", type: "live", note: "日本武道館", sourceUrl: "https://www.014014.jp/news/8002" },
+  { date: "2027-10-24", title: "オーイシ武道館 Vol.5", type: "live", note: "日本武道館", sourceUrl: "https://www.014014.jp/news/8002" },
 ].sort((a, b) => a.date.localeCompare(b.date));
