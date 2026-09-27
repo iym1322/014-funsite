@@ -754,11 +754,11 @@ for (const row of rows) {
           ctx.restore();
 
           ctx.fillStyle = "#ffffff";
-          ctx.font = "bold 14px sans-serif";
+          ctx.font = "bold 12px sans-serif";
           ctx.textAlign = "center";
           ctx.textBaseline = "alphabetic";
           const lines = wrapTitle(ctx, candidate.title, CELL - 16);
-          const lineHeight = 17;
+          const lineHeight = 15;
           const startY = y + CELL - 12 - (lines.length - 1) * lineHeight;
           lines.forEach((line, li) => {
             ctx.fillText(line, x + CELL / 2, startY + li * lineHeight);
