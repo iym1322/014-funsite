@@ -3,7 +3,8 @@
 // お題ごとの全順位表示と投票はこのページで行う(一覧ページはTOP3のみ)。
 import Layout from "../../layouts/Layout.astro";
 import { rankingQuestions, resolveRankingChoices } from "../../data/ranking";
-import { tracks } from "../../data/discography";
+import { tracks, getAlbumCoverImages } from "../../data/discography";
+import { resolveTrackCoverSrc } from "../../lib/trackCover";
 
 export function getStaticPaths() {
   return rankingQuestions.map((q) => ({ params: { id: q.id }, props: { question: q } }));
@@ -18,9 +19,11 @@ const { question } = Astro.props;
 const choicesForClient = resolveRankingChoices(question)
   .map((c) => {
     const track = trackFor(c.trackSlug);
-    return track ? { trackSlug: c.trackSlug, title: track.title } : null;
+    if (!track) return null;
+    const coverSrc = resolveTrackCoverSrc(track.image, track.title, getAlbumCoverImages(track), track.preferAlbumCover);
+    return { trackSlug: c.trackSlug, title: track.title, coverSrc };
   })
-  .filter((c): c is { trackSlug: string; title: string } => c !== null);
+  .filter((c): c is { trackSlug: string; title: string; coverSrc: string | null } => c !== null);
 ---
 
 <Layout title={`${question.question} | 勝手にランキング | 014 BASE`}>
@@ -55,7 +58,7 @@ const choicesForClient = resolveRankingChoices(question)
 <script>
   import { supabase, getVoterToken } from "../../lib/supabase";
 
-  type Choice = { trackSlug: string; title: string };
+  type Choice = { trackSlug: string; title: string; coverSrc: string | null };
   type QuestionData = { id: string; choices: Choice[] };
 
   const questionData: QuestionData = JSON.parse(document.getElementById("question-data")!.textContent!);
@@ -73,7 +76,15 @@ const choicesForClient = resolveRankingChoices(question)
     return new Date().toISOString().slice(0, 7);
   }
 
-  function coverEl(): HTMLDivElement {
+  function coverEl(coverSrc: string | null): HTMLElement {
+    if (coverSrc) {
+      const img = document.createElement("img");
+      img.className = "cover";
+      img.src = coverSrc;
+      img.alt = "";
+      img.loading = "lazy";
+      return img;
+    }
     const cover = document.createElement("div");
     cover.className = "cover placeholder";
     cover.setAttribute("aria-hidden", "true");
@@ -121,7 +132,7 @@ const choicesForClient = resolveRankingChoices(question)
       const trackLink = document.createElement("a");
       trackLink.className = "rank-track";
       trackLink.href = `/works/${choice.trackSlug}`;
-      trackLink.appendChild(coverEl());
+      trackLink.appendChild(coverEl(choice.coverSrc));
       li.appendChild(trackLink);
 
       const bodyDiv = document.createElement("div");
@@ -285,12 +296,18 @@ const choicesForClient = resolveRankingChoices(question)
     display: block;
   }
 
+  .cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+
   .cover.placeholder {
     display: flex;
     align-items: center;
     justify-content: center;
-    aspect-ratio: 1 / 1;
-    border-radius: 8px;
     background: linear-gradient(135deg, #e5ded3, #cfc3af);
     color: var(--color-surface);
   }

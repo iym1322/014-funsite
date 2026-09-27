@@ -48,7 +48,8 @@ const relatedAlbums = tracks.filter(
   (t) => t.type === "アルバム" && t.tracklist?.some((s) => s.slug === track.slug)
 );
 
-// この曲が候補になっている「勝手にランキング」のお題を逆引きする。
+// この曲が候補になっている「勝手にランキング」のお題を逆引きする(バッジ表示専用。
+// 「関連するランキング」セクションは廃止済みで、投票リンク自体はここには出さない)。
 const relatedRankingQuestions = rankingQuestions.filter((q) =>
   resolveRankingChoices(q).some((c) => c.trackSlug === track.slug)
 );
@@ -188,17 +189,6 @@ const relatedRankingQuestionsForClient = relatedRankingQuestions.map((q) => ({
         <ul id="favorites-list"></ul>
         <a class="favorites-cta" href="/favorites">推し曲コーナーで投稿する →</a>
       </section>
-
-      {relatedRankingQuestions.length > 0 && (
-        <section class="vote-preview">
-          <h2>関連するランキング</h2>
-          <ul class="ranking-links">
-            {relatedRankingQuestions.map((q) => (
-              <li><a href={`/ranking/${q.id}`}>「{q.question}」に投票する →</a></li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       <script
         type="application/json"
@@ -569,8 +559,7 @@ const relatedRankingQuestionsForClient = relatedRankingQuestions.map((q) => ({
     color: var(--color-accent);
   }
 
-  .favorites-preview h2,
-  .vote-preview h2 {
+  .favorites-preview h2 {
     font-size: 1rem;
     color: var(--color-text-muted);
     margin: 1.5rem 0 0.5rem;
@@ -644,19 +633,6 @@ const relatedRankingQuestionsForClient = relatedRankingQuestions.map((q) => ({
     cursor: default;
   }
 
-  .ranking-links {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .ranking-links a {
-    color: var(--color-text);
-  }
-
-  .ranking-links a:hover {
-    color: var(--color-accent);
-  }
 
   .track-pager {
     display: grid;

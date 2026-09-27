@@ -4,7 +4,8 @@
 // 詳細ページ(/ranking/[id])で行う。
 import Layout from "../../layouts/Layout.astro";
 import { rankingQuestions, resolveRankingChoices } from "../../data/ranking";
-import { tracks } from "../../data/discography";
+import { tracks, getAlbumCoverImages } from "../../data/discography";
+import { resolveTrackCoverSrc } from "../../lib/trackCover";
 
 function trackFor(slug: string) {
   return tracks.find((t) => t.slug === slug);
@@ -16,9 +17,11 @@ const questionsForClient = rankingQuestions.map((q) => ({
   choices: resolveRankingChoices(q)
     .map((c) => {
       const track = trackFor(c.trackSlug);
-      return track ? { trackSlug: c.trackSlug, title: track.title } : null;
+      if (!track) return null;
+      const coverSrc = resolveTrackCoverSrc(track.image, track.title, getAlbumCoverImages(track), track.preferAlbumCover);
+      return { trackSlug: c.trackSlug, title: track.title, coverSrc };
     })
-    .filter((c): c is { trackSlug: string; title: string } => c !== null),
+    .filter((c): c is { trackSlug: string; title: string; coverSrc: string | null } => c !== null),
 }));
 ---
 
@@ -37,14 +40,22 @@ const questionsForClient = rankingQuestions.map((q) => ({
 <script>
   import { supabase } from "../../lib/supabase";
 
-  type Choice = { trackSlug: string; title: string };
+  type Choice = { trackSlug: string; title: string; coverSrc: string | null };
   type Question = { id: string; question: string; choices: Choice[] };
 
   const questions: Question[] = JSON.parse(document.getElementById("questions-data")!.textContent!);
   const container = document.getElementById("questions") as HTMLDivElement;
   const rankMedals = ["🥇", "🥈", "🥉"];
 
-  function coverEl(): HTMLDivElement {
+  function coverEl(coverSrc: string | null): HTMLElement {
+    if (coverSrc) {
+      const img = document.createElement("img");
+      img.className = "cover";
+      img.src = coverSrc;
+      img.alt = "";
+      img.loading = "lazy";
+      return img;
+    }
     const cover = document.createElement("div");
     cover.className = "cover placeholder";
     cover.setAttribute("aria-hidden", "true");
@@ -126,7 +137,7 @@ const questionsForClient = rankingQuestions.map((q) => ({
         const trackLink = document.createElement("a");
         trackLink.className = "rank-track";
         trackLink.href = `/works/${choice.trackSlug}`;
-        trackLink.appendChild(coverEl());
+        trackLink.appendChild(coverEl(choice.coverSrc));
         li.appendChild(trackLink);
 
         const bodyDiv = document.createElement("div");
@@ -267,12 +278,18 @@ const questionsForClient = rankingQuestions.map((q) => ({
     display: block;
   }
 
+  .cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+
   .cover.placeholder {
     display: flex;
     align-items: center;
     justify-content: center;
-    aspect-ratio: 1 / 1;
-    border-radius: 8px;
     background: linear-gradient(135deg, #e5ded3, #cfc3af);
     color: var(--color-surface);
   }

@@ -21,6 +21,7 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
 ---
 
 <Layout title="オーイシ検定 | 014 BASE">
+  <a class="back-link" href="/minigames">← ミニゲーム一覧に戻る</a>
   <h1>オーイシ検定</h1>
   <p class="note">
     オーイシマサヨシ／大石昌良に関する四択クイズです。全{quizQuestions.length}問、
@@ -1058,6 +1059,18 @@ const categories = [...new Set(quizQuestions.flatMap((q) => q.categories))];
 </script>
 
 <style>
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    color: var(--color-accent);
+  }
+
   .note {
     color: var(--color-text-muted);
     font-size: 0.9rem;
