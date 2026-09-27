@@ -1,0 +1,1432 @@
+---
+// MY PICK オーイシ(ミニゲーム)。
+// 「MY PICK HASUNOSORA」に着想を得た、楽曲選択グリッド企画。
+// 縦軸=名義(5つ)×横軸=お題(3つ、パターン切り替え式。あくまでユーザーの主観)のマス目に
+// 好きな曲を1曲ずつ選んでもらい、選び終わったらブラウザ内(Canvas API)で
+// グリッド画像を生成してダウンロードできるようにする。
+// サーバー側での画像生成は行わない(過去にOGP画像生成でVercel adapter・
+// satori・WASMフォント周りのトラブルに苦しんだため、静的サイトのまま
+// 完結する構成をあえて選んでいる)。選択結果もSupabaseには保存せず、
+// その場限り(ページ内で完結)とする。
+import Layout from "../../layouts/Layout.astro";
+import { tracks, getAlbumCoverImages } from "../../data/discography";
+import { resolveTrackCoverSrc } from "../../lib/trackCover";
+
+// 縦軸(名義)。表示ラベルは企画書の表記に合わせ、実データの絞り込みには
+// discography.ts の group フィールドをそのまま使う。行ごとに淡い色を付けて
+// 見分けやすくする(色はサイト全体の落ち着いたトーンに合わせた自前の配色)。
+// logo を指定した行は、ラベル文字の代わりにロゴ画像を表示する(未指定は文字のまま)。
+// subLabel / accent を指定した行は、文字ラベルに英字の小見出しと下線を添えて「文字ロゴ」風にする。
+// 色は名義ごとに系統を分けた淡い色(オーイシ=赤、大石=緑、OxT=黄、Sound Schedule=ミントグリーン、提供楽曲=紫)。
+const rows: {
+  group: string;
+  label: string;
+  tint: string;
+  logo?: string;
+  labelScale?: number;
+  subLabel?: string;
+  accent?: string;
+}[] = [
+  { group: "オーイシマサヨシ", label: "オーイシマサヨシ", tint: "#f6dede", logo: "/images/logos/oishi-masayoshi-katakana.png" },
+  { group: "大石昌良", label: "大石昌良", tint: "#e1ecd6", logo: "/images/logos/oishi-masayoshi.webp" },
+  { group: "OxT", label: "OxT", tint: "#f7efc6", logo: "/images/logos/oxt.webp" },
+  { group: "Sound Schedule", label: "Sound Schedule", tint: "#dbe6f5", logo: "/images/logos/sound-schedule.png" },
+  { group: "楽曲提供", label: "提供楽曲", tint: "#e8e1f2", labelScale: 1.5, subLabel: "PROVIDED SONGS", accent: "#8f7bb5" },
+];
+
+// 横軸(お題)は3つ。曲データ側にタグは無く、あくまでユーザーが主観で
+// 「このマスにはこの曲」と選ぶ形(絞り込みには使わない)。
+// パターンを切り替えるとお題の表示だけが変わり、選んだ曲はそのまま残る。
+// 「自分で設定」は3つのお題をユーザーが入力する(初期値は空)。
+const patterns = [
+  { id: "favorite", label: "私の好きな曲", columns: ["1位", "2位", "3位"] },
+  { id: "theme", label: "テーマ別", columns: ["熱い曲", "エモい曲", "楽しい曲"] },
+  { id: "situation", label: "シチュエーション別", columns: ["ライブで聞きたい", "一人で聞きたい", "ドライブ中に聞きたい"] },
+  { id: "custom", label: "自分で設定", columns: ["", "", ""] },
+];
+const defaultColumns = patterns[0].columns;
+
+// マスの選択肢にする曲は「単曲としてリリースされたもの」に絞る
+// (アルバム・映像作品そのものは1曲ではないため除外)。個別ページ(slug)が
+// あるものだけにして、ジャケット画像をきちんと出せる曲だけを候補にする。
+type PickCandidate = {
+  id: string;
+  title: string;
+  group: string;
+  date: string;
+  tieIn: string | null;
+  subject: string | null;
+  role: string | null;
+  coverSrc: string | null;
+};
+
+const candidatesByGroup: Record<string, PickCandidate[]> = {};
+for (const row of rows) {
+  const list = tracks
+    .filter((t) => t.group === row.group && t.slug && (t.type === "シングル" || t.type === "提供曲"))
+    .map((t) => ({
+      id: t.slug!,
+      title: t.title,
+      group: t.group,
+      date: t.date,
+      tieIn: t.tieIn ?? null,
+      subject: t.subject ?? null,
+      role: t.role ?? null,
+      coverSrc: resolveTrackCoverSrc(t.image, t.title, getAlbumCoverImages(t), t.preferAlbumCover),
+    }))
+    .sort((a, b) => a.title.localeCompare(b.title, "ja"));
+  candidatesByGroup[row.group] = list;
+}
+---
+
+<Layout title="MY PICK オーイシ | 014 BASE">
+  <div class="pick-hero">
+    <p class="pick-hero-eyebrow">あなたの一曲を、並べてみよう</p>
+    <h1 class="pick-hero-title">MY PICK <span>オーイシ</span></h1>
+    <p class="pick-hero-lead">
+      5つの名義 × 3つのお題。マスを埋めるたびに、あなただけのオーイシソングが並んでいきます。<br />
+      お題は「私の好きな曲」「テーマ別」「シチュエーション別」、または自由入力。<br />
+      選び方に正解はありません。直感で、気分で、好きなように。<br />
+      できあがったら画像にして、Xなどでシェアしてみてください。
+    </p>
+    <p class="pick-hero-note">
+      「MY PICK HASUNOSORA」に着想を得たファン企画です。<br />
+      選んだ曲はこのページの中だけで完結し、サーバーには保存されません(ページを閉じると消えます)。
+    </p>
+  </div>
+
+  <div class="pick-toolbar">
+    <label class="name-field">
+      <span class="name-field-label">ニックネーム(任意)</span>
+      <input type="text" id="picker-name" maxlength="20" placeholder="例: 014ファン" />
+    </label>
+    <p class="name-field-hint">画像内に「Picked by …」として表示されます</p>
+    <div class="pick-toolbar-buttons">
+      <button type="button" id="reset-button">グリッドをクリア</button>
+      <button type="button" id="generate-button">画像を生成</button>
+    </div>
+  </div>
+
+  <div class="pick-patterns" role="group" aria-label="お題のパターン">
+    {patterns.map((p, i) => (
+      <button type="button" class={`pattern-button${i === 0 ? " is-active" : ""}`} data-pattern={p.id} aria-pressed={i === 0}>
+        {p.label}
+      </button>
+    ))}
+  </div>
+
+  <div class="pick-grid-wrap">
+    <div class="pick-col-headers" id="pick-col-headers">
+      <div class="pick-row-label-spacer"></div>
+      {defaultColumns.map((c) => (
+        <div class="col-header">
+          <span class="col-header-text">{c}</span>
+          <input class="col-header-input" type="text" maxlength="12" placeholder="お題を入力" aria-label="お題" hidden />
+        </div>
+      ))}
+    </div>
+
+    <div class="pick-grid" id="pick-grid">
+      {rows.map((row, rowIndex) => (
+        <div class="pick-row" style={`--row-tint: ${row.tint}`}>
+          <div class="pick-row-label">
+            {row.logo ? <img class="pick-row-logo" src={row.logo} alt={row.label} /> : row.subLabel ? (
+              <span class="pick-row-title">
+                <small>{row.subLabel}</small>
+                <strong style={row.labelScale ? `font-size: ${row.labelScale}em` : undefined}>{row.label}</strong>
+                <i style={row.accent ? `background: ${row.accent}` : undefined}></i>
+              </span>
+            ) : <span style={row.labelScale ? `font-size: ${row.labelScale}em` : undefined}>{row.label}</span>}
+          </div>
+          <div class="pick-row-cells">
+            {defaultColumns.map((c, colIndex) => (
+              <button
+                type="button"
+                class="pick-cell"
+                data-row={rowIndex}
+                data-col={colIndex}
+                aria-label={`${row.label} × ${c}`}
+              >
+                <span class="pick-cell-empty">+</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div class="picker-modal" id="picker-modal" hidden>
+    <div class="picker-modal-inner">
+      <div class="picker-modal-header">
+        <div>
+          <h2 id="picker-modal-title">曲を選ぶ</h2>
+          <span class="picker-modal-tag" id="picker-modal-tag"></span>
+        </div>
+        <button type="button" class="picker-modal-close" id="picker-modal-close" aria-label="閉じる">×</button>
+      </div>
+      <div class="picker-search-wrap">
+        <svg class="picker-search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+          <path d="M20 20L16.5 16.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <input type="search" id="picker-search" placeholder="曲名・タイアップ作品名で検索..." aria-label="曲名で検索" />
+      </div>
+      <ul class="picker-song-list" id="picker-song-list"></ul>
+      <p class="picker-modal-footer" id="picker-modal-footer"></p>
+    </div>
+  </div>
+
+  <div class="picker-modal" id="preview-modal" hidden>
+    <div class="picker-modal-inner preview-inner">
+      <div class="picker-modal-header">
+        <h2>プレビュー</h2>
+        <button type="button" class="picker-modal-close" id="preview-close" aria-label="閉じる">×</button>
+      </div>
+      <div class="preview-image-wrap">
+        <img id="preview-image" alt="生成されたMY PICK画像のプレビュー" />
+      </div>
+      <p class="preview-hint">この内容で保存できます。スマホでは画像を長押しして保存することもできます。</p>
+      <div class="preview-actions">
+        <button type="button" class="preview-button secondary" id="preview-back">修正する</button>
+        <button type="button" class="preview-button" id="preview-download">ダウンロード</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="pick-data" set:html={JSON.stringify({ rows, patterns, candidatesByGroup })} />
+</Layout>
+
+<script>
+  type PickCandidate = {
+    id: string;
+    title: string;
+    group: string;
+    date: string;
+    tieIn: string | null;
+    subject: string | null;
+    role: string | null;
+    coverSrc: string | null;
+  };
+  type Pattern = { id: string; label: string; columns: string[] };
+  type PickData = {
+    rows: {
+      group: string;
+      label: string;
+      tint: string;
+      logo?: string;
+      labelScale?: number;
+      subLabel?: string;
+      accent?: string;
+    }[];
+    patterns: Pattern[];
+    candidatesByGroup: Record<string, PickCandidate[]>;
+  };
+
+  const data: PickData = JSON.parse(document.getElementById("pick-data")!.textContent!);
+  const { rows, patterns, candidatesByGroup } = data;
+
+  const COLS = 3;
+
+  // 現在のお題パターン。「自分で設定」のときだけ customLabels(ユーザー入力)を使う。
+  // パターンを切り替えても picks(選んだ曲)は消さない。
+  let currentPattern: Pattern = patterns[0];
+  const customLabels: string[] = ["", "", ""];
+
+  function columnLabel(col: number): string {
+    const label = currentPattern.id === "custom" ? customLabels[col] : currentPattern.columns[col];
+    return label.trim() || `お題${col + 1}`;
+  }
+
+  // picks[row][col] = 選択中の曲id、未選択は null。
+  const picks: (string | null)[][] = rows.map(() => Array.from({ length: COLS }, () => null));
+
+  const pickerNameInput = document.getElementById("picker-name") as HTMLInputElement;
+  const generateButton = document.getElementById("generate-button") as HTMLButtonElement;
+  const resetButton = document.getElementById("reset-button") as HTMLButtonElement;
+  const cellButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(".pick-cell"));
+
+  const modal = document.getElementById("picker-modal") as HTMLDivElement;
+  const modalTitle = document.getElementById("picker-modal-title") as HTMLHeadingElement;
+  const modalTag = document.getElementById("picker-modal-tag") as HTMLSpanElement;
+  const modalClose = document.getElementById("picker-modal-close") as HTMLButtonElement;
+  const modalSearch = document.getElementById("picker-search") as HTMLInputElement;
+  const modalFooter = document.getElementById("picker-modal-footer") as HTMLParagraphElement;
+  const modalList = document.getElementById("picker-song-list") as HTMLUListElement;
+
+  const patternButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(".pattern-button"));
+  const headerCells = Array.from(document.querySelectorAll<HTMLDivElement>("#pick-col-headers .col-header"));
+
+  // お題の表示(見出し・各マスのaria-label)を現在のパターンに合わせる。
+  function renderHeaders() {
+    const isCustom = currentPattern.id === "custom";
+    headerCells.forEach((cell, i) => {
+      const text = cell.querySelector<HTMLSpanElement>(".col-header-text")!;
+      const input = cell.querySelector<HTMLInputElement>(".col-header-input")!;
+      text.hidden = isCustom;
+      input.hidden = !isCustom;
+      if (isCustom) {
+        input.value = customLabels[i];
+      } else {
+        text.textContent = currentPattern.columns[i];
+      }
+    });
+    updateCellLabels();
+  }
+
+  function updateCellLabels() {
+    cellButtons.forEach((button) => {
+      const row = Number(button.dataset.row);
+      const col = Number(button.dataset.col);
+      button.setAttribute("aria-label", `${rows[row].label} × ${columnLabel(col)}`);
+    });
+  }
+
+  patternButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const next = patterns.find((p) => p.id === button.dataset.pattern);
+      if (!next) return;
+      currentPattern = next;
+      patternButtons.forEach((b) => {
+        const active = b === button;
+        b.classList.toggle("is-active", active);
+        b.setAttribute("aria-pressed", String(active));
+      });
+      renderHeaders();
+      if (next.id === "custom") headerCells[0].querySelector<HTMLInputElement>(".col-header-input")!.focus();
+    });
+  });
+
+  headerCells.forEach((cell, i) => {
+    cell.querySelector<HTMLInputElement>(".col-header-input")!.addEventListener("input", (event) => {
+      customLabels[i] = (event.target as HTMLInputElement).value;
+      updateCellLabels();
+    });
+  });
+
+  function escapeHtml(str: string): string {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  let activeRow = -1;
+  let activeCol = -1;
+
+  function candidateById(id: string): PickCandidate | undefined {
+    for (const group of Object.keys(candidatesByGroup)) {
+      const found = candidatesByGroup[group].find((c) => c.id === id);
+      if (found) return found;
+    }
+    return undefined;
+  }
+
+  function renderCell(row: number, col: number) {
+    const button = cellButtons.find((b) => Number(b.dataset.row) === row && Number(b.dataset.col) === col)!;
+    const id = picks[row][col];
+    if (!id) {
+      button.innerHTML = `<span class="pick-cell-empty">+</span>`;
+      button.classList.remove("is-filled");
+      return;
+    }
+    const candidate = candidateById(id)!;
+    button.classList.add("is-filled");
+    button.innerHTML = `
+      ${
+        candidate.coverSrc
+          ? `<img class="pick-cell-cover" src="${candidate.coverSrc}" alt="" loading="lazy" />`
+          : `<span class="pick-cell-placeholder" aria-hidden="true">♪</span>`
+      }
+      <span class="pick-cell-title">${candidate.title}</span>
+    `;
+  }
+
+  function openPicker(row: number, col: number) {
+    activeRow = row;
+    activeCol = col;
+    modalTitle.textContent = `${rows[row].label} の楽曲を選択`;
+    modalTag.textContent = columnLabel(col);
+    modalSearch.value = "";
+    renderPickerList("");
+    modal.hidden = false;
+    modalSearch.focus();
+  }
+
+  function closePicker() {
+    modal.hidden = true;
+    activeRow = -1;
+    activeCol = -1;
+  }
+
+  // グリッド全体で同じ曲を重複選択できないようにする
+  // (名義ごとに候補が分かれているため実際には同じ行の中だけの制約になる)。
+  function usedElsewhere(id: string, row: number, col: number): boolean {
+    for (let r = 0; r < picks.length; r++) {
+      for (let c = 0; c < picks[r].length; c++) {
+        if (r === row && c === col) continue;
+        if (picks[r][c] === id) return true;
+      }
+    }
+    return false;
+  }
+
+  function renderPickerList(query: string) {
+    const group = rows[activeRow].group;
+    const all = candidatesByGroup[group];
+    const q = query.trim().toLowerCase();
+    const list = all.filter((c) => {
+      if (!q) return true;
+      const haystack = [c.title, c.tieIn, c.subject].filter(Boolean).join(" ").toLowerCase();
+      return haystack.includes(q);
+    });
+    modalFooter.textContent = `全${all.length}曲中${list.length}曲が見つかりました。`;
+
+    modalList.innerHTML = "";
+    const currentId = picks[activeRow][activeCol];
+
+    if (currentId) {
+      const clearLi = document.createElement("li");
+      const clearButton = document.createElement("button");
+      clearButton.type = "button";
+      clearButton.className = "picker-song-clear";
+      clearButton.textContent = "選択をクリア(空欄にする)";
+      clearButton.addEventListener("click", () => {
+        picks[activeRow][activeCol] = null;
+        renderCell(activeRow, activeCol);
+        closePicker();
+      });
+      clearLi.appendChild(clearButton);
+      modalList.appendChild(clearLi);
+    }
+
+    if (list.length === 0) {
+      const empty = document.createElement("li");
+      empty.className = "picker-song-empty";
+      empty.textContent = "該当する曲が見つかりませんでした。";
+      modalList.appendChild(empty);
+      return;
+    }
+
+    for (const candidate of list) {
+      const disabled = usedElsewhere(candidate.id, activeRow, activeCol);
+      const li = document.createElement("li");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "picker-song-item";
+      if (candidate.id === currentId) button.classList.add("is-current");
+      if (disabled) button.classList.add("is-disabled");
+      button.disabled = disabled;
+
+      // タイアップ情報(提供曲なら提供先アーティスト)があれば1行だけ添える。
+      const subtitleParts = [candidate.tieIn, candidate.subject ? `提供先: ${candidate.subject}` : null].filter(
+        (v): v is string => Boolean(v)
+      );
+
+      button.innerHTML = `
+        ${
+          candidate.coverSrc
+            ? `<img class="picker-song-cover" src="${candidate.coverSrc}" alt="" loading="lazy" />`
+            : `<span class="picker-song-cover picker-song-cover-placeholder" aria-hidden="true">♪</span>`
+        }
+        <span class="picker-song-body">
+          <span class="picker-song-title-row">
+            <span class="picker-song-title">${escapeHtml(candidate.title)}</span>
+            <span class="picker-song-date">${escapeHtml(candidate.date)}</span>
+          </span>
+          ${
+            subtitleParts.length > 0
+              ? `<span class="picker-song-subtitle">${escapeHtml(subtitleParts.join(" ・ "))}</span>`
+              : ""
+          }
+          ${disabled ? `<span class="picker-song-disabled-tag">他のマスで選択中</span>` : ""}
+        </span>
+      `;
+      button.addEventListener("click", () => {
+        if (disabled) return;
+        picks[activeRow][activeCol] = candidate.id;
+        renderCell(activeRow, activeCol);
+        closePicker();
+      });
+      li.appendChild(button);
+      modalList.appendChild(li);
+    }
+  }
+
+  cellButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      openPicker(Number(button.dataset.row), Number(button.dataset.col));
+    });
+  });
+
+  modalClose.addEventListener("click", closePicker);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) closePicker();
+  });
+  modalSearch.addEventListener("input", () => renderPickerList(modalSearch.value));
+
+  resetButton.addEventListener("click", () => {
+    if (!confirm("選んだ内容を全部リセットしますか？")) return;
+    for (let r = 0; r < picks.length; r++) {
+      for (let c = 0; c < picks[r].length; c++) {
+        picks[r][c] = null;
+        renderCell(r, c);
+      }
+    }
+  });
+
+  // =========================================
+  // 画像生成(Canvas API、サーバー不要)
+  // =========================================
+  // ページ上の見た目に合わせた寸法(1マス=正方形のジャケット)。
+  const PAD = 28;
+  const TITLE_H = 64;
+  const HEADER_H = 40;
+  const CELL = 200;
+  const CELL_GAP = 8;
+  const LABEL_W = 140;
+  const ROW_PAD = 12;
+  const ROW_GAP_Y = 14;
+  const FOOTER_H = 64;
+
+  function loadImage(src: string): Promise<HTMLImageElement | null> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+  }
+
+  // object-fit: cover相当のトリミング矩形を計算して描画する。
+  function drawImageCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, w: number, h: number) {
+    const imgRatio = img.width / img.height;
+    const boxRatio = w / h;
+    let sx: number, sy: number, sw: number, sh: number;
+    if (imgRatio > boxRatio) {
+      sh = img.height;
+      sw = sh * boxRatio;
+      sx = (img.width - sw) / 2;
+      sy = 0;
+    } else {
+      sw = img.width;
+      sh = sw / boxRatio;
+      sx = 0;
+      sy = (img.height - sh) / 2;
+    }
+    ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  }
+
+  function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function wrapTitle(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+    const lines: string[] = [];
+    let current = "";
+    for (const ch of text) {
+      const test = current + ch;
+      if (ctx.measureText(test).width > maxWidth && current) {
+        lines.push(current);
+        current = ch;
+      } else {
+        current = test;
+      }
+      if (lines.length === 2) break;
+    }
+    if (lines.length < 2 && current) lines.push(current);
+    return lines.slice(0, 2);
+  }
+
+  // 生成した画像のプレビュー(ダウンロード前の確認用)。
+  const previewModal = document.getElementById("preview-modal") as HTMLDivElement;
+  const previewImage = document.getElementById("preview-image") as HTMLImageElement;
+  const previewDownload = document.getElementById("preview-download") as HTMLButtonElement;
+  const previewClose = document.getElementById("preview-close") as HTMLButtonElement;
+  const previewBack = document.getElementById("preview-back") as HTMLButtonElement;
+  let previewUrl: string | null = null;
+
+  function closePreview() {
+    previewModal.hidden = true;
+    previewImage.removeAttribute("src");
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      previewUrl = null;
+    }
+  }
+
+  previewClose.addEventListener("click", closePreview);
+  previewBack.addEventListener("click", closePreview);
+  previewModal.addEventListener("click", (event) => {
+    if (event.target === previewModal) closePreview();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !previewModal.hidden) closePreview();
+  });
+  previewDownload.addEventListener("click", () => {
+    if (!previewUrl) return;
+    const a = document.createElement("a");
+    a.href = previewUrl;
+    a.download = "my-pick-oishi.png";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  });
+
+  generateButton.addEventListener("click", async () => {
+    generateButton.disabled = true;
+    generateButton.textContent = "生成中...";
+    try {
+      const rowW = ROW_PAD * 2 + LABEL_W + CELL_GAP + COLS * CELL + (COLS - 1) * CELL_GAP;
+      const rowH = CELL + ROW_PAD * 2;
+      const width = PAD * 2 + rowW;
+      const height = PAD * 2 + TITLE_H + HEADER_H + rows.length * rowH + (rows.length - 1) * ROW_GAP_Y + FOOTER_H;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d")!;
+
+      // ページ上の見た目(淡い背景・色付きの行・ロゴ入りラベル)をそのまま画像にする。
+      ctx.fillStyle = "#f9f7f2";
+      ctx.fillRect(0, 0, width, height);
+
+      // タイトル
+      ctx.textBaseline = "middle";
+      ctx.textAlign = "left";
+      ctx.font = "bold 34px sans-serif";
+      const titleY = PAD + TITLE_H / 2;
+      const titleHead = "MY PICK ";
+      ctx.fillStyle = "#2f2c28";
+      ctx.fillText(titleHead, PAD, titleY);
+      ctx.fillStyle = "#a67c5b";
+      ctx.fillText("オーイシ", PAD + ctx.measureText(titleHead).width, titleY);
+
+      const cellX = (c: number) => PAD + ROW_PAD + LABEL_W + CELL_GAP + c * (CELL + CELL_GAP);
+      const bodyTop = PAD + TITLE_H + HEADER_H;
+
+      // 列ヘッダー(お題)。長いお題(自分で設定など)はマス幅に収まるまで文字を小さくする。
+      ctx.textAlign = "center";
+      for (let i = 0; i < COLS; i++) {
+        const label = columnLabel(i);
+        let size = 16;
+        ctx.font = `bold ${size}px sans-serif`;
+        while (size > 10 && ctx.measureText(label).width > CELL - 16) {
+          size -= 1;
+          ctx.font = `bold ${size}px sans-serif`;
+        }
+        ctx.fillStyle = "#6f6a62";
+        ctx.fillText(label, cellX(i) + CELL / 2, PAD + TITLE_H + HEADER_H / 2);
+      }
+
+      // 事前に全カバー画像を読み込んでおく
+      const allCandidates = Object.values(candidatesByGroup).flat();
+      const imageCache = new Map<string, HTMLImageElement | null>();
+      await Promise.all(
+        allCandidates
+          .filter((c) => c.coverSrc)
+          .map(async (c) => {
+            imageCache.set(c.id, await loadImage(c.coverSrc!));
+          })
+      );
+
+      const logoCache = new Map<string, HTMLImageElement>();
+      await Promise.all(
+        rows
+          .filter((row) => row.logo)
+          .map(async (row) => {
+            const logo = await loadImage(row.logo!);
+            if (logo) logoCache.set(row.label, logo);
+          })
+      );
+
+      for (let r = 0; r < rows.length; r++) {
+        const rowTop = bodyTop + r * (rowH + ROW_GAP_Y);
+
+        // 行の背景(名義ごとの淡い色)
+        roundRectPath(ctx, PAD, rowTop, rowW, rowH, 16);
+        ctx.fillStyle = rows[r].tint;
+        ctx.fill();
+
+        // 行ラベル(名義)。ページ上と同じく、半透明の白い枠の中にロゴ(または文字)を横向きで置く。
+        const labelX = PAD + ROW_PAD;
+        const labelY = rowTop + ROW_PAD;
+        roundRectPath(ctx, labelX, labelY, LABEL_W, CELL, 10);
+        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.fill();
+        const rowLogo = logoCache.get(rows[r].label);
+        if (rowLogo) {
+          const scale = Math.min((LABEL_W - 20) / rowLogo.width, 100 / rowLogo.height);
+          const lw = rowLogo.width * scale;
+          const lh = rowLogo.height * scale;
+          ctx.save();
+          ctx.globalCompositeOperation = "multiply"; // 白背景のロゴが行の色になじむ(ページ上と同じ)
+          ctx.drawImage(rowLogo, labelX + (LABEL_W - lw) / 2, labelY + (CELL - lh) / 2, lw, lh);
+          ctx.restore();
+        } else if (rows[r].subLabel) {
+          // 文字ロゴ風: 英字の小見出し + 大きな太字 + 下線(ページ上の .pick-row-title と同じ構成)
+          const mainSize = Math.round(16 * (rows[r].labelScale ?? 1.4));
+          const cx = labelX + LABEL_W / 2;
+          const cy = labelY + CELL / 2;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.letterSpacing = "3px";
+          ctx.font = "bold 10px sans-serif";
+          ctx.fillStyle = "#6f6a62";
+          ctx.fillText(rows[r].subLabel!, cx + 1.5, cy - mainSize * 0.85);
+          ctx.letterSpacing = `${Math.round(mainSize * 0.1)}px`;
+          ctx.font = `bold ${mainSize}px sans-serif`;
+          ctx.fillStyle = "#2f2c28";
+          ctx.fillText(rows[r].label, cx + mainSize * 0.05, cy);
+          ctx.letterSpacing = "0px";
+          roundRectPath(ctx, cx - 18, cy + mainSize * 0.85, 36, 3, 1.5);
+          ctx.fillStyle = rows[r].accent ?? "#a67c5b";
+          ctx.fill();
+        } else {
+          const fontSize = Math.round(16 * (rows[r].labelScale ?? 1));
+          ctx.font = `bold ${fontSize}px sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = "#2f2c28";
+          const labelLines = wrapTitle(ctx, rows[r].label, LABEL_W - 20);
+          const labelLineH = fontSize * 1.4;
+          labelLines.forEach((line, li) => {
+            ctx.fillText(line, labelX + LABEL_W / 2, labelY + CELL / 2 + (li - (labelLines.length - 1) / 2) * labelLineH);
+          });
+        }
+
+        for (let c = 0; c < COLS; c++) {
+          const x = cellX(c);
+          const y = rowTop + ROW_PAD;
+          const id = picks[r][c];
+
+          if (!id) {
+            roundRectPath(ctx, x + 0.5, y + 0.5, CELL - 1, CELL - 1, 12);
+            ctx.fillStyle = "rgba(255,255,255,0.65)";
+            ctx.fill();
+            ctx.strokeStyle = "rgba(47,44,40,0.2)";
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 3]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = "#8a847b";
+            ctx.font = "28px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("+", x + CELL / 2, y + CELL / 2);
+            continue;
+          }
+
+          const candidate = candidateById(id)!;
+          const img = imageCache.get(id);
+
+          // ジャケットを枠いっぱいに(角丸クリップ + object-fit:cover相当)。
+          ctx.save();
+          roundRectPath(ctx, x, y, CELL, CELL, 12);
+          ctx.clip();
+          if (img) {
+            drawImageCover(ctx, img, x, y, CELL, CELL);
+          } else {
+            const grad = ctx.createLinearGradient(x, y, x + CELL, y + CELL);
+            grad.addColorStop(0, "#e5ded3");
+            grad.addColorStop(1, "#cfc3af");
+            ctx.fillStyle = grad;
+            ctx.fillRect(x, y, CELL, CELL);
+            ctx.fillStyle = "rgba(0,0,0,0.4)";
+            ctx.font = "40px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("♪", x + CELL / 2, y + CELL / 2);
+          }
+
+          // 画像下部を少し黒くして、そこに白字でタイトルを重ねる。
+          const overlayH = CELL * 0.46;
+          const overlay = ctx.createLinearGradient(0, y + CELL - overlayH, 0, y + CELL);
+          overlay.addColorStop(0, "rgba(0,0,0,0)");
+          overlay.addColorStop(1, "rgba(0,0,0,0.78)");
+          ctx.fillStyle = overlay;
+          ctx.fillRect(x, y + CELL - overlayH, CELL, overlayH);
+          ctx.restore();
+
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 14px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "alphabetic";
+          const lines = wrapTitle(ctx, candidate.title, CELL - 16);
+          const lineHeight = 17;
+          const startY = y + CELL - 12 - (lines.length - 1) * lineHeight;
+          lines.forEach((line, li) => {
+            ctx.fillText(line, x + CELL / 2, startY + li * lineHeight);
+          });
+        }
+      }
+
+      // フッター
+      const name = pickerNameInput.value.trim() || "ゲスト";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#2f2c28";
+      ctx.font = "bold 18px sans-serif";
+      ctx.fillText(`Picked by ${name}`, PAD, height - PAD - FOOTER_H / 2 + 6);
+      ctx.font = "13px sans-serif";
+      ctx.fillStyle = "#6f6a62";
+      ctx.fillText("014-funsite.vercel.app/minigames/my-pick", PAD, height - PAD - FOOTER_H / 2 + 28);
+
+      const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+      if (!blob) throw new Error("画像の生成に失敗しました");
+      // いきなりダウンロードせず、まずプレビューを見せてから保存してもらう。
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      previewUrl = URL.createObjectURL(blob);
+      previewImage.src = previewUrl;
+      previewModal.hidden = false;
+      previewDownload.focus({ preventScroll: true });
+    } catch (err) {
+      alert("画像の生成に失敗しました。時間をおいて再度お試しください。");
+      console.error(err);
+    } finally {
+      generateButton.disabled = false;
+      generateButton.textContent = "画像を生成";
+    }
+  });
+</script>
+
+<style is:global>
+  /*
+    このページのグリッドセル・曲選択リストの中身はクライアントJS側で
+    innerHTML経由で動的に生成している。Astroのスコープ付きCSSは
+    ビルド時にテンプレート内の要素へ data-astro-cid-* を付与する方式のため、
+    実行時に生成した要素にはスコープ属性が付かず、通常の<style>だと
+    これらのクラスに対するスタイルが一切当たらない(実際、画像が
+    width/height指定を無視して元サイズのまま表示される不具合が発生した)。
+    そのためこのページ全体のスタイルは is:global にして確実に当てる。
+    クラス名は my-pick 固有のものだけを使っているため、他ページとの
+    衝突は無い。
+  */
+  .note {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .pick-hero {
+    margin: 0.5rem 0 1.5rem;
+    text-align: center;
+  }
+
+  .pick-hero-eyebrow {
+    margin: 0 0 0.35rem;
+    color: var(--color-accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .pick-hero-title {
+    margin: 0 0 0.75rem;
+    font-size: 2rem;
+  }
+
+  .pick-hero-title span {
+    background: linear-gradient(120deg, var(--color-accent), #c99a6c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .pick-hero-lead {
+    max-width: 640px;
+    margin: 0 auto 0.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .pick-hero-note {
+    max-width: 640px;
+    margin: 0 auto;
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+  }
+
+  .pick-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.25rem;
+    margin: 0 0 1rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    box-shadow: 0 4px 16px rgba(47, 44, 40, 0.05);
+  }
+
+  .name-field {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  .name-field-label {
+    white-space: nowrap;
+  }
+
+  .name-field input {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    font-family: inherit;
+    width: 12rem;
+    max-width: 40vw;
+  }
+
+  .name-field-hint {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    flex: 1 1 auto;
+  }
+
+  .pick-toolbar-buttons {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  #generate-button {
+    padding: 0.55rem 1.5rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: var(--color-surface);
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  #generate-button:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  #reset-button {
+    padding: 0.55rem 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .pick-grid-wrap {
+    overflow-x: auto;
+    margin-bottom: 2rem;
+  }
+
+  .pick-row-label-spacer {
+    flex: 0 0 140px;
+  }
+
+  .pick-col-headers {
+    display: flex;
+    gap: 0.5rem;
+    min-width: 640px;
+    max-width: 848px;
+    margin-inline: auto;
+    padding: 0 0.75rem;
+    margin-bottom: 0.6rem;
+    box-sizing: border-box;
+  }
+
+  .col-header {
+    flex: 1 1 0;
+    min-width: 150px;
+    max-width: 220px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    font-weight: 700;
+  }
+
+  .col-header-text[hidden],
+  .col-header-input[hidden] {
+    display: none;
+  }
+
+  .col-header-input {
+    width: 100%;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--color-text);
+    box-sizing: border-box;
+  }
+
+  .col-header-input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 20%, transparent);
+  }
+
+  .pick-patterns {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0 0 1.75rem;
+  }
+
+  .pattern-button {
+    padding: 0.5rem 1.1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .pattern-button.is-active {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-surface);
+  }
+
+  .pick-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    min-width: 640px;
+    max-width: 848px;
+    margin-inline: auto;
+  }
+
+  .pick-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-radius: 16px;
+    background: var(--row-tint, var(--color-surface));
+  }
+
+  .pick-row-label {
+    flex: 0 0 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 150px;
+    padding: 0.5rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.55);
+    text-align: center;
+    font-weight: 700;
+    color: var(--color-text);
+    box-sizing: border-box;
+  }
+
+  .pick-row-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .pick-row-title small {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--color-text-muted);
+  }
+
+  .pick-row-title strong {
+    letter-spacing: 0.1em;
+    line-height: 1.1;
+  }
+
+  .pick-row-title i {
+    display: block;
+    width: 2.2rem;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--color-accent);
+  }
+
+  .pick-row-logo {
+    display: block;
+    width: 100%;
+    max-height: 100px;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+  }
+
+
+  .pick-row-cells {
+    display: flex;
+    gap: 0.5rem;
+    flex: 1;
+  }
+
+  .pick-cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 0;
+    min-width: 150px;
+    max-width: 220px;
+    aspect-ratio: 1 / 1;
+    padding: 0;
+    overflow: hidden;
+    border: 1px dashed rgba(47, 44, 40, 0.2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.65);
+    cursor: pointer;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .pick-cell:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(47, 44, 40, 0.08);
+  }
+
+  .pick-cell.is-filled {
+    border-style: solid;
+    border-color: transparent;
+    background: var(--color-surface);
+    box-shadow: 0 2px 8px rgba(47, 44, 40, 0.08);
+  }
+
+  .pick-cell-empty {
+    font-size: 1.5rem;
+    color: var(--color-text-muted);
+  }
+
+  .pick-cell-cover {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .pick-cell-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #e5ded3, #cfc3af);
+    color: rgba(0, 0, 0, 0.4);
+    font-size: 1.8rem;
+  }
+
+  .pick-cell-title {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0.5rem 0.5rem 0.4rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.32) 65%, rgba(0, 0, 0, 0));
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: center;
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .picker-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(47, 44, 40, 0.45);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    padding: 1rem;
+  }
+
+  .picker-modal[hidden] {
+    display: none;
+  }
+
+  .preview-inner {
+    max-width: 480px;
+  }
+
+  .preview-image-wrap {
+    display: flex;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  /*
+    縦長の画像でもスクロールせず全体が見えるよう、高さ基準で収める。
+    枠の背景色は付けず、画像そのものに角丸を付ける(枠だけが画像より
+    横に広がって、左右に余計な暗い帯が出るのを防ぐ)。
+    背の低い画面ではモーダル全体に収まるよう、上限を画面の高さから逆算する。
+  */
+  .preview-image-wrap img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: max(160px, min(60vh, calc(85vh - 230px)));
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(47, 44, 40, 0.18);
+  }
+
+  .preview-hint {
+    margin: 0.75rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    text-align: center;
+  }
+
+  .preview-actions {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 0.9rem;
+  }
+
+  .preview-button {
+    flex: 1;
+    padding: 0.65rem 1rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: var(--color-surface);
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .preview-button.secondary {
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text-muted);
+  }
+
+  .picker-modal-inner {
+    width: 100%;
+    max-width: 620px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-surface);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-sizing: border-box;
+    box-shadow: 0 20px 60px rgba(47, 44, 40, 0.25);
+  }
+
+  .picker-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .picker-modal-header h2 {
+    margin: 0 0 0.35rem;
+    font-size: 1.25rem;
+  }
+
+  .picker-modal-tag {
+    display: inline-block;
+    padding: 0.15rem 0.75rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-accent) 15%, var(--color-surface));
+    color: var(--color-accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .picker-modal-close {
+    flex: none;
+    border: none;
+    background: transparent;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--color-text-muted);
+  }
+
+  .picker-search-wrap {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+
+  .picker-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+
+  #picker-search {
+    width: 100%;
+    padding: 0.7rem 1rem 0.7rem 2.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+  }
+
+  #picker-search:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 20%, transparent);
+  }
+
+  .picker-song-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+  }
+
+  .picker-song-clear {
+    width: 100%;
+    padding: 0.6rem 0.9rem;
+    margin-bottom: 0.6rem;
+    border: 1px dashed var(--color-border);
+    border-radius: 12px;
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .picker-song-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.6rem 0.75rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: var(--color-surface);
+    box-shadow: 0 2px 8px rgba(47, 44, 40, 0.05);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: box-shadow 150ms ease, transform 150ms ease;
+  }
+
+  .picker-song-item:hover:not(.is-disabled) {
+    box-shadow: 0 4px 14px rgba(47, 44, 40, 0.1);
+  }
+
+  .picker-song-item.is-current {
+    border-color: var(--color-accent);
+  }
+
+  .picker-song-item.is-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .picker-song-cover {
+    flex: none;
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .picker-song-cover-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #e5ded3, #cfc3af);
+    color: rgba(0, 0, 0, 0.4);
+    font-size: 1.2rem;
+  }
+
+  .picker-song-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .picker-song-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .picker-song-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .picker-song-date {
+    flex: none;
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+  }
+
+  .picker-song-subtitle {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .picker-song-disabled-tag {
+    font-size: 0.7rem;
+    color: var(--color-accent);
+  }
+
+  .picker-song-empty {
+    padding: 1rem;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+  }
+
+  .picker-modal-footer {
+    margin: 0.75rem 0 0;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+  }
+</style>
