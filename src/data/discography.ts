@@ -2498,6 +2498,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "sugar-salt",
     image: "sugar-salt",
     description: "2026年10月6日放送開始のTVアニメ『塩対応の佐藤さんが俺にだけ甘い』のオープニングテーマとして書き下ろされた新曲。作詞・作曲・編曲は大石昌良。",
+    youtube: "https://youtu.be/8XgKVzuLmJw",
   },
   {
     group: "オーイシマサヨシ",
