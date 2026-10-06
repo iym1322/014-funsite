@@ -131,6 +131,7 @@ export const schedule: ScheduleEvent[] = [
   { date: "2026-11-01", title: "大分大学「2026 蒼稜祭 Special Live」", type: "live", sourceUrl: officialLiveSchedule },
   { date: "2026-11-07", title: "日本福祉大学「第74回福祉大学祭」", type: "live", note: "美浜キャンパス 文化ホール", sourceUrl: "https://www.014014.jp/news/7669" },
   { date: "2026-11-08", title: "静岡産業大学「第28回鳳翔祭」", type: "live", note: "藤枝キャンパス", sourceUrl: "https://www.014014.jp/news/7669" },
+  { date: "2026-11-14", title: "「嗚呼、素晴らしき日常」発売記念フリーライブ", type: "event", note: "セブンパーク天美", sourceUrl: "https://www.014014.jp/news/8007" },
   { date: "2026-11-21", title: "ANIMAX MUSIX 2026 supported by Lemino", type: "live", sourceUrl: officialLiveSchedule },
   { date: "2026-11-28", title: "配信者ハイパーゲーム大会 FINAL [DAY1]", type: "event", note: "東京ドーム。テーマソング制作担当・出演決定", sourceUrl: "https://www.014014.jp/news/7938" },
   { date: "2026-11-29", title: "配信者ハイパーゲーム大会 FINAL [DAY2]", type: "event", note: "東京ドーム。テーマソング制作担当・出演決定", sourceUrl: "https://www.014014.jp/news/7938" },
