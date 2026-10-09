@@ -112,6 +112,7 @@ export const schedule: ScheduleEvent[] = [
   { date: "2026-08-26", title: "「仮歌Ⅲ」CD・配信リリース", type: "release", href: "/works/kagauta-3" },
   { date: "2026-08-30", title: "「仮歌Ⅲ」発売記念フリーライブ", type: "event", note: "神奈川", sourceUrl: officialLiveSchedule },
   { date: "2026-09-05", title: "「仮歌Ⅲ」発売記念フリーライブ", type: "event", note: "岡山", sourceUrl: officialLiveSchedule },
+  { date: "2026-09-04", title: "「ポケモンオールスターズ1025」フルコーラス版配信リリース", type: "release", href: "/works/pokemon-all-stars-1025-full" },
   { date: "2026-09-06", title: "AZUR LANE MUSI9 FES. SPECIAL MUSI9 LIVE", type: "live", sourceUrl: officialLiveSchedule },
   { date: "2026-09-09", title: "「嗚呼、素晴らしき日常」CD・配信リリース", type: "release", note: "大石昌良名義", href: "/works/aa-subarashiki-nichijou" },
   { date: "2026-09-19", title: "「仮歌Ⅲ」発売記念フリーライブ＆特典会", type: "event", note: "イオンモール豊川", sourceUrl: "https://www.014014.jp/news/7890" },
