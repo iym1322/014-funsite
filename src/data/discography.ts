@@ -2440,7 +2440,7 @@ const raw: Omit<Track, "sortDate">[] = [
     tieIn: "『花織さんは転生しても喧嘩がしたい』オープニングテーマ",
     slug: "high-maintenance-girl",
     image: "high-maintenance-girl",
-    description: "TVアニメ『花織さんは転生しても喧嘩がしたい』のオープニングテーマ。主人公目線で描かれるハイテンションなバンドサウンドが特徴。",
+    description: "TVアニメ『花織さんは転生しても喧嘩がしたい』のオープニングテーマ。主人公目線で描かれるハイテンションなバンドサウンドが特徴。「シュガーソルト」とのカップリングで2026年12月2日にCD化された。",
     youtube: "https://www.youtube.com/watch?v=WvFsPFtAojs",
     appleMusic: "https://music.apple.com/jp/album/6781168860",
     spotify: "https://open.spotify.com/track/08wiYF42f2wVoEW0xZfzAl",
@@ -2497,7 +2497,7 @@ const raw: Omit<Track, "sortDate">[] = [
     tieIn: "TVアニメ『塩対応の佐藤さんが俺にだけ甘い』オープニングテーマ",
     slug: "sugar-salt",
     image: "sugar-salt",
-    description: "2026年10月6日放送開始のTVアニメ『塩対応の佐藤さんが俺にだけ甘い』のオープニングテーマとして書き下ろされた新曲。作詞・作曲・編曲は大石昌良。",
+    description: "2026年10月6日放送開始のTVアニメ『塩対応の佐藤さんが俺にだけ甘い』のオープニングテーマとして書き下ろされた新曲。作詞・作曲・編曲は大石昌良。「ハイメンテナンスガール」とのカップリングで2026年12月2日にCD化された。",
     youtube: "https://youtu.be/8XgKVzuLmJw",
   },
   {
