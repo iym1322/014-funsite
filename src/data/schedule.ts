@@ -147,6 +147,7 @@ export const schedule: ScheduleEvent[] = [
 
   // 2027（現時点で発表済みの予定）
   { date: "2027-01-30", title: "スガ シカオ 30th ANNIVERSARY TOUR 2027 “ACOUSTIC SUPERNOVA” 宮城公演", type: "live", note: "トークネットホール仙台(大石昌良ゲスト出演)", sourceUrl: "https://www.014014.jp/news/7932" },
+  { date: "2027-03-13", title: "ANISAMA FUKUOKA 2027", type: "live", note: "みずほPayPayドーム福岡(オーイシマサヨシの出演は3/13のみ)", sourceUrl: "https://www.014014.jp/news/8091" },
   { date: "2027-02-27", title: "オーイシ横アリ Day1", type: "live", note: "横浜アリーナ", sourceUrl: officialLiveSchedule },
   { date: "2027-02-28", title: "オーイシ横アリ Day2", type: "live", note: "横浜アリーナ", sourceUrl: officialLiveSchedule },
   { date: "2027-10-23", title: "オーイシ武道館 Vol.4", type: "live", note: "日本武道館", sourceUrl: "https://www.014014.jp/news/8002" },
