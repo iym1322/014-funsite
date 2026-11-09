@@ -579,6 +579,7 @@ const liveRecordedOverrides: Record<string, boolean> = {
   "hero-impossible-kariuta": true, // ヒーローインポッシボー
   "hey-hey-sound-schedule": true, // ヘイ！ヘイ！
   "high-maintenance-girl": true, // ハイメンテナンスガール
+  "highest-oxt": true, // HIGHEST
   "highlight-sound-schedule": true, // ハイライト
   "hito-no-ko-futari": true, // 人の子ふたり
   "hoeru-inu-to-kimi": true, // 吠える犬と君
@@ -630,6 +631,7 @@ const liveRecordedOverrides: Record<string, boolean> = {
   "mother-complex": true, // マザーコンプレックス
   "moyase-bonnou": true, // 燃やせ煩悩
   "namara-menkoi-gal": true, // なまらめんこいギャル
+  "namida-ga-tomaranai": true, // 涙が止まらない
   "nante-colorful-na-sekai-kariuta-3": true, // なんてカラフルな世界！(仮歌III/オーイシマサヨシ名義セルフカバー版)
   "nemurenu-machi-no-boogieman-dance": true, // 眠れぬ街のブギーマンダンス
   "ningen": true, // ニンゲン
@@ -2207,8 +2209,11 @@ const raw: Omit<Track, "sortDate">[] = [
     date: "2018.05.23",
     title: "ぜんぶ君のせいだ",
     note: "「オトモダチフィルム」のカップリング曲。",
-    description: "シングル「オトモダチフィルム」のカップリング曲。恋心を自覚していく戸惑いを描いたラブソング。",
     slug: "zenbu-kimi-no-seida",
+    image: "otomodachi-film",
+    description: "シングル「オトモダチフィルム」のカップリング曲。恋心を自覚していく戸惑いを描いたラブソング。",
+    appleMusic: "https://music.apple.com/jp/song/%E3%81%9C%E3%82%93%E3%81%B6%E5%90%9B%E3%81%AE%E3%81%9B%E3%81%84%E3%81%A0/1374072399",
+    spotify: "https://open.spotify.com/intl-ja/track/51rnqMVO0RmOo9ITwi5vTs",
   },
   {
     group: "オーイシマサヨシ",
@@ -2399,8 +2404,11 @@ const raw: Omit<Track, "sortDate">[] = [
     date: "2022.06.01",
     title: "しあわせチャンピョン",
     note: "「恋はエクスプロージョン」のカップリング曲。",
-    description: "シングル「恋はエクスプロージョン」のカップリング曲。大切な人の門出を祝う温かな一曲。",
     slug: "shiawase-champion",
+    image: "koi-wa-explosion",
+    description: "シングル「恋はエクスプロージョン」のカップリング曲。大切な人の門出を祝う温かな一曲。",
+    appleMusic: "https://music.apple.com/jp/song/%E3%81%97%E3%81%82%E3%82%8F%E3%81%9B%E3%83%81%E3%83%A3%E3%83%B3%E3%83%94%E3%83%A7%E3%83%B3/1624660728",
+    spotify: "https://open.spotify.com/intl-ja/track/601bekRBqgiHSUHrcBcXAq",
   },
   {
     group: "オーイシマサヨシ",
@@ -2720,7 +2728,7 @@ const raw: Omit<Track, "sortDate">[] = [
     slug: "sugar-salt",
     image: "sugar-salt",
     description: "2026年10月6日放送開始のTVアニメ『塩対応の佐藤さんが俺にだけ甘い』のオープニングテーマとして書き下ろされた新曲。作詞・作曲・編曲は大石昌良。",
-    youtube: "https://youtu.be/8XgKVzuLmJw",
+    youtube: "https://www.youtube.com/watch?v=_7O9YnwO3d4",
     appleMusic: "https://music.apple.com/jp/album/%E3%82%B7%E3%83%A5%E3%82%AC%E3%83%BC%E3%82%BD%E3%83%AB%E3%83%88/6810886176?i=6810886177",
   },
   {
@@ -4507,6 +4515,233 @@ export const liveShows: LiveShow[] = [
     ],
   },
 
+  // --- 大石昌良(フェス・ゲスト出演・コラボ。LiveFansのセットリスト投稿情報に基づく。
+  // 他アーティストの持ち歌や単発カバーは除き、大石昌良本人の持ち歌のみを記録している ---
+  {
+    title: "SOUND CONNECTION -Acoustic Sessions-",
+    date: "2026.07.04",
+    venue: "大阪城野外音楽堂",
+    note: "LiveFansのセットリスト投稿情報に基づく(スガシカオとの対バン。大石昌良の持ち歌のみ記録)。",
+    setlist: [
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "ボーダーライン", slug: "border-line" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+    ],
+  },
+  {
+    title: "大石昌良(中野サンプラザホール)",
+    date: "2019.12.24",
+    venue: "中野サンプラザホール",
+    note: "LiveFansのセットリスト投稿情報に基づく(東京公演のみ。特定のツアー名は付されていない)。",
+    setlist: [
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "鍵っ子ノエル", slug: "kagikko-noel" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "ボーダーライン", slug: "border-line" },
+      { title: "おはよう", slug: "ohayou-oishi" },
+      { title: "別れの種だね", slug: "wakare-no-tanedane" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "オトモダチフィルム", slug: "otomodachi-film" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+      { title: "ストーリー", slug: "story" },
+    ],
+  },
+  {
+    title: "CLUB014限定!大石昌良クリスマスディナーショー",
+    date: "2024.12.15",
+    venue: "LDH kitchen THE TOKYO HANEDA",
+    note: "LiveFansのセットリスト投稿情報に基づく。カバー曲は除く。",
+    setlist: [
+      { title: "ユートピア", slug: "utopia" },
+      { title: "ストーリー", slug: "story" },
+      { title: "うしろのしょうめん", slug: "ushiro-no-shoumen" },
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+    ],
+  },
+  {
+    title: "大柴広己presentsマイク一本の弾き語りフェス「SSW23」",
+    date: "2023.11.25",
+    venue: "",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+    ],
+  },
+  {
+    title: "Yamaha Acoustic Mind 2022 ～PREMIUM～",
+    date: "2022.10.23",
+    venue: "ヤマハホール",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "ボーダーライン", slug: "border-line" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+    ],
+  },
+  {
+    title: "ネコフェス後夜祭(2022)",
+    date: "2022.06.27",
+    venue: "",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "ちょっとだけ", slug: "chotto-dake" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+    ],
+  },
+  {
+    title: "ネコフェス後夜祭(2021)",
+    date: "2021.06.28",
+    venue: "神戸ART HOUSE",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "ボーダーライン", slug: "border-line" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+    ],
+  },
+  {
+    title: "おおいしめじ。感動の再会ライブ!",
+    date: "2020.12.05",
+    venue: "オンラインライブ",
+    note: "LiveFansのセットリスト投稿情報に基づく(さくらしめじとの対バン。大石昌良の持ち歌のみ記録)。",
+    setlist: [
+      { title: "キウイ畑の宇宙船", slug: "kiwi-batake-no-uchuusen" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "ボーダーライン", slug: "border-line" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "涙が止まらない", slug: "namida-ga-tomaranai" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+    ],
+  },
+  {
+    title: "CLUB014限定!オンラインミーティング",
+    date: "2020.09.20",
+    venue: "Streaming+",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "東京ループ", slug: "tokyo-loop" },
+      { title: "海を見ていた ぼくは", slug: "umi-wo-miteita-boku-wa" },
+      { title: "キウイ畑の宇宙船", slug: "kiwi-batake-no-uchuusen" },
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "ボーダーライン", slug: "border-line" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+    ],
+  },
+  {
+    title: "CLUB014限定!2018クリスマススペシャルイベントin大阪",
+    date: "2018.12.17",
+    venue: "Music Club JANUS",
+    note: "LiveFansのセットリスト投稿情報に基づく。カバー曲は除く。",
+    setlist: [
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+    ],
+  },
+  {
+    title: "高槻魂!!2016",
+    date: "2016.07.24",
+    venue: "",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+    ],
+  },
+  {
+    title: "UNCHAIN presents Mr.VIRUSOUL ～8th Operation～(ゲスト出演)",
+    date: "2016.03.05",
+    venue: "新代田FEVER",
+    note: "LiveFansのセットリスト投稿情報に基づく。カバー曲は除く。",
+    setlist: [
+      { title: "別れの種だね", slug: "wakare-no-tanedane" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+    ],
+  },
+  {
+    title: "大柴広己presents「SSW15」SINGER SONG WRITERS 2015",
+    date: "2015.10.24",
+    venue: "",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+    ],
+  },
+  {
+    title: "KANSAI LOVERS 2015",
+    date: "2015.09.23",
+    venue: "大阪城野外音楽堂",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+    ],
+  },
+  {
+    title: "柏 ヒキガタリのモノガタリ 冬編",
+    date: "2015.02.21",
+    venue: "柏PALOOZA",
+    note: "LiveFansのセットリスト投稿情報に基づく。カバー曲は除く。",
+    setlist: [
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "不可侵領域デストロイヤー", slug: "fukashin-ryouiki-destroyer-kariuta" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "うしろのしょうめん", slug: "ushiro-no-shoumen" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+    ],
+  },
+  {
+    title: "J-WAVE 25th ANNIVERSARY TOKYO Guitar Jamboree",
+    date: "2013.04.20",
+    venue: "両国国技館",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "おはよう", slug: "ohayou-oishi" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+    ],
+  },
+
   // --- Sound Schedule(単独ライブのみ。ネコフェス/KANSAI LOVERS/MINAMI WHEEL等の
   // フェス出演・ゲスト出演は対象外)。LiveFansのセットリスト投稿情報に基づく。
   // 各ツアーとも複数都市を回るが、セットリスト登録のある代表1公演のみを記録 ---
@@ -5045,6 +5280,174 @@ export const liveShows: LiveShow[] = [
     ],
   },
 
+  // --- Sound Schedule(フェス・ゲスト出演。LiveFansのセットリスト投稿情報に基づく。
+  // 「リハ:」「リハ1:」表記は本編前の確認演奏だが、曲が演奏されたこと自体は記録として残す ---
+  {
+    title: "ネコフェス2025 -KUDAKENEKO ROCK FESTIVAL-",
+    date: "2025.11.01",
+    venue: "GLION ARENA KOBE",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "ヘイ!ヘイ!", slug: "hey-hey-sound-schedule" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "幼なじみ", slug: "osananajimi" },
+    ],
+  },
+  {
+    title: "KANSAI LOVERS 2022〜15th Anniversary〜 再会",
+    date: "2022.09.23",
+    venue: "大阪城野外音楽堂",
+    note: "LiveFansのセットリスト投稿情報に基づく。「リハ1:幼なじみ」は本編前の確認演奏。",
+    setlist: [
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "ハイライト", slug: "highlight-sound-schedule" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+    ],
+  },
+  {
+    title: "ネコフェス2022 -KUDAKENEKO ROCK FESTIVAL-",
+    date: "2022.06.26",
+    venue: "ネコフェス2022会場(神戸VARIT./チキンジョージ/ART HOUSE/KOBE BLUEPORT)",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "愛のかたち", slug: "ai-no-katachi" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "グッドタイムコミュニケーション", slug: "good-time-communication" },
+    ],
+  },
+  {
+    title: "ネコフェス2021",
+    date: "2021.06.27",
+    venue: "神戸チキンジョージ",
+    note: "LiveFansのセットリスト投稿情報に基づく。「リハ:ことばさがし」は本編前の確認演奏。",
+    setlist: [
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" },
+      { title: "スペシャルナンバー", slug: "special-number" },
+      { title: "今ココにあるもの", slug: "ima-koko-ni-aru-mono" },
+    ],
+  },
+  {
+    title: "ネコフェス2017 くだけねこロックフェスティバル",
+    date: "2017.06.25",
+    venue: "ネコフェス2017会場(神戸VARIT.他)",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "ミラクル", slug: "miracle-sound-schedule" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "タイムマシーン", slug: "time-machine" },
+      { title: "ヘイ!ヘイ!", slug: "hey-hey-sound-schedule" },
+    ],
+  },
+  {
+    title: "ネコフェス2016 くだけねこロックフェスティバル",
+    date: "2016.06.26",
+    venue: "ネコフェス2016会場(神戸VARIT.他)",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "グッドタイムコミュニケーション", slug: "good-time-communication" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "ミラクル", slug: "miracle-sound-schedule" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+    ],
+  },
+  {
+    title: "ネコフェス2015 -KUDAKENEKO ROCK FESTIVAL 2015-",
+    date: "2015.06.28",
+    venue: "ネコフェス2015会場(神戸VARIT.他)",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+    ],
+  },
+  {
+    title: "ア・ル・カ・ラ LIVE DVD \"20141207\" 発売記念ツアー「ついに来てしまいましたTOUR2015」(ゲスト出演)",
+    date: "2015.03.25",
+    venue: "味園ユニバース",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "コモリウタ", slug: "komoriuta" },
+      { title: "ちょっとだけ", slug: "chotto-dake" },
+      { title: "竜巻", slug: "tatsumaki" },
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" },
+      { title: "今ココにあるもの", slug: "ima-koko-ni-aru-mono" },
+    ],
+  },
+  {
+    title: "ネコフェス2014 -KUDAKENEKO ROCK FESTIVAL 2014-",
+    date: "2014.06.29",
+    venue: "ネコフェス2014会場(神戸VARIT.他)",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "僕らの行方", slug: "bokura-no-yukue" },
+      { title: "ヘイ!ヘイ!", slug: "hey-hey-sound-schedule" },
+    ],
+  },
+  {
+    title: "吉川Family Presents『僕らの街から』Vol.5(ゲスト出演)",
+    date: "2013.10.06",
+    venue: "札幌ビジュアルアーツ 大通公園ホール",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "スペシャルナンバー", slug: "special-number" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+    ],
+  },
+  {
+    title: "KANSAI LOVERS 2013",
+    date: "2013.09.23",
+    venue: "大阪城野外音楽堂",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "ヘイ!ヘイ!", slug: "hey-hey-sound-schedule" },
+      { title: "僕らの逃避行", slug: "bokura-no-touhikou" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+    ],
+  },
+  {
+    title: "神戸ライブサーキットイベント ネコフェス2013",
+    date: "2013.06.30",
+    venue: "神戸ライブサーキットイベント会場(神戸ART HOUSE他)",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "スペシャルナンバー", slug: "special-number" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+    ],
+  },
+
   // --- OxT(単独ライブのみ。ANIMAX MUSIX/Animelo Summer Live/P's LIVE!等の
   // フェス・対バン出演、MYTH & ROIDとのツーマンライブは対象外)。
   // LiveFansのセットリスト投稿情報に基づく ---
@@ -5187,6 +5590,246 @@ export const liveShows: LiveShow[] = [
       { title: "UNION", slug: "union-oxt" },
       { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
       { title: "Hello New World", slug: "hello-new-world" },
+    ],
+  },
+
+  // --- OxT(フェス・ゲスト出演。LiveFansのセットリスト投稿情報に基づく。
+  // 他アーティストとの合同フェスでは、OxTの持ち歌のみを抽出して記録している ---
+  {
+    title: "FLOW THE FESTIVAL 2025",
+    date: "2025.06.15",
+    venue: "ぴあアリーナMM(メインステージ)",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "STRIDER'S HIGH", slug: "striders-high" },
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "UNION", slug: "union-oxt" },
+      { title: "HOLLOW HUNGER", slug: "hollow-hunger" },
+      { title: "HIGHEST", slug: "highest-oxt" },
+    ],
+  },
+  {
+    title: "Animelo Summer Live 2023 -AXEL-",
+    date: "2023.08.25",
+    venue: "さいたまスーパーアリーナ",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "HIGHEST", slug: "highest-oxt" },
+      { title: "HOLLOW HUNGER", slug: "hollow-hunger" },
+    ],
+  },
+  {
+    title: "GRANRODEO 15th ANNIVERSARY FES ROUND GR 2020",
+    date: "2021.02.28",
+    venue: "東京ガーデンシアター(ONLINE)",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "変幻自在のマジカルスター" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "STRIDER'S HIGH", slug: "striders-high" },
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "ゴールデンアフタースクール", slug: "golden-after-school" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+      { title: "UNION", slug: "union-oxt" },
+    ],
+  },
+  {
+    title: "オダイバ!!超次元音楽祭-ヨコハマからハッピーバレンタインフェス2021-",
+    date: "2021.02.13",
+    venue: "ぴあアリーナMM",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "UNION", slug: "union-oxt" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+    ],
+  },
+  {
+    title: "P's LIVE! -Boys Side-",
+    date: "2020.10.17",
+    venue: "舞浜アンフィシアター",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "ゴールデンアフタースクール", slug: "golden-after-school" },
+      { title: "変幻自在のマジカルスター" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+    ],
+  },
+  {
+    title: "uP!!!SPECIAL BANQUET vol.2",
+    date: "2020.02.06",
+    venue: "EX THEATER ROPPONGI",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+      { title: "One Hand Message", slug: "one-hand-message" },
+      { title: "GO CRY GO", slug: "go-cry-go" },
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "STRIDER'S HIGH", slug: "striders-high" },
+      { title: "Everlasting Dream", slug: "everlasting-dream" },
+      { title: "UNION", slug: "union-oxt" },
+    ],
+  },
+  {
+    title: "ANIMAX MUSIX 2019 YOKOHAMA",
+    date: "2019.11.23",
+    venue: "横浜アリーナ",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "真赤な誓い" },
+      { title: "GHOST SWEEPER" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+      { title: "ゴールデンアフタースクール", slug: "golden-after-school" },
+      { title: "UNION", slug: "union-oxt" },
+    ],
+  },
+  {
+    title: "アニソン!プレミアム!Fes.",
+    date: "2019.11.15",
+    venue: "NHKホール",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "UNION", slug: "union-oxt" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+    ],
+  },
+  {
+    title: "Animelo Summer Live 2019 -STORY-",
+    date: "2019.09.01",
+    venue: "さいたまスーパーアリーナ",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "Hands", slug: "hands" },
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "ゴールデンアフタースクール", slug: "golden-after-school" },
+      { title: "UNION", slug: "union-oxt" },
+    ],
+  },
+  {
+    title: "ANIMAX MUSIX 2018 YOKOHAMA",
+    date: "2018.11.17",
+    venue: "横浜アリーナ",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "UNION", slug: "union-oxt" },
+      { title: "STRIDER'S HIGH", slug: "striders-high" },
+    ],
+  },
+  {
+    title: "Anison Days Festival(ゲスト出演)",
+    date: "2018.10.22",
+    venue: "新宿BLAZE",
+    note: "LiveFansのセットリスト投稿情報に基づく。「UNION」はライブでは初披露と注記あり。",
+    setlist: [
+      { title: "UNION", slug: "union-oxt" },
+    ],
+  },
+  {
+    title: "Animelo Summer Live 2018 \"OK!\"",
+    date: "2018.08.26",
+    venue: "さいたまスーパーアリーナ",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "GO CRY GO", slug: "go-cry-go" },
+      { title: "Silent Solitude", slug: "silent-solitude" },
+    ],
+  },
+  {
+    title: "ANIMAX MUSIX 2018 OSAKA",
+    date: "2018.03.03",
+    venue: "大阪城ホール",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "GO CRY GO", slug: "go-cry-go" },
+    ],
+  },
+  {
+    title: "P's LIVE!05 Go! Love&Passion !!",
+    date: "2017.11.26",
+    venue: "横浜アリーナ",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+      { title: "BLOOM OF YOUTH", slug: "bloom-of-youth" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+    ],
+  },
+  {
+    title: "Animelo Summer Live 2017 -THE CARD-",
+    date: "2017.08.25",
+    venue: "さいたまスーパーアリーナ",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+    ],
+  },
+  {
+    title: "かなざわ アニメソングフェス 2017",
+    date: "2017.02.26",
+    venue: "本多の森ホール",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "STRIDER'S HIGH", slug: "striders-high" },
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "One Hand Message", slug: "one-hand-message" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+    ],
+  },
+  {
+    title: "JAPAN POP CULTURE CARNIVAL 2017 in MATSUDO feat.ANISON",
+    date: "2017.01.22",
+    venue: "松戸森のホール21 大ホール",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "STRIDER'S HIGH", slug: "striders-high" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+    ],
+  },
+  {
+    title: "ANIMAX MUSIX 2016 2017 OSAKA",
+    date: "2017.01.14",
+    venue: "大阪城ホール",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "One Hand Message", slug: "one-hand-message" },
+      { title: "Clattanoia", slug: "clattanoia" },
+    ],
+  },
+  {
+    title: "かどみゅ! KADOKAWAアニメの映像と名曲が紡ぎだす夢のライブ",
+    date: "2016.09.04",
+    venue: "NHKホール",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "STRIDER'S HIGH", slug: "striders-high" },
+      { title: "Clattanoia", slug: "clattanoia" },
+    ],
+  },
+  {
+    title: "Animelo Summer Live 2016 -刻 TOKI-",
+    date: "2016.08.27",
+    venue: "さいたまスーパーアリーナ",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "STRIDER'S HIGH", slug: "striders-high" },
+    ],
+  },
+  {
+    title: "ANIMAX MUSIX 2015 YOKOHAMA",
+    date: "2015.11.21",
+    venue: "横浜アリーナ",
+    note: "LiveFansのセットリスト投稿情報に基づく(合同フェスのため、OxTの持ち歌のみ記録)。",
+    setlist: [
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "STRIDER'S HIGH", slug: "striders-high" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
     ],
   },
 ];
