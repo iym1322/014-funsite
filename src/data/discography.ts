@@ -510,6 +510,210 @@ const yomiOverrides: Record<string, string> = {
   "bouya-no-yume-yo": "ぼうやのゆめよ", // ぼうやの夢よ
 };
 
+// 「シングルあてゲーム」の「ライブ収録」判定用の手動上書き。
+// 本来はisLiveな映像作品のsetlist/setlistsへの掲載有無から自動判定しているが、
+// セトリ情報は「判明分のみ」の収録(CONTENTS_PLAN.md方針)で網羅的ではないため、
+// 自動判定だけでは不正確なケースがある。ユーザーが確認した情報をここに
+// slugキーで記録し、自動判定より優先して使う(true=ライブ収録あり、false=なし)。
+const liveRecordedOverrides: Record<string, boolean> = {
+  "5-soul-mates": true, // 5 soul MATE'S
+  "aa-subarashiki-nichijou": true, // 嗚呼、素晴らしき日常
+  "ai-no-katachi": true, // 愛のかたち
+  "alien-sound-schedule": true, // エイリアン
+  "amai-yoru": true, // 甘い夜
+  "answer-sound-schedule": true, // アンサー
+  "aoi-housougeki": true, // 碧い砲撃
+  "arigatou-sound-schedule": true, // ありがとう
+  "around-the-world-oxt": true, // Around the world
+  "asagao": true, // あさがお
+  "ato-no-matsuri": true, // あとの祭り
+  "baby-music-rider-kariuta-2": true, // ベイビーミュージックライダー
+  "blood-type-heartbeat-kariuta": true, // ブラッドタイプ☆ハートビート
+  "bloom-of-youth": true, // BLOOM OF YOUTH
+  "blt-oxt": true, // B.L.T.
+  "bokura-no-ashiato": true, // 僕らの足跡～はじめのいっぽ～
+  "bokura-no-hakoniwa": true, // 僕らの箱庭
+  "bokura-no-touhikou": true, // 僕らの逃避行
+  "bokura-no-yukue": true, // 僕らの行方
+  "border-line": true, // ボーダーライン
+  "bouya-no-yume-yo-kariuta": true, // ぼうやの夢よ
+  "brand-new-blue": true, // BRAND NEW BLUE
+  "chance-oxt": true, // チャンス！
+  "chiisana-koi-no-melody": true, // 小さな恋のメロディ
+  "chotto-dake": true, // ちょっとだけ
+  "chounouryoku-shounen": true, // 超能力少年
+  "clattanoia": true, // Clattanoia
+  "climax-sound-schedule": true, // クライマックス
+  "compass-sound-schedule": true, // コンパス
+  "contact-sound-schedule": true, // コンタクト
+  "daigaku-monogatari": true, // 大学物語
+  "daily-go-round": true, // Daily-go-round
+  "diamond": true, // ダイヤモンド
+  "dragon-energy": true, // ドラゴンエネルギー
+  "duel-shiyouze": true, // デュエルしようぜ！
+  "eiyu-no-uta": true, // 英雄の歌
+  "electric-parade": true, // エレクトリックパレード
+  "entertainer-song": true, // エンターテイナー
+  "epilogue-sound-schedule": true, // エピローグ
+  "everlasting-dream": true, // Everlasting Dream
+  "fire-oishi": true, // ファイヤー！
+  "fish-story-kariuta-2": true, // フィッシュストーリー
+  "free-hand": true, // フリーハンド
+  "fukashin-ryouiki-destroyer-kariuta": true, // 不可侵領域デストロイヤー
+  "gakuen-tengoku": true, // 学園天国
+  "gambling-hall": true, // ギャンブリングホール
+  "gensou-underground": true, // 幻想アンダーグラウンド
+  "gift": true, // ギフト
+  "ginga-station": true, // 銀河ステーション
+  "go-cry-go": true, // GO CRY GO
+  "go-exceed": true, // Go EXCEED!!
+  "gokudol-music-kariuta-2": true, // ゴクドルミュージック
+  "golden-after-school": true, // ゴールデンアフタースクール
+  "good-morning-sound-schedule": true, // グッドモーニング
+  "good-time-communication": true, // グッドタイムコミュニケーション
+  "grateful-story": true, // Grateful Story
+  "hajimari-no-melody": true, // はじまりのメロディ
+  "hanabi-sound-schedule": true, // 花火
+  "hands": true, // Hands
+  "hello-new-world": true, // Hello New World
+  "hero-impossible-kariuta": true, // ヒーローインポッシボー
+  "hey-hey-sound-schedule": true, // ヘイ！ヘイ！
+  "high-maintenance-girl": true, // ハイメンテナンスガール
+  "highlight-sound-schedule": true, // ハイライト
+  "hito-no-ko-futari": true, // 人の子ふたり
+  "hoeru-inu-to-kimi": true, // 吠える犬と君
+  "hollow-hunger": true, // HOLLOW HUNGER
+  "honoka-terasu": true, // ほのかてらす
+  "hyoutan-ike": true, // ひょうたん池
+  "ima-koko-ni-aru-mono": true, // 今ココにあるもの
+  "imperfect": true, // インパーフェクト
+  "iq-kyoudai": true, // IQ兄弟
+  "kabu-rider": true, // カブライダー
+  "kagikko-noel": true, // 鍵っ子ノエル
+  "kagome-kagome": true, // かごめかごめ
+  "ketsumatsu-no-nai-futari": true, // 結末のない二人
+  "kimero": true, // KIMERO!!
+  "kimi-janakya-dame-mitai": true, // 君じゃなきゃダメみたい
+  "kimi-no-heroine-kariuta-2": true, // 君のヒロインでいるために
+  "kimi-no-tame-ni-dekiru-koto": true, // 君のためにできること
+  "kimi-to-iu-hana": true, // 君という花
+  "kimi-wa-koibito": true, // 君は恋人
+  "kinkan-no-uta-2020": true, // キンカンのうた2020
+  "kiteretsu-poemer": true, // 奇天烈ポエマー
+  "kitto-todokanai-darou": true, // きっととどかないだろう
+  "kiwi-batake-no-uchuusen": true, // キウイ畑の宇宙船
+  "kizudarake-no-shounen": true, // 傷だらけの少年
+  "koi-kogare": true, // 恋焦がれ
+  "koi-wa-explosion": true, // 恋はエクスプロージョン
+  "komoriuta": true, // コモリウタ
+  "kotoba-ijou-ni": true, // 言葉以上に
+  "kotoba-sagashi": true, // ことばさがし
+  "kyoukaisen-nite": true, // 境界線にて
+  "laughter-slaughter": true, // Laughter Slaughter
+  "lon": true, // L'oN
+  "lost-you-oxt": true, // Lost you
+  "love": true, // ラブ
+  "love-song-kariuta-2": true, // ラブソング
+  "mado-no-mukou": true, // 窓の向こう
+  "makura-danshi-kariuta": true, // 枕男子
+  "mamoritai-sono-egao": true, // 守りたい、その笑顔
+  "mamoritai-sono-egao-kariuta-3": true, // 守りたい、その笑顔(仮歌III/オーイシマサヨシ名義セルフカバー版)
+  "mankai-kaika-sengen-kariuta": true, // MANKAI☆開花宣言
+  "mass-for-the-dead": true, // MASS FOR THE DEAD
+  "mayonaka-no-id": true, // 真夜中のID
+  "megane-darling": true, // 眼鏡ダーリン
+  "mekakushi-oni": true, // 目隠し鬼
+  "mimi-no-kikoenaku-natta-koibito": true, // 耳の聞こえなくなった恋人とそのうたうたい
+  "miracle-sound-schedule": true, // ミラクル
+  "mister-oishi": true, // ミスター
+  "moratorium-dance-floor-kariuta": true, // モラトリアムダンスフロア
+  "mother-complex": true, // マザーコンプレックス
+  "moyase-bonnou": true, // 燃やせ煩悩
+  "namara-menkoi-gal": true, // なまらめんこいギャル
+  "nante-colorful-na-sekai-kariuta-3": true, // なんてカラフルな世界！(仮歌III/オーイシマサヨシ名義セルフカバー版)
+  "nemurenu-machi-no-boogieman-dance": true, // 眠れぬ街のブギーマンダンス
+  "ningen": true, // ニンゲン
+  "no-7": true, // No.7
+  "notteke-japari-beat-kariuta-2": true, // 乗ってけ！ジャパリビート
+  "numa": true, // 沼
+  "number-one-oxt": true, // Number One
+  "o-vs-t": true, // O vs T
+  "o-vs-t-2": true, // O vs T #2
+  "ohayou-oishi": true, // おはよう
+  "onaji-sora-no-shita-de": true, // 同じ空の下で
+  "one-hand-message": true, // One Hand Message
+  "osananajimi": true, // 幼なじみ
+  "otomodachi-film": true, // オトモダチフィルム
+  "ougon-kouro": true, // 黄金航路
+  "ougon-recipe": true, // 黄金レシピ
+  "parallel-world": true, // パラレルワールド
+  "penne-no-onna": true, // ペンネの女
+  "perfect-hero": true, // Perfect HERO
+  "peter-pan-syndrome": true, // ピーターパン・シンドローム
+  "pierrot-oishi": true, // ピエロ
+  "pokemon-all-stars-1025": true, // ポケモンオールスターズ1025(213/1025)
+  "powerful-buddy": true, // パワフルバディ
+  "rakuen-toshi": true, // 楽園都市
+  "ready-steady-derby-kariuta-3": true, // Ready!! Steady!! Derby!!(仮歌III/オーイシマサヨシ名義セルフカバー版)
+  "reunion-song": true, // REUNION
+  "ring-of-drinker-kariuta": true, // リングオブドランカー
+  "rock-n-roll-sound-schedule": true, // ロックンロール
+  "role-playing": true, // ロールプレイング
+  "roman-hikou-kariuta": true, // 浪漫飛行
+  "saikyou-no-oshi-kariuta-3": true, // 最強の推し！(仮歌III/オーイシマサヨシ名義セルフカバー版)
+  "saraba-pina-colada": true, // さらばピニャコラーダ
+  "saredo-sora-no-aosa-wo-shiru": true, // されど空の青さを知る
+  "sea-of-wonderland": true, // Sea of Wonderland
+  "sekai-ga-kimi-wo": true, // 世界が君を必要とする時が来たんだ
+  "setsuna-kaze": true, // セツナ風
+  "shiawase-champion": true, // しあわせチャンピョン
+  "shinda": true, // 死んだ!
+  "shinwaku-algorithm": true, // 神或アルゴリズム
+  "shujinkou-ni-narou": true, // 主人公になろう！
+  "shunkashuutou-blooming-kariuta-2": true, // 春夏秋冬☆Blooming!
+  "shuuen-teki-melodrama": true, // 終焉的メロドラマ
+  "sign-wa-b-kariuta-3": true, // サインはB(仮歌III/オーイシマサヨシ名義セルフカバー版)
+  "silent-solitude": true, // Silent Solitude
+  "singalong-shinkaron-kariuta-2": true, // シンガロン進化論
+  "smile-sound-schedule": true, // スマイル
+  "songwriter-oishi": true, // ソングライター
+  "sono-ai-wo-tomenaide": true, // その愛を止めないで
+  "special-number": true, // スペシャルナンバー
+  "stew-ga-nomitaku-naru-uta": true, // シチューが飲みたくなる唄
+  "story": true, // ストーリー
+  "striders-high": true, // STRIDER'S HIGH
+  "sugar-salt": true, // シュガーソルト
+  "suki-ni-naccha-dame-na-hito": true, // 好きになっちゃダメな人
+  "super-hero-kariuta-2": true, // スーパーヒーロー
+  "tadaima": true, // ただいま
+  "taiyou-no-kuni": true, // 太陽の国
+  "tasogare-starlight": true, // たそがれスターライト
+  "tatsumaki": true, // 竜巻
+  "tears-of-a-genius": true, // Tears of a Genius
+  "terminal": true, // ターミナル
+  "time-machine": true, // タイムマシーン
+  "tokai-no-semi-wa-yoru-ni-naku": true, // 都会の蝉は夜に鳴く
+  "tokyo-life-sound-schedule": true, // 東京ライフ
+  "tokyo-loop": true, // 東京ループ
+  "triangle-oishi": true, // トライアングル
+  "tsuki-ga-ochiru-mae-ni": true, // 月が落ちる前に…
+  "ultra-sing": true, // ウルトラSing!!
+  "umi-wo-miteita-boku-wa": true, // 海を見ていた ぼくは
+  "uni-verse": true, // uni-verse
+  "union-oxt": true, // UNION
+  "unmei-no-hito-e": true, // 運命の人へ
+  "ushiro-no-shoumen": true, // うしろのしょうめん
+  "utopia": true, // ユートピア
+  "wakare-no-tanedane": true, // 別れの種だね
+  "wakeari": true, // わけあり
+  "wonderland-a-gogo-kariuta-2": true, // ワンダーランド・ア・ゴーゴー!!
+  "yonaoshi-buddha": true, // 世直しブッダ
+  "youkoso-japari-park-kariuta": true, // ようこそジャパリパークへ
+  "yume-no-hero-oxt": true, // 夢のヒーロー
+  "zenbu-kimi-no-seida": true, // ぜんぶ君のせいだ
+
+};
+
 const soundSong = (
   title: string,
   date: string,
@@ -948,11 +1152,11 @@ const raw: Omit<Track, "sortDate">[] = [
       { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
       { title: "ピエロ", slug: "pierrot-oishi" },
       { title: "眼鏡ダーリン", slug: "megane-darling" },
-      { title: "Clattanoia" },
+      { title: "Clattanoia", slug: "clattanoia" },
       { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
       { title: "ストーリー", slug: "story" },
-      { title: "不可侵領域デストロイヤー" },
-      { title: "枕男子" },
+      { title: "不可侵領域デストロイヤー", slug: "fukashin-ryouiki-destroyer-kariuta" },
+      { title: "枕男子", slug: "makura-danshi-kariuta" },
       { title: "トライアングル", slug: "triangle-oishi" },
       { title: "海を見ていた ぼくは", slug: "umi-wo-miteita-boku-wa" },
     ],
@@ -1825,24 +2029,24 @@ const raw: Omit<Track, "sortDate">[] = [
     description: "ソロデビュー10周年を記念したワンマンライブの模様を収めた映像作品。",
     isLive: true,
     setlist: [
-      { title: "ピエロ" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
       { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
       { title: "うしろのしょうめん", slug: "ushiro-no-shoumen" },
       { title: "パラレルワールド", slug: "parallel-world" },
       { title: "ボーダーライン", slug: "border-line" },
-      { title: "眼鏡ダーリン" },
-      { title: "おはよう" },
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "おはよう", slug: "ohayou-oishi" },
       { title: "ユートピア", slug: "utopia" },
       { title: "キウイ畑の宇宙船", slug: "kiwi-batake-no-uchuusen" },
-      { title: "ファイヤー！" },
-      { title: "トライアングル" },
-      { title: "ようこそジャパリパークへ" },
+      { title: "ファイヤー！", slug: "fire-oishi" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
       { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
-      { title: "UNION" },
+      { title: "UNION", slug: "union-oxt" },
       { title: "ほのかてらす", slug: "honoka-terasu" },
-      { title: "ミスター" },
-      { title: "東京ループ" },
-      { title: "ストーリー" },
+      { title: "ミスター", slug: "mister-oishi" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+      { title: "ストーリー", slug: "story" },
     ],
   },
 
@@ -1892,7 +2096,7 @@ const raw: Omit<Track, "sortDate">[] = [
       { title: "シンガロン進化論", slug: "singalong-shinkaron-kariuta-2" },
       { title: "君のヒロインでいるために", slug: "kimi-no-heroine-kariuta-2" },
       { title: "ラブソング", slug: "love-song-kariuta-2" },
-      { title: "学園天国" },
+      { title: "学園天国", slug: "gakuen-tengoku" },
     ],
   },
   {
@@ -1996,6 +2200,15 @@ const raw: Omit<Track, "sortDate">[] = [
     youtube: "https://www.youtube.com/watch?v=CP9mzbSTZPk",
     appleMusic: "https://music.apple.com/jp/song/%E3%82%AA%E3%83%88%E3%83%A2%E3%83%80%E3%83%81%E3%83%95%E3%82%A3%E3%83%AB%E3%83%A0/1374072398",
     spotify: "https://open.spotify.com/intl-ja/track/1s4sRRnzMaQDvVyvKJ7b8t",
+  },
+  {
+    group: "オーイシマサヨシ",
+    type: "シングル",
+    date: "2018.05.23",
+    title: "ぜんぶ君のせいだ",
+    note: "「オトモダチフィルム」のカップリング曲。",
+    description: "シングル「オトモダチフィルム」のカップリング曲。恋心を自覚していく戸惑いを描いたラブソング。",
+    slug: "zenbu-kimi-no-seida",
   },
   {
     group: "オーイシマサヨシ",
@@ -2179,6 +2392,15 @@ const raw: Omit<Track, "sortDate">[] = [
     youtube: "https://www.youtube.com/watch?v=0N17SrQ27oA",
     appleMusic: "https://music.apple.com/jp/album/%E6%81%8B%E3%81%AF%E3%82%A8%E3%82%AF%E3%82%B9%E3%83%97%E3%83%AD%E3%83%BC%E3%82%B8%E3%83%A7%E3%83%B3-feat-%E7%94%B0%E6%9D%91%E3%82%86%E3%81%8B%E3%82%8A-ep/1624660726",
     spotify: "https://open.spotify.com/intl-ja/track/1QH7w8jyeyLhJZvczjKbEv",
+  },
+  {
+    group: "オーイシマサヨシ",
+    type: "シングル",
+    date: "2022.06.01",
+    title: "しあわせチャンピョン",
+    note: "「恋はエクスプロージョン」のカップリング曲。",
+    description: "シングル「恋はエクスプロージョン」のカップリング曲。大切な人の門出を祝う温かな一曲。",
+    slug: "shiawase-champion",
   },
   {
     group: "オーイシマサヨシ",
@@ -3083,8 +3305,8 @@ const raw: Omit<Track, "sortDate">[] = [
       { title: "ぼうやの夢よ", slug: "bouya-no-yume-yo-kariuta" },
       { title: "ヒーローインポッシボー", slug: "hero-impossible-kariuta" },
       { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
-      { title: "学園天国" },
-      { title: "Go EXCEED!!" },
+      { title: "学園天国", slug: "gakuen-tengoku" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
       { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
     ],
   },
@@ -3114,7 +3336,7 @@ const raw: Omit<Track, "sortDate">[] = [
       { title: "君のヒロインでいるために", slug: "kimi-no-heroine-kariuta-2" },
       { title: "Hands", slug: "hands" },
       { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
-      { title: "学園天国" },
+      { title: "学園天国", slug: "gakuen-tengoku" },
     ],
   },
   {
@@ -3143,7 +3365,7 @@ const raw: Omit<Track, "sortDate">[] = [
       { title: "英雄の歌", slug: "eiyu-no-uta" },
       { title: "ロールプレイング", slug: "role-playing" },
       { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
-      { title: "学園天国" },
+      { title: "学園天国", slug: "gakuen-tengoku" },
       { title: "ドラゴンエネルギー", slug: "dragon-energy" },
       { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
     ],
@@ -3172,9 +3394,9 @@ const raw: Omit<Track, "sortDate">[] = [
       { title: "楽園都市", slug: "rakuen-toshi" },
       { title: "エレクトリックパレード", slug: "electric-parade" },
       { title: "インパーフェクト", slug: "imperfect" },
-      { title: "UNION" },
+      { title: "UNION", slug: "union-oxt" },
       { title: "uni-verse", slug: "uni-verse" },
-      { title: "Go EXCEED!!" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
       { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
       { title: "僕らの箱庭", slug: "bokura-no-hakoniwa" },
       { title: "ドラゴンエネルギー", slug: "dragon-energy" },
@@ -3239,9 +3461,9 @@ const raw: Omit<Track, "sortDate">[] = [
           { title: "なまらめんこいギャル", slug: "namara-menkoi-gal" },
           { title: "守りたい、その笑顔", slug: "mamoritai-sono-egao" },
           { title: "インパーフェクト", slug: "imperfect" },
-          { title: "UNION" },
+          { title: "UNION", slug: "union-oxt" },
           { title: "uni-verse", slug: "uni-verse" },
-          { title: "Clattanoia" },
+          { title: "Clattanoia", slug: "clattanoia" },
           { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
           { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
         ],
@@ -3273,7 +3495,7 @@ const raw: Omit<Track, "sortDate">[] = [
       { title: "主人公になろう！ feat.鈴木愛理", slug: "shujinkou-ni-narou" },
       { title: "なまらめんこいギャル feat.鈴木愛理", slug: "namara-menkoi-gal" },
       { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
-      { title: "UNION" },
+      { title: "UNION", slug: "union-oxt" },
       { title: "uni-verse", slug: "uni-verse" },
       { title: "デュエルしようぜ！", slug: "duel-shiyouze" },
       { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
@@ -3298,7 +3520,7 @@ const raw: Omit<Track, "sortDate">[] = [
   {
     group: "OxT", type: "アルバム", date: "2020.09.10", title: "REUNION", note: "2ndアルバム", slug: "reunion-album", description: "OxTの2ndオリジナルアルバム。既発曲のアルバム版と新曲、カバー曲を収録。", appleMusic: "https://music.apple.com/jp/album/reunion/1528922188",
     tracklist: [
-      { title: "UNION", slug: "union-oxt" }, { title: "鼓動エスカレーション -OxT ver.-", slug: "kodou-escalation-oxt" }, { title: "チャンス！ -OxT ver.-", slug: "chance-oxt" }, { title: "Tears of a Genius", slug: "tears-of-a-genius" }, { title: "O vs T #2", slug: "o-vs-t-2" }, { title: "Number One", slug: "number-one-oxt" }, { title: "Be the Best! Be the Blue!", slug: "be-the-best-be-the-blue" }, { title: "HOME GROUND", slug: "home-ground" }, { title: "REUNION", slug: "reunion-song" }, { title: "もっと君を知れば", slug: "motto-kimi-wo-shireba" }, { title: "ゴールデンアフタースクール", slug: "golden-after-school" }, { title: "Everlasting Dream", slug: "everlasting-dream" },
+      { title: "UNION", slug: "union-oxt" }, { title: "鼓動エスカレーション -OxT ver.-", slug: "kodou-escalation-oxt" }, { title: "チャンス！ -OxT ver.-", slug: "chance-oxt" }, { title: "Tears of a Genius", slug: "tears-of-a-genius" }, { title: "O vs T #2", slug: "o-vs-t-2" }, { title: "Number One", slug: "number-one-oxt" }, { title: "Be The Best! Be The Blue!", slug: "be-the-best-be-the-blue" }, { title: "HOME GROUND", slug: "home-ground" }, { title: "REUNION", slug: "reunion-song" }, { title: "もっと君を知れば", slug: "motto-kimi-wo-shireba" }, { title: "ゴールデンアフタースクール", slug: "golden-after-school" }, { title: "Everlasting Dream", slug: "everlasting-dream" },
     ],
   },
   { group: "OxT", type: "シングル", date: "2013.10.30", title: "Go EXCEED!!", tieIn: "TVアニメ『ダイヤのA』オープニングテーマ", slug: "go-exceed", description: "Tom-H@ck featuring 大石昌良名義で発表され、後にOxTへつながった『ダイヤのA』主題歌。", spotify: "https://open.spotify.com/track/16z7LDN5Mge7YvMKjvv7MF", youtube: "https://www.youtube.com/watch?v=Pf1rqYWhUB4", youtubeAudioOnly: true, appleMusic: "https://music.apple.com/jp/album/go-exceed/1085539817?i=1085539819" },
@@ -3471,5 +3693,1507 @@ export function getAlbumCoverImages(track: Track): string[] {
   return [album.image, album.title].filter((candidate): candidate is string => Boolean(candidate));
 }
 
+// ライブ本編・セットリストの記録(ゲーム用のliveRecordedOverridesとは別の用途)。
+// Blu-ray/DVD化され個別ページを持つ公演はtracks側のisLiveエントリ(/worksに実在の
+// 商品として表示される)が正式なデータであり、ここには含めない。
+// ここにまとめるのは、映像化の有無にかかわらずセットリストそのものを記録しておきたい
+// 公演(未発表のものや、円盤に埋もれた特典映像など)で、/worksには表示されない
+// (実在しない商品をディスコグラフィーに並べてしまわないため)。
+export type LiveShow = {
+  title: string;
+  date: string; // 公演日(YYYY.MM.DD、判明している精度のまま)
+  venue?: string;
+  note?: string;
+  setlist: TrackRef[];
+};
+
+// Zeppワンマンツアー2022(大阪・名古屋・横浜)は同一セットリストのため、
+// 共通部分を定数化して使い回す(ユーザー確認済み: 「全公演同セトリ」)。
+// LiveFans(livefans.jp)のセットリスト投稿情報に基づく(各公演のevents/ページを参照)。
+// 大石昌良「君に聞かせる物語ツアー」(2016)・「弾き語りラボ2018」は
+// 東京・大阪でほぼ同一セットリストのため共通定数にする。
+const kimiNiKikaseruMonogatariSetlist: TrackRef[] = [
+  { title: "ほのかてらす", slug: "honoka-terasu" },
+  { title: "眼鏡ダーリン", slug: "megane-darling" },
+  { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+  { title: "ピエロ", slug: "pierrot-oishi" },
+  { title: "はじまりのメロディ", slug: "hajimari-no-melody" },
+  { title: "ソングライター", slug: "songwriter-oishi" },
+  { title: "終焉的メロドラマ", slug: "shuuen-teki-melodrama" },
+  { title: "都会の蝉は夜に鳴く", slug: "tokai-no-semi-wa-yoru-ni-naku" },
+  { title: "別れの種だね", slug: "wakare-no-tanedane" },
+  { title: "ファイヤー!", slug: "fire-oishi" },
+  { title: "トライアングル", slug: "triangle-oishi" },
+  { title: "ストーリー", slug: "story" },
+  { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+  { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+  { title: "ダイヤモンド", slug: "diamond" },
+  { title: "東京ループ", slug: "tokyo-loop" },
+];
+
+const kagautaLab2018Setlist: TrackRef[] = [
+  { title: "トライアングル", slug: "triangle-oishi" },
+  { title: "ピエロ", slug: "pierrot-oishi" },
+  { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+  { title: "別れの種だね", slug: "wakare-no-tanedane" },
+  { title: "ファイヤー!", slug: "fire-oishi" },
+  { title: "キウイ畑の宇宙船", slug: "kiwi-batake-no-uchuusen" },
+  { title: "うしろのしょうめん", slug: "ushiro-no-shoumen" },
+  { title: "おはよう", slug: "ohayou-oishi" },
+  { title: "パラレルワールド", slug: "parallel-world" },
+  { title: "眼鏡ダーリン", slug: "megane-darling" },
+  { title: "奇天烈ポエマー", slug: "kiteretsu-poemer" },
+  { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+  { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+  { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+  { title: "ストーリー", slug: "story" },
+  { title: "ほのかてらす", slug: "honoka-terasu" },
+  { title: "東京ループ", slug: "tokyo-loop" },
+];
+
+const kagautaTour2019Setlist: TrackRef[] = [
+  { title: "MANKAI☆開花宣言", slug: "mankai-kaika-sengen-kariuta" },
+  { title: "枕男子", slug: "makura-danshi-kariuta" },
+  { title: "フィッシュストーリー", slug: "fish-story-kariuta-2" },
+  { title: "シンガロン進化論", slug: "singalong-shinkaron-kariuta-2" },
+  { title: "ゴクドルミュージック", slug: "gokudol-music-kariuta-2" },
+  { title: "春夏秋冬☆Blooming!", slug: "shunkashuutou-blooming-kariuta-2" },
+  { title: "ワンダーランド・ア・ゴーゴー!!", slug: "wonderland-a-gogo-kariuta-2" },
+  { title: "オトモダチフィルム", slug: "otomodachi-film" },
+  { title: "乗ってけ！ジャパリビート", slug: "notteke-japari-beat-kariuta-2" },
+  { title: "沼", slug: "numa" },
+  { title: "スーパーヒーロー", slug: "super-hero-kariuta-2" },
+  { title: "ラブソング", slug: "love-song-kariuta-2" },
+  { title: "ベイビーミュージックライダー", slug: "baby-music-rider-kariuta-2" },
+  { title: "学園天国", slug: "gakuen-tengoku" },
+  { title: "Hands", slug: "hands" },
+  { title: "UNION", slug: "union-oxt" },
+  { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+  { title: "君のヒロインでいるために", slug: "kimi-no-heroine-kariuta-2" },
+  { title: "楽園都市", slug: "rakuen-toshi" },
+  { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+];
+
+const zeppTour2022Setlist: TrackRef[] = [
+  { title: "楽園都市", slug: "rakuen-toshi" },
+  { title: "乗ってけ！ジャパリビート", slug: "notteke-japari-beat-kariuta-2" },
+  { title: "エンターテイナー", slug: "entertainer-song" },
+  { title: "MANKAI☆開花宣言", slug: "mankai-kaika-sengen-kariuta" },
+  { title: "奇天烈ポエマー", slug: "kiteretsu-poemer" },
+  { title: "オトモダチフィルム", slug: "otomodachi-film" },
+  { title: "キンカンのうた2020", slug: "kinkan-no-uta-2020" },
+  { title: "恋はエクスプロージョン", slug: "koi-wa-explosion" },
+  { title: "ベイビーミュージックライダー", slug: "baby-music-rider-kariuta-2" },
+  { title: "ぜんぶ君のせいだ", slug: "zenbu-kimi-no-seida" },
+  { title: "しあわせチャンピョン", slug: "shiawase-champion" },
+  { title: "英雄の歌", slug: "eiyu-no-uta" },
+  { title: "UNION", slug: "union-oxt" },
+  { title: "インパーフェクト", slug: "imperfect" },
+  { title: "浪漫飛行", slug: "roman-hikou-kariuta" },
+  { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+  { title: "ドラゴンエネルギー", slug: "dragon-energy" },
+  { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+];
+export const liveShows: LiveShow[] = [
+  {
+    title: "オーイシマサヨシ 仮歌ワンマンツアー2018〈大阪〉",
+    date: "2018.06.28",
+    venue: "梅田CLUB QUATTRO",
+    note: "LiveFansのセットリスト投稿情報に基づく。「(即興一節ver.)」はMC中の即興パフォーマンスのためセットリストに含めていない。",
+    setlist: [
+      { title: "ぜんぶ君のせいだ", slug: "zenbu-kimi-no-seida" },
+      { title: "ブラッドタイプ☆ハートビート", slug: "blood-type-heartbeat-kariuta" },
+      { title: "純情可憐書店屋ガール" },
+      { title: "奇天烈ポエマー", slug: "kiteretsu-poemer" },
+      { title: "春夏秋冬☆Blooming!", slug: "shunkashuutou-blooming-kariuta-2" },
+      { title: "オトモダチフィルム", slug: "otomodachi-film" },
+      { title: "MANKAI☆開花宣言", slug: "mankai-kaika-sengen-kariuta" },
+      { title: "枕男子", slug: "makura-danshi-kariuta" },
+      { title: "ベイビーミュージックライダー", slug: "baby-music-rider-kariuta-2" },
+      { title: "ぼうやの夢よ", slug: "bouya-no-yume-yo-kariuta" },
+      { title: "モラトリアムダンスフロア", slug: "moratorium-dance-floor-kariuta" },
+      { title: "浪漫飛行", slug: "roman-hikou-kariuta" },
+      { title: "学園天国", slug: "gakuen-tengoku" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "Hands", slug: "hands" },
+      { title: "ヒーローインポッシボー", slug: "hero-impossible-kariuta" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+    ],
+  },
+  {
+    title: "オーイシマサヨシ 仮歌ワンマンツアー2018〈東京〉",
+    date: "2018.07.05",
+    venue: "TSUTAYA O-EAST",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "純情可憐書店屋ガール" },
+      { title: "ブラッドタイプ☆ハートビート", slug: "blood-type-heartbeat-kariuta" },
+      { title: "枕男子", slug: "makura-danshi-kariuta" },
+      { title: "ぜんぶ君のせいだ", slug: "zenbu-kimi-no-seida" },
+      { title: "春夏秋冬☆Blooming!", slug: "shunkashuutou-blooming-kariuta-2" },
+      { title: "オトモダチフィルム", slug: "otomodachi-film" },
+      { title: "MANKAI☆開花宣言", slug: "mankai-kaika-sengen-kariuta" },
+      { title: "フィッシュストーリー", slug: "fish-story-kariuta-2" },
+      { title: "ベイビーミュージックライダー", slug: "baby-music-rider-kariuta-2" },
+      { title: "ぼうやの夢よ", slug: "bouya-no-yume-yo-kariuta" },
+      { title: "モラトリアムダンスフロア", slug: "moratorium-dance-floor-kariuta" },
+      { title: "浪漫飛行", slug: "roman-hikou-kariuta" },
+      { title: "学園天国", slug: "gakuen-tengoku" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "Hands", slug: "hands" },
+      { title: "ヒーローインポッシボー", slug: "hero-impossible-kariuta" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+    ],
+  },
+  {
+    title: "オーイシマサヨシ 仮歌ワンマンツアー2018〈東京・追加公演〉",
+    date: "2018.07.06",
+    venue: "TSUTAYA O-EAST",
+    note: "LiveFansのセットリスト投稿情報に基づく。アンコールの「ドラゴンエネルギー」はオーイシマサヨシ・加藤純一のデュエット。",
+    setlist: [
+      { title: "純情可憐書店屋ガール" },
+      { title: "ベイビーミュージックライダー", slug: "baby-music-rider-kariuta-2" },
+      { title: "春夏秋冬☆Blooming!", slug: "shunkashuutou-blooming-kariuta-2" },
+      { title: "MANKAI☆開花宣言", slug: "mankai-kaika-sengen-kariuta" },
+      { title: "ぜんぶ君のせいだ", slug: "zenbu-kimi-no-seida" },
+      { title: "オトモダチフィルム", slug: "otomodachi-film" },
+      { title: "枕男子", slug: "makura-danshi-kariuta" },
+      { title: "フィッシュストーリー", slug: "fish-story-kariuta-2" },
+      { title: "ブラッドタイプ☆ハートビート", slug: "blood-type-heartbeat-kariuta" },
+      { title: "ぼうやの夢よ", slug: "bouya-no-yume-yo-kariuta" },
+      { title: "モラトリアムダンスフロア", slug: "moratorium-dance-floor-kariuta" },
+      { title: "浪漫飛行", slug: "roman-hikou-kariuta" },
+      { title: "学園天国", slug: "gakuen-tengoku" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "Hands", slug: "hands" },
+      { title: "ドラゴンエネルギー", slug: "dragon-energy" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+    ],
+  },
+  {
+    title: "仮歌ワンマンツアー2019〈東京〉",
+    date: "2019.07.11",
+    venue: "Zepp DiverCity",
+    note: "LiveFansのセットリスト投稿情報に基づく。既存の映像作品「仮歌ツアー2019」(2019.11リリース)のsetlistは判明分のみの抜粋だが、こちらはUNION・楽園都市・ようこそジャパリパークへを含むより詳細な記録。",
+    setlist: kagautaTour2019Setlist,
+  },
+  {
+    title: "仮歌ワンマンツアー2019〈大阪〉",
+    date: "2019.07.06",
+    venue: "なんばHatch",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: kagautaTour2019Setlist,
+  },
+  {
+    title: "世界が君を必要とする時が来たんだ",
+    date: "2021.01.05",
+    venue: "オンラインライブ",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "学園天国", slug: "gakuen-tengoku" },
+      { title: "英雄の歌", slug: "eiyu-no-uta" },
+      { title: "キンカンのうた2020", slug: "kinkan-no-uta-2020" },
+      { title: "世界が君を必要とする時が来たんだ", slug: "sekai-ga-kimi-wo" },
+      { title: "オトモダチフィルム", slug: "otomodachi-film" },
+      { title: "楽園都市", slug: "rakuen-toshi" },
+      { title: "枕男子", slug: "makura-danshi-kariuta" },
+      { title: "乗ってけ！ジャパリビート", slug: "notteke-japari-beat-kariuta-2" },
+      { title: "Hands", slug: "hands" },
+      { title: "MANKAI☆開花宣言", slug: "mankai-kaika-sengen-kariuta" },
+      { title: "沼", slug: "numa" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "UNION", slug: "union-oxt" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+    ],
+  },
+  {
+    title: "オーイシマサヨシ Zeppワンマンツアー2022〈大阪〉",
+    date: "2022.05.06",
+    venue: "Zepp Namba",
+    setlist: zeppTour2022Setlist,
+  },
+  {
+    title: "オーイシマサヨシ Zeppワンマンツアー2022〈名古屋〉",
+    date: "2022.06.09",
+    venue: "Zepp Nagoya",
+    setlist: zeppTour2022Setlist,
+  },
+  {
+    title: "オーイシマサヨシ Zeppワンマンツアー2022〈横浜〉",
+    date: "2022.06.17",
+    venue: "KT Zepp Yokohama",
+    note: "初のZeppワンマンツアーのファイナル公演。",
+    setlist: zeppTour2022Setlist,
+  },
+  {
+    title: "オーイシ武道館 Vol.3 〜オーイシマサヨシ ワンマンライブ at 日本武道館〜",
+    date: "2026.09.22",
+    venue: "日本武道館",
+    note: "映像化(Blu-ray/DVD)は本稿時点で未発表。タイアップのある曲はオーイシマサヨシ名義のセルフカバー(仮歌シリーズ)版での出演。",
+    setlist: [
+      { title: "サインはB", slug: "sign-wa-b-kariuta-3" },
+      { title: "守りたい、その笑顔", slug: "mamoritai-sono-egao-kariuta-3" },
+      { title: "ハイメンテナンスガール", slug: "high-maintenance-girl" },
+      { title: "ニンゲン", slug: "ningen" },
+      { title: "Ready!! Steady!! Derby!!", slug: "ready-steady-derby-kariuta-3" },
+      { title: "No.7", slug: "no-7" },
+      { title: "L'oN", slug: "lon" },
+      { title: "最強の推し！", slug: "saikyou-no-oshi-kariuta-3" },
+      { title: "なまらめんこいギャル", slug: "namara-menkoi-gal" },
+      { title: "ポケモンオールスターズ1025(213/1025)", slug: "pokemon-all-stars-1025" },
+      { title: "インパーフェクト", slug: "imperfect" },
+      { title: "君は恋人", slug: "kimi-wa-koibito" },
+      { title: "ギフト", slug: "gift" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "乗ってけ！ジャパリビート", slug: "notteke-japari-beat-kariuta-2" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "uni-verse", slug: "uni-verse" },
+      { title: "なんてカラフルな世界！", slug: "nante-colorful-na-sekai-kariuta-3" },
+      { title: "シュガーソルト", slug: "sugar-salt" },
+      { title: "ドラゴンエネルギー", slug: "dragon-energy" },
+      { title: "エンターテイナー", slug: "entertainer-song" },
+    ],
+  },
+  {
+    title: "オーイシマサヨシ ワンマンライブ 2023〈東京〉",
+    date: "2023.03.25",
+    venue: "TOKYO DOME CITY HALL",
+    note: "2ndアルバム『ユニバース』(2024.02.07)の特典Blu-ray/DVDと、CLUB014・イベント限定盤のライブCDに全19曲収録。",
+    setlist: [
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "世界が君を必要とする時が来たんだ", slug: "sekai-ga-kimi-wo" },
+      { title: "ドラゴンエネルギー", slug: "dragon-energy" },
+      { title: "恋はエクスプロージョン", slug: "koi-wa-explosion" },
+      { title: "楽園都市", slug: "rakuen-toshi" },
+      { title: "枕男子", slug: "makura-danshi-kariuta" },
+      { title: "ギフト", slug: "gift" },
+      { title: "オトモダチフィルム", slug: "otomodachi-film" },
+      { title: "ぼうやの夢よ", slug: "bouya-no-yume-yo-kariuta" },
+      { title: "碧い砲撃", slug: "aoi-housougeki" },
+      { title: "英雄の歌", slug: "eiyu-no-uta" },
+      { title: "インパーフェクト", slug: "imperfect" },
+      { title: "UNION", slug: "union-oxt" },
+      { title: "uni-verse", slug: "uni-verse" },
+      { title: "ロールプレイング", slug: "role-playing" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "Hands", slug: "hands" },
+      { title: "死んだ!", slug: "shinda" },
+      { title: "エンターテイナー", slug: "entertainer-song" },
+    ],
+  },
+  {
+    title: "オーイシマサヨシ ワンマンライブ 2023〈神戸〉",
+    date: "2023.03.18",
+    venue: "神戸文化ホール 大ホール",
+    note: "映像化は確認できず(東京公演のみ特典Blu-ray/DVD化)。",
+    setlist: [
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "世界が君を必要とする時が来たんだ", slug: "sekai-ga-kimi-wo" },
+      { title: "MANKAI☆開花宣言", slug: "mankai-kaika-sengen-kariuta" },
+      { title: "恋はエクスプロージョン", slug: "koi-wa-explosion" },
+      { title: "楽園都市", slug: "rakuen-toshi" },
+      { title: "枕男子", slug: "makura-danshi-kariuta" },
+      { title: "ギフト", slug: "gift" },
+      { title: "オトモダチフィルム", slug: "otomodachi-film" },
+      { title: "ぼうやの夢よ", slug: "bouya-no-yume-yo-kariuta" },
+      { title: "碧い砲撃", slug: "aoi-housougeki" },
+      { title: "英雄の歌", slug: "eiyu-no-uta" },
+      { title: "Hands", slug: "hands" },
+      { title: "ウルトラSing!!", slug: "ultra-sing" },
+      { title: "インパーフェクト", slug: "imperfect" },
+      { title: "uni-verse", slug: "uni-verse" },
+      { title: "ロールプレイング", slug: "role-playing" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "ドラゴンエネルギー", slug: "dragon-energy" },
+      { title: "エンターテイナー", slug: "entertainer-song" },
+    ],
+  },
+
+  // --- 大石昌良(弾き語りラボ・シリーズ)。LiveFansのセットリスト投稿情報に基づく ---
+  {
+    title: "大石昌良 弾き語りラボ 2014",
+    date: "2014.12.15",
+    venue: "duo MUSIC EXCHANGE",
+    note: "LiveFansのセットリスト投稿情報に基づく(東京公演のみ)。「(新曲)」と付記されていた曲は眠れぬ街のブギーマンダンス。",
+    setlist: [
+      { title: "うしろのしょうめん", slug: "ushiro-no-shoumen" },
+      { title: "純情可憐書店屋ガール" },
+      { title: "ストーリー", slug: "story" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "おはよう", slug: "ohayou-oishi" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "ひょうたん池", slug: "hyoutan-ike" },
+      { title: "ユートピア", slug: "utopia" },
+      { title: "ミスター", slug: "mister-oishi" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "眠れぬ街のブギーマンダンス", slug: "nemurenu-machi-no-boogieman-dance" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+    ],
+  },
+  {
+    title: "大石昌良の弾き語りラボ 2015〈東京〉",
+    date: "2015.12.17",
+    venue: "duo MUSIC EXCHANGE",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "鍵っ子ノエル", slug: "kagikko-noel" },
+      { title: "別れの種だね", slug: "wakare-no-tanedane" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "枕男子", slug: "makura-danshi-kariuta" },
+      { title: "うしろのしょうめん", slug: "ushiro-no-shoumen" },
+      { title: "ユートピア", slug: "utopia" },
+      { title: "ミスター", slug: "mister-oishi" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "小さな恋のメロディ", slug: "chiisana-koi-no-melody" },
+      { title: "ストーリー", slug: "story" },
+      { title: "不可侵領域デストロイヤー", slug: "fukashin-ryouiki-destroyer-kariuta" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+    ],
+  },
+  {
+    title: "大石昌良の弾き語りラボ 2015〈大阪〉",
+    date: "2015.12.21",
+    venue: "BIGCAT",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "別れの種だね", slug: "wakare-no-tanedane" },
+      { title: "鍵っ子ノエル", slug: "kagikko-noel" },
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "枕男子", slug: "makura-danshi-kariuta" },
+      { title: "ひょうたん池", slug: "hyoutan-ike" },
+      { title: "海を見ていた ぼくは", slug: "umi-wo-miteita-boku-wa" },
+      { title: "小さな恋のメロディ", slug: "chiisana-koi-no-melody" },
+      { title: "ユートピア", slug: "utopia" },
+      { title: "ミスター", slug: "mister-oishi" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "ストーリー", slug: "story" },
+      { title: "不可侵領域デストロイヤー", slug: "fukashin-ryouiki-destroyer-kariuta" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+    ],
+  },
+  {
+    title: "君に聞かせる物語ツアー〈東京〉",
+    date: "2016.08.06",
+    venue: "恵比寿LIQUIDROOM",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: kimiNiKikaseruMonogatariSetlist,
+  },
+  {
+    title: "君に聞かせる物語ツアー〈大阪〉",
+    date: "2016.08.04",
+    venue: "梅田CLUB QUATTRO",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: kimiNiKikaseruMonogatariSetlist,
+  },
+  {
+    title: "大石昌良の弾き語りラボツアー 2016",
+    date: "2016.12.15",
+    venue: "duo MUSIC EXCHANGE",
+    note: "LiveFansのセットリスト投稿情報に基づく(東京公演のみ)。",
+    setlist: [
+      { title: "うしろのしょうめん", slug: "ushiro-no-shoumen" },
+      { title: "終焉的メロドラマ", slug: "shuuen-teki-melodrama" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "ソングライター", slug: "songwriter-oishi" },
+      { title: "都会の蝉は夜に鳴く", slug: "tokai-no-semi-wa-yoru-ni-naku" },
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "別れの種だね", slug: "wakare-no-tanedane" },
+      { title: "枕男子", slug: "makura-danshi-kariuta" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "はじまりのメロディ", slug: "hajimari-no-melody" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+      { title: "ストーリー", slug: "story" },
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+    ],
+  },
+  {
+    title: "大石昌良の弾き語りラボ2018〈東京〉",
+    date: "2018.03.23",
+    venue: "マイナビBLITZ赤坂",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: kagautaLab2018Setlist,
+  },
+  {
+    title: "大石昌良の弾き語りラボ2018〈大阪〉",
+    date: "2018.04.04",
+    venue: "なんばHatch",
+    note: "LiveFansのセットリスト投稿情報に基づく。大阪公演のみアンコールで「どんなときも。」(槇原敬之のカバー)を追加。",
+    setlist: kagautaLab2018Setlist,
+  },
+  {
+    title: "大石昌良の弾き語りラボ2019サテライトツアー",
+    date: "2019.12.06",
+    venue: "誰も知らない劇場",
+    note: "LiveFansのセットリスト投稿情報に基づく(宮城公演のみ)。",
+    setlist: [
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "ボーダーライン", slug: "border-line" },
+      { title: "うしろのしょうめん", slug: "ushiro-no-shoumen" },
+      { title: "別れの種だね", slug: "wakare-no-tanedane" },
+      { title: "おはよう", slug: "ohayou-oishi" },
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "UNION", slug: "union-oxt" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+      { title: "ストーリー", slug: "story" },
+    ],
+  },
+  {
+    title: "大石昌良の弾き語りラボ～3日間の秘密の研究室～",
+    date: "2021.04.06",
+    venue: "duo MUSIC EXCHANGE",
+    note: "LiveFansのセットリスト投稿情報に基づく(2021.04.06/04.08/04.09の3日間、ほぼ同一セトリ)。",
+    setlist: [
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "セツナ風", slug: "setsuna-kaze" },
+      { title: "ボーダーライン", slug: "border-line" },
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+      { title: "海を見ていた ぼくは", slug: "umi-wo-miteita-boku-wa" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "ストーリー", slug: "story" },
+      { title: "ぼうやの夢よ", slug: "bouya-no-yume-yo-kariuta" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+    ],
+  },
+  {
+    title: "大石昌良の弾き語りラボ～大阪の秘密の研究室～",
+    date: "2021.07.28",
+    venue: "Music Club JANUS",
+    note: "LiveFansのセットリスト投稿情報に基づく(7月28日公演。27日公演はセットリスト未登録)。「ひまわりの約束」(秦基博のカバー)は除く。",
+    setlist: [
+      { title: "キウイ畑の宇宙船", slug: "kiwi-batake-no-uchuusen" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "ミスター", slug: "mister-oishi" },
+      { title: "ボーダーライン", slug: "border-line" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "うしろのしょうめん", slug: "ushiro-no-shoumen" },
+      { title: "英雄の歌", slug: "eiyu-no-uta" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+      { title: "ストーリー", slug: "story" },
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+    ],
+  },
+  {
+    title: "大石昌良が本気でやるアンプラグド・ワンマンライブ〈1部〉",
+    date: "2021.12.29",
+    venue: "Billboard Live OSAKA",
+    note: "LiveFansのセットリスト投稿情報に基づく(16:30/19:30の2部制のうち1部)。",
+    setlist: [
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "終焉的メロドラマ", slug: "shuuen-teki-melodrama" },
+      { title: "カブライダー", slug: "kabu-rider" },
+      { title: "ストーリー", slug: "story" },
+      { title: "ユートピア", slug: "utopia" },
+      { title: "海を見ていた ぼくは", slug: "umi-wo-miteita-boku-wa" },
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+      { title: "ただいま", slug: "tadaima" },
+    ],
+  },
+  {
+    title: "大石昌良が本気でやるアンプラグド・ワンマンライブ〈2部〉",
+    date: "2021.12.29",
+    venue: "Billboard Live OSAKA",
+    note: "LiveFansのセットリスト投稿情報に基づく(16:30/19:30の2部制のうち2部)。",
+    setlist: [
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "ラブ", slug: "love" },
+      { title: "別れの種だね", slug: "wakare-no-tanedane" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "ユートピア", slug: "utopia" },
+      { title: "うしろのしょうめん", slug: "ushiro-no-shoumen" },
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "オトモダチフィルム", slug: "otomodachi-film" },
+      { title: "楽園都市", slug: "rakuen-toshi" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "ストーリー", slug: "story" },
+    ],
+  },
+  {
+    title: "大石昌良の弾き語りラボ2022〈東京〉",
+    date: "2022.12.23",
+    venue: "中野サンプラザ ホール",
+    note: "LiveFansのセットリスト投稿情報に基づく。リクエストコーナーのカバー曲(タマシイレボリューション、夜空ノムコウ、抱きしめたい、ラブソング[サンボマスター]、エイリアンズ 等)は除く。",
+    setlist: [
+      { title: "ボーダーライン", slug: "border-line" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "楽園都市", slug: "rakuen-toshi" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "ダイヤモンド", slug: "diamond" },
+      { title: "オトモダチフィルム", slug: "otomodachi-film" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "ストーリー", slug: "story" },
+    ],
+  },
+  {
+    title: "大石昌良の弾き語りラボ2022〈愛媛〉",
+    date: "2022.12.25",
+    venue: "松前総合文化センター",
+    note: "LiveFansのセットリスト投稿情報に基づく。リクエストコーナーのカバー曲(ミュージック・アワー[ポルノグラフィティ]、白い恋人達[桑田佳祐]、今宵の月のように[エレファントカシマシ]、Tomorrow never knows[Mr.Children] 等)は除く。",
+    setlist: [
+      { title: "ボーダーライン", slug: "border-line" },
+      { title: "楽園都市", slug: "rakuen-toshi" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "ダイヤモンド", slug: "diamond" },
+      { title: "オトモダチフィルム", slug: "otomodachi-film" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "海を見ていた ぼくは", slug: "umi-wo-miteita-boku-wa" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+    ],
+  },
+  {
+    title: "大石昌良の弾き語りラボ2023",
+    date: "2023.12.19",
+    venue: "LINE CUBE SHIBUYA",
+    note: "LiveFansのセットリスト投稿情報に基づく(東京公演のみ。大阪公演はセットリスト未登録)。",
+    setlist: [
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "ボーダーライン", slug: "border-line" },
+      { title: "おはよう", slug: "ohayou-oishi" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "鍵っ子ノエル", slug: "kagikko-noel" },
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "キウイ畑の宇宙船", slug: "kiwi-batake-no-uchuusen" },
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "死んだ!", slug: "shinda" },
+      { title: "好きになっちゃダメな人", slug: "suki-ni-naccha-dame-na-hito" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "ターミナル", slug: "terminal" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+    ],
+  },
+  {
+    title: "大石昌良の弾き語りラボ 2025〈仙台〉",
+    date: "2025.05.01",
+    venue: "仙台darwin",
+    note: "LiveFansのセットリスト投稿情報に基づく(「～Back in LIVEHOUSE～」ツアー。各会場で一部セトリが異なる、セットリスト登録のある5公演を個別に記録)。",
+    setlist: [
+      { title: "ストーリー", slug: "story" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "ミスター", slug: "mister-oishi" },
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "別れの種だね", slug: "wakare-no-tanedane" },
+      { title: "されど空の青さを知る", slug: "saredo-sora-no-aosa-wo-shiru" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+      { title: "キウイ畑の宇宙船", slug: "kiwi-batake-no-uchuusen" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "エンターテイナー", slug: "entertainer-song" },
+    ],
+  },
+  {
+    title: "大石昌良の弾き語りラボ 2025〈東京〉",
+    date: "2025.05.07",
+    venue: "渋谷La.mama",
+    note: "LiveFansのセットリスト投稿情報に基づく(「～Back in LIVEHOUSE～」ツアー)。",
+    setlist: [
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "カブライダー", slug: "kabu-rider" },
+      { title: "ミスター", slug: "mister-oishi" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "別れの種だね", slug: "wakare-no-tanedane" },
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "海を見ていた ぼくは", slug: "umi-wo-miteita-boku-wa" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+      { title: "ストーリー", slug: "story" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "エンターテイナー", slug: "entertainer-song" },
+    ],
+  },
+  {
+    title: "大石昌良の弾き語りラボ 2025〈千葉〉",
+    date: "2025.05.09",
+    venue: "柏PALOOZA",
+    note: "LiveFansのセットリスト投稿情報に基づく(「～Back in LIVEHOUSE～」ツアー)。",
+    setlist: [
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "キウイ畑の宇宙船", slug: "kiwi-batake-no-uchuusen" },
+      { title: "uni-verse", slug: "uni-verse" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "カブライダー", slug: "kabu-rider" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "別れの種だね", slug: "wakare-no-tanedane" },
+      { title: "ボーダーライン", slug: "border-line" },
+      { title: "ミスター", slug: "mister-oishi" },
+      { title: "されど空の青さを知る", slug: "saredo-sora-no-aosa-wo-shiru" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+      { title: "ストーリー", slug: "story" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "エンターテイナー", slug: "entertainer-song" },
+    ],
+  },
+  {
+    title: "大石昌良の弾き語りラボ 2025〈兵庫〉",
+    date: "2025.05.21",
+    venue: "live music club PADOMA",
+    note: "LiveFansのセットリスト投稿情報に基づく(「～Back in LIVEHOUSE～」ツアー)。",
+    setlist: [
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "ボーダーライン", slug: "border-line" },
+      { title: "されど空の青さを知る", slug: "saredo-sora-no-aosa-wo-shiru" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "別れの種だね", slug: "wakare-no-tanedane" },
+      { title: "ミスター", slug: "mister-oishi" },
+      { title: "キウイ畑の宇宙船", slug: "kiwi-batake-no-uchuusen" },
+      { title: "カブライダー", slug: "kabu-rider" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+      { title: "ストーリー", slug: "story" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "エンターテイナー", slug: "entertainer-song" },
+    ],
+  },
+  {
+    title: "大石昌良の弾き語りラボ 2025〈福岡〉",
+    date: "2025.05.28",
+    venue: "FUKUOKA BEAT STATION",
+    note: "LiveFansのセットリスト投稿情報に基づく(「～Back in LIVEHOUSE～」ツアー)。",
+    setlist: [
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "されど空の青さを知る", slug: "saredo-sora-no-aosa-wo-shiru" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "別れの種だね", slug: "wakare-no-tanedane" },
+      { title: "ミスター", slug: "mister-oishi" },
+      { title: "キウイ畑の宇宙船", slug: "kiwi-batake-no-uchuusen" },
+      { title: "カブライダー", slug: "kabu-rider" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+      { title: "ストーリー", slug: "story" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "エンターテイナー", slug: "entertainer-song" },
+    ],
+  },
+  {
+    title: "大石昌良の弾き語りラボ 2025〈神奈川〉",
+    date: "2025.06.06",
+    venue: "CLUB CITTA'川崎",
+    note: "LiveFansのセットリスト投稿情報に基づく(「～Back in LIVEHOUSE～」ツアーのファイナル公演)。",
+    setlist: [
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "キウイ畑の宇宙船", slug: "kiwi-batake-no-uchuusen" },
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "カブライダー", slug: "kabu-rider" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "別れの種だね", slug: "wakare-no-tanedane" },
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "ミスター", slug: "mister-oishi" },
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+      { title: "ストーリー", slug: "story" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "エンターテイナー", slug: "entertainer-song" },
+    ],
+  },
+  {
+    title: "大石武道館 ～大石昌良 弾き語りワンマンライブ at 日本武道館～",
+    date: "2026.09.23",
+    venue: "日本武道館",
+    note: "LiveFansのセットリスト投稿情報に基づく。「ここが僕らのユニバース」「武道館」はタイトルを確認できず(新曲の可能性があり、slugを設定していない)。",
+    setlist: [
+      { title: "幻想アンダーグラウンド", slug: "gensou-underground" },
+      { title: "おはよう", slug: "ohayou-oishi" },
+      { title: "パラレルワールド", slug: "parallel-world" },
+      { title: "エンターテイナー", slug: "entertainer-song" },
+      { title: "カブライダー", slug: "kabu-rider" },
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "キウイ畑の宇宙船", slug: "kiwi-batake-no-uchuusen" },
+      { title: "「ここが僕らのユニバース」" },
+      { title: "ピエロ", slug: "pierrot-oishi" },
+      { title: "眼鏡ダーリン", slug: "megane-darling" },
+      { title: "ファイヤー!", slug: "fire-oishi" },
+      { title: "ボーダーライン", slug: "border-line" },
+      { title: "トライアングル", slug: "triangle-oishi" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "耳の聞こえなくなった恋人とそのうたうたい", slug: "mimi-no-kikoenaku-natta-koibito" },
+      { title: "嗚呼、素晴らしき日常", slug: "aa-subarashiki-nichijou" },
+      { title: "ただいま", slug: "tadaima" },
+      { title: "武道館" },
+      { title: "東京ループ", slug: "tokyo-loop" },
+      { title: "ストーリー", slug: "story" },
+    ],
+  },
+
+  // --- Sound Schedule(単独ライブのみ。ネコフェス/KANSAI LOVERS/MINAMI WHEEL等の
+  // フェス出演・ゲスト出演は対象外)。LiveFansのセットリスト投稿情報に基づく。
+  // 各ツアーとも複数都市を回るが、セットリスト登録のある代表1公演のみを記録 ---
+  {
+    title: "Live Tour『456』～シェイキャバディ～",
+    date: "2003.11.23",
+    venue: "なんばHatch",
+    note: "LiveFansのセットリスト投稿情報に基づく(大阪公演のみ)。",
+    setlist: [
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "窓の向こう", slug: "mado-no-mukou" },
+      { title: "ペンネの女", slug: "penne-no-onna" },
+      { title: "IQ兄弟", slug: "iq-kyoudai" },
+      { title: "月が落ちる前に…", slug: "tsuki-ga-ochiru-mae-ni" },
+      { title: "愛のかたち", slug: "ai-no-katachi" },
+      { title: "コモリウタ", slug: "komoriuta" },
+      { title: "運命の人へ", slug: "unmei-no-hito-e" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "僕らの行方", slug: "bokura-no-yukue" },
+      { title: "燃やせ煩悩", slug: "moyase-bonnou" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "東京ライフ", slug: "tokyo-life-sound-schedule" },
+      { title: "結末のない二人", slug: "ketsumatsu-no-nai-futari" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "人の子ふたり", slug: "hito-no-ko-futari" },
+      { title: "花火", slug: "hanabi-sound-schedule" },
+    ],
+  },
+  {
+    title: "ひざからアクセル ツアー2004",
+    date: "2004.07.20",
+    venue: "なんばHatch",
+    note: "LiveFansのセットリスト投稿情報に基づく(大阪公演のみ)。「メドレー」は除く。",
+    setlist: [
+      { title: "スペシャルナンバー", slug: "special-number" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "わけあり", slug: "wakeari" },
+      { title: "運命の人へ", slug: "unmei-no-hito-e" },
+      { title: "僕らの行方", slug: "bokura-no-yukue" },
+      { title: "窓の向こう", slug: "mado-no-mukou" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "恋焦がれ", slug: "koi-kogare" },
+      { title: "花火", slug: "hanabi-sound-schedule" },
+      { title: "愛のかたち", slug: "ai-no-katachi" },
+      { title: "太陽の国", slug: "taiyou-no-kuni" },
+      { title: "大学物語", slug: "daigaku-monogatari" },
+      { title: "マザーコンプレックス", slug: "mother-complex" },
+      { title: "傷だらけの少年", slug: "kizudarake-no-shounen" },
+      { title: "結末のない二人", slug: "ketsumatsu-no-nai-futari" },
+      { title: "ハイライト", slug: "highlight-sound-schedule" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "東京ライフ", slug: "tokyo-life-sound-schedule" },
+      { title: "コモリウタ", slug: "komoriuta" },
+      { title: "境界線にて", slug: "kyoukaisen-nite" },
+      { title: "幼なじみ", slug: "osananajimi" },
+    ],
+  },
+  {
+    title: "Live Tour \"you can't beat that\"",
+    date: "2005.11.12",
+    venue: "BIGCAT",
+    note: "LiveFansのセットリスト投稿情報に基づく(大阪公演のみ)。",
+    setlist: [
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" },
+      { title: "スペシャルナンバー", slug: "special-number" },
+      { title: "ヘイ!ヘイ!", slug: "hey-hey-sound-schedule" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+      { title: "愛のかたち", slug: "ai-no-katachi" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "僕らの逃避行", slug: "bokura-no-touhikou" },
+      { title: "コモリウタ", slug: "komoriuta" },
+      { title: "甘い夜", slug: "amai-yoru" },
+      { title: "エピローグ", slug: "epilogue-sound-schedule" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "今ココにあるもの", slug: "ima-koko-ni-aru-mono" },
+      { title: "同じ空の下で", slug: "onaji-sora-no-shita-de" },
+      { title: "結末のない二人", slug: "ketsumatsu-no-nai-futari" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+    ],
+  },
+  {
+    title: "Sound Life 2005～再開～",
+    date: "2005.12.28",
+    venue: "神戸ART HOUSE",
+    note: "LiveFansのセットリスト投稿情報に基づく(兵庫公演のみ)。",
+    setlist: [
+      { title: "ちょっとだけ", slug: "chotto-dake" },
+      { title: "ヘイ!ヘイ!", slug: "hey-hey-sound-schedule" },
+      { title: "花火", slug: "hanabi-sound-schedule" },
+      { title: "同じ空の下で", slug: "onaji-sora-no-shita-de" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "スペシャルナンバー", slug: "special-number" },
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "僕らの逃避行", slug: "bokura-no-touhikou" },
+      { title: "月が落ちる前に…", slug: "tsuki-ga-ochiru-mae-ni" },
+      { title: "ハイライト", slug: "highlight-sound-schedule" },
+      { title: "甘い夜", slug: "amai-yoru" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "エピローグ", slug: "epilogue-sound-schedule" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+      { title: "今ココにあるもの", slug: "ima-koko-ni-aru-mono" },
+    ],
+  },
+  {
+    title: "Sound Life ～ありがとう～",
+    date: "2006.09.26",
+    venue: "なんばHatch",
+    note: "LiveFansのセットリスト投稿情報に基づく(大阪公演のみ)。「メドレー」は除く。",
+    setlist: [
+      { title: "同じ空の下で", slug: "onaji-sora-no-shita-de" },
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "ヘイ!ヘイ!", slug: "hey-hey-sound-schedule" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "世直しブッダ", slug: "yonaoshi-buddha" },
+      { title: "クライマックス", slug: "climax-sound-schedule" },
+      { title: "黄金レシピ", slug: "ougon-recipe" },
+      { title: "恋焦がれ", slug: "koi-kogare" },
+      { title: "愛のかたち", slug: "ai-no-katachi" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "ちょっとだけ", slug: "chotto-dake" },
+      { title: "東京ライフ", slug: "tokyo-life-sound-schedule" },
+      { title: "大学物語", slug: "daigaku-monogatari" },
+      { title: "マザーコンプレックス", slug: "mother-complex" },
+      { title: "結末のない二人", slug: "ketsumatsu-no-nai-futari" },
+      { title: "君のためにできること", slug: "kimi-no-tame-ni-dekiru-koto" },
+      { title: "窓の向こう", slug: "mado-no-mukou" },
+      { title: "僕らの行方", slug: "bokura-no-yukue" },
+      { title: "スペシャルナンバー", slug: "special-number" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+      { title: "コモリウタ", slug: "komoriuta" },
+      { title: "ハイライト", slug: "highlight-sound-schedule" },
+      { title: "甘い夜", slug: "amai-yoru" },
+      { title: "今ココにあるもの", slug: "ima-koko-ni-aru-mono" },
+      { title: "コンタクト", slug: "contact-sound-schedule" },
+    ],
+  },
+  {
+    title: "Live tour『PLACE 2012』",
+    date: "2012.10.08",
+    venue: "恵比寿LIQUIDROOM",
+    note: "LiveFansのセットリスト投稿情報に基づく(東京公演のみ)。",
+    setlist: [
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "エイリアン", slug: "alien-sound-schedule" },
+      { title: "コモリウタ", slug: "komoriuta" },
+      { title: "その愛を止めないで", slug: "sono-ai-wo-tomenaide" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "グッドモーニング", slug: "good-morning-sound-schedule" },
+      { title: "グッドタイムコミュニケーション", slug: "good-time-communication" },
+      { title: "僕らの行方", slug: "bokura-no-yukue" },
+      { title: "僕らの足跡～はじめのいっぽ～", slug: "bokura-no-ashiato" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "エピローグ", slug: "epilogue-sound-schedule" },
+      { title: "結末のない二人", slug: "ketsumatsu-no-nai-futari" },
+      { title: "スマイル", slug: "smile-sound-schedule" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+    ],
+  },
+  {
+    title: "Live tour『PLACE 2013』",
+    date: "2013.09.20",
+    venue: "duo MUSIC EXCHANGE",
+    note: "LiveFansのセットリスト投稿情報に基づく(東京公演のみ)。",
+    setlist: [
+      { title: "グッドタイムコミュニケーション", slug: "good-time-communication" },
+      { title: "マザーコンプレックス", slug: "mother-complex" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "僕らの逃避行", slug: "bokura-no-touhikou" },
+      { title: "人の子ふたり", slug: "hito-no-ko-futari" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "ちょっとだけ", slug: "chotto-dake" },
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" },
+      { title: "甘い夜", slug: "amai-yoru" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "ヘイ!ヘイ!", slug: "hey-hey-sound-schedule" },
+      { title: "その愛を止めないで", slug: "sono-ai-wo-tomenaide" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "東京ライフ", slug: "tokyo-life-sound-schedule" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "愛のかたち", slug: "ai-no-katachi" },
+      { title: "スペシャルナンバー", slug: "special-number" },
+    ],
+  },
+  {
+    title: "Live tour『PLACE 2014』",
+    date: "2014.10.04",
+    venue: "札幌Bessie Hall",
+    note: "LiveFansのセットリスト投稿情報に基づく(北海道公演のみ)。",
+    setlist: [
+      { title: "月が落ちる前に…", slug: "tsuki-ga-ochiru-mae-ni" },
+      { title: "ミラクル", slug: "miracle-sound-schedule" },
+      { title: "甘い夜", slug: "amai-yoru" },
+      { title: "スペシャルナンバー", slug: "special-number" },
+      { title: "フリーハンド", slug: "free-hand" },
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" },
+      { title: "ペンネの女", slug: "penne-no-onna" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "目隠し鬼", slug: "mekakushi-oni" },
+      { title: "グッドタイムコミュニケーション", slug: "good-time-communication" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "同じ空の下で", slug: "onaji-sora-no-shita-de" },
+      { title: "銀河ステーション", slug: "ginga-station" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "ありがとう", slug: "arigatou-sound-schedule" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+    ],
+  },
+  {
+    title: "Live tour「PLACE 2015」",
+    date: "2015.09.22",
+    venue: "ell. FITSALL",
+    note: "LiveFansのセットリスト投稿情報に基づく(愛知公演のみ)。",
+    setlist: [
+      { title: "結末のない二人", slug: "ketsumatsu-no-nai-futari" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "ヘイ!ヘイ!", slug: "hey-hey-sound-schedule" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "スマイル", slug: "smile-sound-schedule" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "竜巻", slug: "tatsumaki" },
+      { title: "ハイライト", slug: "highlight-sound-schedule" },
+      { title: "境界線にて", slug: "kyoukaisen-nite" },
+      { title: "IQ兄弟", slug: "iq-kyoudai" },
+      { title: "ミラクル", slug: "miracle-sound-schedule" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "エピローグ", slug: "epilogue-sound-schedule" },
+      { title: "コンタクト", slug: "contact-sound-schedule" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "スペシャルナンバー", slug: "special-number" },
+      { title: "今ココにあるもの", slug: "ima-koko-ni-aru-mono" },
+    ],
+  },
+  {
+    title: "Sound Schedule(渋谷CLUB QUATTRO)",
+    date: "2016.09.25",
+    venue: "渋谷CLUB QUATTRO",
+    note: "LiveFansのセットリスト投稿情報に基づく(東京公演のみ。特定のツアー名は付されていない)。",
+    setlist: [
+      { title: "ヘイ!ヘイ!", slug: "hey-hey-sound-schedule" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" },
+      { title: "スペシャルナンバー", slug: "special-number" },
+      { title: "ミラクル", slug: "miracle-sound-schedule" },
+      { title: "タイムマシーン", slug: "time-machine" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "スマイル", slug: "smile-sound-schedule" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "甘い夜", slug: "amai-yoru" },
+      { title: "銀河ステーション", slug: "ginga-station" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "今ココにあるもの", slug: "ima-koko-ni-aru-mono" },
+      { title: "あさがお", slug: "asagao" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "グッドタイムコミュニケーション", slug: "good-time-communication" },
+      { title: "ありがとう", slug: "arigatou-sound-schedule" },
+    ],
+  },
+  {
+    title: "Sound Schedule(BIGCAT)",
+    date: "2017.09.24",
+    venue: "BIGCAT",
+    note: "LiveFansのセットリスト投稿情報に基づく(大阪公演のみ。特定のツアー名は付されていない)。カバー曲(My Sharona、恋)は除く。",
+    setlist: [
+      { title: "世直しブッダ", slug: "yonaoshi-buddha" },
+      { title: "グッドタイムコミュニケーション", slug: "good-time-communication" },
+      { title: "ミラクル", slug: "miracle-sound-schedule" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "エイリアン", slug: "alien-sound-schedule" },
+      { title: "その愛を止めないで", slug: "sono-ai-wo-tomenaide" },
+      { title: "ヘイ!ヘイ!", slug: "hey-hey-sound-schedule" },
+      { title: "ロックンロール", slug: "rock-n-roll-sound-schedule" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "境界線にて", slug: "kyoukaisen-nite" },
+      { title: "ハイライト", slug: "highlight-sound-schedule" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "コンタクト", slug: "contact-sound-schedule" },
+      { title: "同じ空の下で", slug: "onaji-sora-no-shita-de" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+    ],
+  },
+  {
+    title: "Live Tour「PLACE 2018」",
+    date: "2018.09.29",
+    venue: "BIGCAT",
+    note: "LiveFansのセットリスト投稿情報に基づく(大阪公演のみ)。",
+    setlist: [
+      { title: "月が落ちる前に…", slug: "tsuki-ga-ochiru-mae-ni" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "僕らの逃避行", slug: "bokura-no-touhikou" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "グッドタイムコミュニケーション", slug: "good-time-communication" },
+      { title: "ミラクル", slug: "miracle-sound-schedule" },
+      { title: "ペンネの女", slug: "penne-no-onna" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "恋焦がれ", slug: "koi-kogare" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "ヘイ!ヘイ!", slug: "hey-hey-sound-schedule" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "東京ライフ", slug: "tokyo-life-sound-schedule" },
+      { title: "結末のない二人", slug: "ketsumatsu-no-nai-futari" },
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+      { title: "スマイル", slug: "smile-sound-schedule" },
+    ],
+  },
+  {
+    title: "Live Tour「PLACE 2019」",
+    date: "2019.10.05",
+    venue: "BIGCAT",
+    note: "LiveFansのセットリスト投稿情報に基づく(大阪公演のみ)。",
+    setlist: [
+      { title: "フリーハンド", slug: "free-hand" },
+      { title: "太陽の国", slug: "taiyou-no-kuni" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "グッドタイムコミュニケーション", slug: "good-time-communication" },
+      { title: "運命の人へ", slug: "unmei-no-hito-e" },
+      { title: "IQ兄弟", slug: "iq-kyoudai" },
+      { title: "わけあり", slug: "wakeari" },
+      { title: "花火", slug: "hanabi-sound-schedule" },
+      { title: "世直しブッダ", slug: "yonaoshi-buddha" },
+      { title: "傷だらけの少年", slug: "kizudarake-no-shounen" },
+      { title: "シチューが飲みたくなる唄", slug: "stew-ga-nomitaku-naru-uta" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+      { title: "タイムマシーン", slug: "time-machine" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "今ココにあるもの", slug: "ima-koko-ni-aru-mono" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "スペシャルナンバー", slug: "special-number" },
+      { title: "同じ空の下で", slug: "onaji-sora-no-shita-de" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+    ],
+  },
+  {
+    title: "Sound Schedule(恵比寿LIQUIDROOM)",
+    date: "2020.09.27",
+    venue: "恵比寿LIQUIDROOM",
+    note: "LiveFansのセットリスト投稿情報に基づく(東京公演のみ。特定のツアー名は付されていない)。",
+    setlist: [
+      { title: "ハイライト", slug: "highlight-sound-schedule" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "ミラクル", slug: "miracle-sound-schedule" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "ヘイ!ヘイ!", slug: "hey-hey-sound-schedule" },
+      { title: "境界線にて", slug: "kyoukaisen-nite" },
+      { title: "たそがれスターライト", slug: "tasogare-starlight" },
+      { title: "グッドモーニング", slug: "good-morning-sound-schedule" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "エピローグ", slug: "epilogue-sound-schedule" },
+      { title: "東京ライフ", slug: "tokyo-life-sound-schedule" },
+      { title: "スマイル", slug: "smile-sound-schedule" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+      { title: "ありがとう", slug: "arigatou-sound-schedule" },
+    ],
+  },
+  {
+    title: "PLACE2021",
+    date: "2021.10.03",
+    venue: "TSUTAYA O-EAST",
+    note: "LiveFansのセットリスト投稿情報に基づく(東京公演のみ)。",
+    setlist: [
+      { title: "タイムマシーン", slug: "time-machine" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "同じ空の下で", slug: "onaji-sora-no-shita-de" },
+      { title: "グッドモーニング", slug: "good-morning-sound-schedule" },
+      { title: "スペシャルナンバー", slug: "special-number" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "コモリウタ", slug: "komoriuta" },
+      { title: "甘い夜", slug: "amai-yoru" },
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" },
+      { title: "銀河ステーション", slug: "ginga-station" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+      { title: "愛のかたち", slug: "ai-no-katachi" },
+      { title: "幼なじみ", slug: "osananajimi" },
+    ],
+  },
+  {
+    title: "Live tour『PLACE 2022』",
+    date: "2022.10.15",
+    venue: "cube garden",
+    note: "LiveFansのセットリスト投稿情報に基づく(北海道公演のみ)。",
+    setlist: [
+      { title: "マザーコンプレックス", slug: "mother-complex" },
+      { title: "世直しブッダ", slug: "yonaoshi-buddha" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "ちょっとだけ", slug: "chotto-dake" },
+      { title: "月が落ちる前に…", slug: "tsuki-ga-ochiru-mae-ni" },
+      { title: "愛のかたち", slug: "ai-no-katachi" },
+      { title: "流星群" },
+      { title: "大学物語", slug: "daigaku-monogatari" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" },
+      { title: "恋焦がれ", slug: "koi-kogare" },
+      { title: "今ココにあるもの", slug: "ima-koko-ni-aru-mono" },
+      { title: "竜巻", slug: "tatsumaki" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "シチューが飲みたくなる唄", slug: "stew-ga-nomitaku-naru-uta" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+    ],
+  },
+  {
+    title: "Live tour『PLACE 2023』",
+    date: "2023.10.09",
+    venue: "恵比寿LIQUIDROOM",
+    note: "LiveFansのセットリスト投稿情報に基づく(東京公演のみ。別途Extra Show[兵庫]あり)。",
+    setlist: [
+      { title: "アンサー", slug: "answer-sound-schedule" },
+      { title: "グッドタイムコミュニケーション", slug: "good-time-communication" },
+      { title: "ミラクル", slug: "miracle-sound-schedule" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "ヘイ!ヘイ!", slug: "hey-hey-sound-schedule" },
+      { title: "ほのかてらす", slug: "honoka-terasu" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "超能力少年", slug: "chounouryoku-shounen" },
+      { title: "スペシャルナンバー", slug: "special-number" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "エピローグ", slug: "epilogue-sound-schedule" },
+      { title: "結末のない二人", slug: "ketsumatsu-no-nai-futari" },
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" },
+      { title: "幼なじみ", slug: "osananajimi" },
+    ],
+  },
+  {
+    title: "Live tour『PLACE 2024』",
+    date: "2024.10.06",
+    venue: "Electric Lady Land",
+    note: "LiveFansのセットリスト投稿情報に基づく(愛知公演のみ)。",
+    setlist: [
+      { title: "きっととどかないだろう", slug: "kitto-todokanai-darou" },
+      { title: "コモリウタ", slug: "komoriuta" },
+      { title: "真夜中のID", slug: "mayonaka-no-id" },
+      { title: "僕らの逃避行", slug: "bokura-no-touhikou" },
+      { title: "太陽の国", slug: "taiyou-no-kuni" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+      { title: "スマイル", slug: "smile-sound-schedule" },
+      { title: "人の子ふたり", slug: "hito-no-ko-futari" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "同じ空の下で", slug: "onaji-sora-no-shita-de" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "ことばさがし", slug: "kotoba-sagashi" },
+      { title: "幼なじみ", slug: "osananajimi" },
+    ],
+  },
+  {
+    title: "Sound Schedule LIVE2026 -New Year Edition-",
+    date: "2026.01.17",
+    venue: "duo MUSIC EXCHANGE",
+    note: "LiveFansのセットリスト投稿情報に基づく(東京18:00公演)。",
+    setlist: [
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "コモリウタ", slug: "komoriuta" },
+      { title: "東京ライフ", slug: "tokyo-life-sound-schedule" },
+      { title: "ハイライト", slug: "highlight-sound-schedule" },
+      { title: "ペンネの女", slug: "penne-no-onna" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "恋焦がれ", slug: "koi-kogare" },
+      { title: "月が落ちる前に…", slug: "tsuki-ga-ochiru-mae-ni" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "結末のない二人", slug: "ketsumatsu-no-nai-futari" },
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" },
+      { title: "甘い夜", slug: "amai-yoru" },
+    ],
+  },
+  {
+    title: "Sound Schedule Live Tour \"PLACE 2026\"",
+    date: "2026.10.10",
+    venue: "ヒューリックホール東京",
+    note: "LiveFansのセットリスト投稿情報に基づく(東京公演のみ)。",
+    setlist: [
+      { title: "幼なじみ", slug: "osananajimi" },
+      { title: "スペシャルナンバー", slug: "special-number" },
+      { title: "愛のかたち", slug: "ai-no-katachi" },
+      { title: "ヘイ!ヘイ!", slug: "hey-hey-sound-schedule" },
+      { title: "さらばピニャコラーダ", slug: "saraba-pina-colada" },
+      { title: "僕らの逃避行", slug: "bokura-no-touhikou" },
+      { title: "吠える犬と君", slug: "hoeru-inu-to-kimi" },
+      { title: "結末のない二人", slug: "ketsumatsu-no-nai-futari" },
+      { title: "甘い夜", slug: "amai-yoru" },
+      { title: "エピローグ", slug: "epilogue-sound-schedule" },
+      { title: "ピーターパン・シンドローム", slug: "peter-pan-syndrome" },
+      { title: "君という花", slug: "kimi-to-iu-hana" },
+      { title: "コンパス", slug: "compass-sound-schedule" },
+      { title: "アンサー", slug: "answer-sound-schedule" },
+      { title: "言葉以上に", slug: "kotoba-ijou-ni" },
+    ],
+  },
+
+  // --- OxT(単独ライブのみ。ANIMAX MUSIX/Animelo Summer Live/P's LIVE!等の
+  // フェス・対バン出演、MYTH & ROIDとのツーマンライブは対象外)。
+  // LiveFansのセットリスト投稿情報に基づく ---
+  {
+    title: "OxT(新宿ReNY)",
+    date: "2016.04.01",
+    venue: "新宿ReNY",
+    note: "LiveFansのセットリスト投稿情報に基づく(東京公演のみ。特定のツアー名は付されていない)。「Everybody Dance Now+コウメ太夫 MIX」は除く。",
+    setlist: [
+      { title: "BLOOM OF YOUTH", slug: "bloom-of-youth" },
+      { title: "5 soul MATE'S", slug: "5-soul-mates" },
+      { title: "BRAND NEW BLUE", slug: "brand-new-blue" },
+      { title: "Perfect HERO", slug: "perfect-hero" },
+      { title: "B.L.T.", slug: "blt-oxt" },
+      { title: "枕男子", slug: "makura-danshi-kariuta" },
+      { title: "Lost you", slug: "lost-you-oxt" },
+      { title: "STRIDER'S HIGH", slug: "striders-high" },
+      { title: "KIMERO!!", slug: "kimero" },
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+      { title: "Grateful Story", slug: "grateful-story" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+    ],
+  },
+  {
+    title: "OxTの日(club asia)",
+    date: "2016.09.10",
+    venue: "club asia",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+      { title: "KIMERO!!", slug: "kimero" },
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "BLOOM OF YOUTH", slug: "bloom-of-youth" },
+      { title: "STRIDER'S HIGH", slug: "striders-high" },
+      { title: "Grateful Story", slug: "grateful-story" },
+      { title: "Perfect HERO", slug: "perfect-hero" },
+    ],
+  },
+  {
+    title: "OxT(渋谷CLUB QUATTRO)",
+    date: "2017.04.02",
+    venue: "渋谷CLUB QUATTRO",
+    note: "LiveFansのセットリスト投稿情報に基づく(東京公演のみ。特定のツアー名は付されていない)。",
+    setlist: [
+      { title: "Tears of a Genius", slug: "tears-of-a-genius" },
+      { title: "STRIDER'S HIGH", slug: "striders-high" },
+      { title: "Lost you", slug: "lost-you-oxt" },
+      { title: "Grateful Story", slug: "grateful-story" },
+      { title: "B.L.T.", slug: "blt-oxt" },
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "KIMERO!!", slug: "kimero" },
+      { title: "One Hand Message", slug: "one-hand-message" },
+      { title: "ようこそジャパリパークへ", slug: "youkoso-japari-park-kariuta" },
+      { title: "Perfect HERO", slug: "perfect-hero" },
+      { title: "BLOOM OF YOUTH", slug: "bloom-of-youth" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "Laughter Slaughter", slug: "laughter-slaughter" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+    ],
+  },
+  {
+    title: "OxTの日(SPACE ODD)",
+    date: "2018.09.10",
+    venue: "SPACE ODD",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "O vs T", slug: "o-vs-t" },
+      { title: "GO CRY GO", slug: "go-cry-go" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+      { title: "Silent Solitude", slug: "silent-solitude" },
+      { title: "Hello New World", slug: "hello-new-world" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "UNION", slug: "union-oxt" },
+    ],
+  },
+  {
+    title: "Hello New World 2018 Tour",
+    date: "2018.10.17",
+    venue: "Music Club JANUS",
+    note: "LiveFansのセットリスト投稿情報に基づく(大阪公演のみ)。",
+    setlist: [
+      { title: "Lost you", slug: "lost-you-oxt" },
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "STRIDER'S HIGH", slug: "striders-high" },
+      { title: "Around the world", slug: "around-the-world-oxt" },
+      { title: "Hello New World", slug: "hello-new-world" },
+      { title: "One Hand Message", slug: "one-hand-message" },
+      { title: "O vs T", slug: "o-vs-t" },
+      { title: "Daily-go-round", slug: "daily-go-round" },
+      { title: "GO CRY GO", slug: "go-cry-go" },
+      { title: "Silent Solitude", slug: "silent-solitude" },
+      { title: "MASS FOR THE DEAD", slug: "mass-for-the-dead" },
+      { title: "KIMERO!!", slug: "kimero" },
+      { title: "BLOOM OF YOUTH", slug: "bloom-of-youth" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "夢のヒーロー", slug: "yume-no-hero-oxt" },
+      { title: "UNION", slug: "union-oxt" },
+    ],
+  },
+  {
+    title: "OxTの日 2020 ON LINE",
+    date: "2020.09.10",
+    venue: "オンラインライブ",
+    note: "LiveFansのセットリスト投稿情報に基づく。",
+    setlist: [
+      { title: "ゴールデンアフタースクール", slug: "golden-after-school" },
+      { title: "O vs T #2", slug: "o-vs-t-2" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "REUNION", slug: "reunion-song" },
+      { title: "チャンス!", slug: "chance-oxt" },
+      { title: "UNION", slug: "union-oxt" },
+      { title: "Everlasting Dream", slug: "everlasting-dream" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+    ],
+  },
+  {
+    title: "OxTワンマンライブ「Hello New World 2022」",
+    date: "2022.09.09",
+    venue: "梅田CLUB QUATTRO",
+    note: "LiveFansのセットリスト投稿情報に基づく(大阪公演のみ)。",
+    setlist: [
+      { title: "STRIDER'S HIGH", slug: "striders-high" },
+      { title: "One Hand Message", slug: "one-hand-message" },
+      { title: "Silent Solitude", slug: "silent-solitude" },
+      { title: "HOLLOW HUNGER", slug: "hollow-hunger" },
+      { title: "Around the world", slug: "around-the-world-oxt" },
+      { title: "MASS FOR THE DEAD", slug: "mass-for-the-dead" },
+      { title: "O vs T", slug: "o-vs-t" },
+      { title: "Clattanoia", slug: "clattanoia" },
+      { title: "Lost you", slug: "lost-you-oxt" },
+      { title: "GO CRY GO", slug: "go-cry-go" },
+      { title: "Perfect HERO", slug: "perfect-hero" },
+      { title: "Number One", slug: "number-one-oxt" },
+      { title: "Go EXCEED!!", slug: "go-exceed" },
+      { title: "ゴールデンアフタースクール", slug: "golden-after-school" },
+      { title: "UNION", slug: "union-oxt" },
+      { title: "君じゃなきゃダメみたい", slug: "kimi-janakya-dame-mitai" },
+      { title: "Hello New World", slug: "hello-new-world" },
+    ],
+  },
+];
+
 export const groups = ["オーイシマサヨシ", "大石昌良", "OxT", "Sound Schedule", "楽曲提供"] as const;
 export const types = ["アルバム", "シングル", "映像", "提供曲"] as const;
+
+// 「ライブ収録」手動上書き辞書そのものを公開する(my-pick側のcandidatesByGroupのような
+// 加工は行わず、利用側のoishi-wordle.astroで自動判定とマージして使う)。
+export { liveRecordedOverrides };

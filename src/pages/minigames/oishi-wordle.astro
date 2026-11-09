@@ -1,0 +1,1001 @@
+---
+// シングルあてゲーム(ミニゲーム)。
+// Wordle/Loldleのクラシックモードに近い形式: ランダムに選ばれた1曲(正解)を、
+// 曲名を予想するたびに属性を比較して一致度をヒントとして出し、6回以内に
+// 正解にたどり着くゲーム。アキネーターのような質問形式ではなく、
+// 「予想→一致した部分を見て絞り込む」方式(ユーザー要望に基づく)。
+// MY PICKと同様、サーバー側には何も保存せずブラウザ内だけで完結する。
+import Layout from "../../layouts/Layout.astro";
+import { tracks, getAlbumCoverImages, liveShows, liveRecordedOverrides } from "../../data/discography";
+import { resolveTrackCoverSrc } from "../../lib/trackCover";
+
+// 出題・回答候補はシングルのみ(ユーザー要望)。slugが無い曲は個別ページも
+// ジャケットも用意できないので対象外にする。
+const singleTracks = tracks.filter((t) => t.type === "シングル" && t.slug);
+
+// 「アルバム収録」は曲データ自身には無いフィールドなので、全曲のアルバムの
+// tracklistを走査してこの曲が登場するかを逆引きする。TrackRefにslugが
+// あればslugで、無ければタイトル完全一致で判定する。
+const albumSlugs = new Set<string>();
+const albumTitles = new Set<string>();
+
+for (const t of tracks) {
+  if (t.type === "アルバム" && t.tracklist) {
+    for (const ref of t.tracklist) {
+      if (ref.slug) albumSlugs.add(ref.slug);
+      else albumTitles.add(ref.title);
+    }
+  }
+}
+
+function hasAppearance(slug: string | undefined, title: string, slugSet: Set<string>, titleSet: Set<string>): boolean {
+  return (!!slug && slugSet.has(slug)) || titleSet.has(title);
+}
+
+// 「ライブ収録」は回数で見る(ユーザー要望)。公式にBlu-ray/DVD化された
+// 映像作品(isLive)のsetlist/setlistsと、liveShows(LiveFans等で個別に
+// 調査したライブ記録)の両方を走査して、この曲が何回登場したかを数える。
+// liveRecordedOverridesに明示的な記録があるslugは、その回数をそのまま使う
+// (無ければ0回として扱う。中間の「収録はされているが正確な回数は未集計」
+// というケースは現状存在しない)。
+const liveCountBySlug = new Map<string, number>();
+const liveCountByTitle = new Map<string, number>();
+
+function bump(map: Map<string, number>, key: string) {
+  map.set(key, (map.get(key) ?? 0) + 1);
+}
+
+for (const t of tracks) {
+  if (t.isLive) {
+    const refs = [...(t.setlist ?? []), ...(t.setlists?.flatMap((g) => g.tracks) ?? [])];
+    for (const ref of refs) {
+      if (ref.slug) bump(liveCountBySlug, ref.slug);
+      else bump(liveCountByTitle, ref.title);
+    }
+  }
+}
+for (const show of liveShows) {
+  for (const ref of show.setlist) {
+    if (ref.slug) bump(liveCountBySlug, ref.slug);
+    else bump(liveCountByTitle, ref.title);
+  }
+}
+
+function liveCountOf(slug: string | undefined, title: string): number {
+  // liveRecordedOverridesはtrue/falseの「収録実績があるかどうか」フラグだが、
+  // falseが明示されている(=調査済みで0回と確認済み)場合は0回扱いにする。
+  if (slug && slug in liveRecordedOverrides && liveRecordedOverrides[slug] === false) return 0;
+  return (slug ? liveCountBySlug.get(slug) : undefined) ?? liveCountByTitle.get(title) ?? 0;
+}
+
+// 回数の0/1/2〜4/5以上という段階表示(ユーザー要望: 0,1,3,5以上)はクライアント側
+// (liveBucketLabel)で行う。比較のヒント自体は丸める前の実数(liveCount)を使う。
+
+// タイアップは「アニメ」「アニメ以外」「なし」の3カテゴリで比較する
+// (ユーザー要望)。tieInの文章だけでは判定しきれない曲があるため、
+// 1曲ずつ確認した結果をslugキーの辞書として持つ(新しいタイアップ付き
+// シングルを追加したときはこの辞書への追記を忘れないこと)。
+// 判定根拠: 各曲のdescriptionやdiscography.tsの記載(「TVアニメ」「Webアニメ」
+// 「劇場版」+アニメ作品名など)を個別に確認済み。
+const tieInAnimeOverrides: Record<string, "anime" | "other"> = {
+  "compass-sound-schedule": "other", // コンパス(ジュビロ磐田イメージソング)
+  "climax-sound-schedule": "other", // クライマックス(ジュビロ磐田イメージソング)
+  "honoka-terasu": "other", // ほのかてらす(「神さまぁ〜ず」)
+  "love": "other", // ラブ(「クメピポ!」)
+  "kimi-janakya-dame-mitai": "anime", // 君じゃなきゃダメみたい(月刊少女野崎くん)
+  "otomodachi-film": "anime", // オトモダチフィルム(多田くんは恋をしない)
+  "hands": "other", // Hands(特撮『ウルトラマンR/B』)
+  "ultra-sing": "other", // ウルトラSing!!(特撮『ウルトラマンR/B』)
+  "dragon-energy": "other", // ドラゴンエネルギー(ネット番組)
+  "numa": "anime", // 沼(臨死‼江古田ちゃん)
+  "rakuen-toshi": "anime", // 楽園都市(コップクラフト)
+  "voltssimo": "other", // ボルテシモ(NHKドキュメンタリー「ノーナレ」)
+  "no-7": "anime", // No.7(地縛少年花子くん)
+  "sekai-ga-kimi-wo": "anime", // 世界が君を必要とする時が来たんだ(トミカ絆合体アースグランナー)
+  "eiyu-no-uta": "anime", // 英雄の歌(劇場版モンスターストライク)
+  "kinkan-no-uta-2020": "other", // キンカンのうた2020(CM)
+  "shinwaku-algorithm": "other", // 神或アルゴリズム(りりあ。とのデュエット、作品タイアップなし)
+  "imperfect": "anime", // インパーフェクト(SSSS.DYNAZENON)
+  "role-playing": "anime", // ロールプレイング(ドラゴン、家を買う。)
+  "koi-wa-explosion": "anime", // 恋はエクスプロージョン(恋は世界征服のあとで)
+  "aoi-housougeki": "other", // 碧い砲撃(スマホゲーム『アズールレーン』)
+  "gift": "anime", // ギフト(お隣の天使様にいつの間にか駄目人間にされていた件)
+  "shinda": "anime", // 死んだ!(勇者が死んだ!)
+  "ougon-kouro": "other", // 黄金航路(スマホゲーム『アズールレーン』)
+  "suki-ni-naccha-dame-na-hito": "anime", // 好きになっちゃダメな人(お嬢と番犬くん)
+  "namara-menkoi-gal": "anime", // なまらめんこいギャル(道産子ギャルはなまらめんこい)
+  "duel-shiyouze": "anime", // デュエルしようぜ！(遊☆戯☆王ゴーラッシュ!!)
+  "ato-no-matsuri": "other", // あとの祭り(TVドラマ『サバエとヤッたら終わる』)
+  "sea-of-wonderland": "other", // Sea of Wonderland(スマホゲーム『アズールレーン』)
+  "gambling-hall": "anime", // ギャンブリングホール(凍牌〜裏レート麻雀闘牌録〜)
+  "shujinkou-ni-narou": "anime", // 主人公になろう！(空色ユーティリティ)
+  "uni-verse-first-take": "anime", // uni-verse – From THE FIRST TAKE(グリッドマン ユニバース)
+  "kimi-janakya-dame-mitai-first-take": "anime", // 君じゃなきゃダメみたい – From THE FIRST TAKE(月刊少女野崎くん)
+  "kagome-kagome": "anime", // かごめかごめ(地縛少年花子くん2)
+  "futari-camp": "anime", // ふたりキャンプ(ふたりソロキャンプ)
+  "ningen": "anime", // ニンゲン(人外教室)
+  "pokemon-all-stars-1025": "anime", // ポケモンオールスターズ1025(213/1025)
+  "kimi-wa-koibito": "anime", // 君は恋人(お隣の天使様にいつの間にか駄目人間にされていた件2)
+  "high-maintenance-girl": "anime", // ハイメンテナンスガール(花織さんは転生しても喧嘩がしたい)
+  "pokemon-all-stars-1025-full": "anime", // ポケモンオールスターズ1025(フルコーラス版)
+  "aa-subarashiki-nichijou": "other", // 嗚呼、素晴らしき日常(MBS「よんチャンTV」)
+  "tadaima": "other", // ただいま(MBS「よんチャンTV」)
+  "sugar-salt": "anime", // シュガーソルト(塩対応の佐藤さんが俺にだけ甘い)
+  "hero": "anime", // Hero(アニメ『モンスターストライク ノア 方舟の救世主』)
+  "powerful-buddy": "anime", // パワフルバディ(Webアニメ『パワフルプロ野球 パワフル高校編』)
+  "uni-verse": "anime", // uni-verse(劇場版グリッドマン ユニバース)
+  "youkoso-japari-park-kariuta": "anime", // ようこそジャパリパークへ(けものフレンズ)
+  "blood-type-heartbeat-kariuta": "anime", // ブラッドタイプ☆ハートビート(血液型くん!4)
+  "makura-danshi-kariuta": "anime", // 枕男子(TVアニメ『枕男子』)
+  "mankai-kaika-sengen-kariuta": "other", // MANKAI☆開花宣言(ゲーム『A3!』)
+  "bouya-no-yume-yo-kariuta": "anime", // ぼうやの夢よ(Re:ゼロから始める異世界生活)
+  "shunkashuutou-blooming-kariuta-2": "other", // 春夏秋冬☆Blooming!(ゲーム『A3!』)
+  "gokudol-music-kariuta-2": "anime", // ゴクドルミュージック(Back Street Girls -ゴクドルズ-)
+  "wonderland-a-gogo-kariuta-2": "other", // ワンダーランド・ア・ゴーゴー!!(ゲーム『A3!』)
+  "notteke-japari-beat-kariuta-2": "anime", // 乗ってけ！ジャパリビート(けものフレンズ2)
+  "love-song-kariuta-2": "anime", // ラブソング(多田くんは恋をしない)
+  "ready-steady-derby-kariuta-3": "anime", // Ready!! Steady!! Derby!!(劇場版ウマ娘 プリティーダービー 新時代の扉)
+  "peten-shi-no-yuutsu-kariuta-3": "other", // ペテン師の憂鬱(ゲーム『A3!』)
+  "the-show-must-go-on-kariuta-3": "other", // The Show Must Go On!(舞台『A3!』)
+  "isekai-quartet-kariuta-3": "anime", // 異世界かるてっと(TVアニメ『異世界かるてっと』)
+  "nante-colorful-na-sekai-kariuta-3": "other", // なんてカラフルな世界！(Animelo Summer Liveテーマソング)
+  "go-exceed": "anime", // Go EXCEED!!(ダイヤのA)
+  "perfect-hero": "anime", // Perfect HERO(ダイヤのA)
+  "kimero": "anime", // KIMERO!!(ダイヤのA -SECOND SEASON-)
+  "grateful-story": "other", // Grateful Story(舞台『ダイヤのA The LIVE』)
+  "clattanoia": "anime", // Clattanoia(オーバーロード)
+  "bloom-of-youth": "anime", // BLOOM OF YOUTH(ダイヤのA -SECOND SEASON-)
+  "striders-high": "anime", // STRIDER'S HIGH(プリンス・オブ・ストライド オルタナティブ)
+  "brand-new-blue": "anime", // BRAND NEW BLUE(ダイヤのA -SECOND SEASON-)
+  "be-the-best-be-the-blue": "other", // Be The Best! Be The Blue!(舞台『ダイヤのA The LIVE III』)
+  "tears-of-a-genius": "other", // Tears of a Genius(舞台『ダイヤのA The LIVE III』)
+  "one-hand-message": "anime", // One Hand Message(ハンドシェイカー)
+  "laughter-slaughter": "anime", // Laughter Slaughter(劇場版総集編オーバーロード)
+  "number-one-oxt": "other", // Number One(舞台『ダイヤのA The LIVE V』)
+  "home-ground": "other", // HOME GROUND(舞台『ダイヤのA The LIVE V』)
+  "go-cry-go": "anime", // GO CRY GO(オーバーロードII)
+  "silent-solitude": "anime", // Silent Solitude(オーバーロードIII)
+  "mass-for-the-dead": "other", // MASS FOR THE DEAD(ゲームアプリ)
+  "union-oxt": "anime", // UNION(SSSS.GRIDMAN)
+  "golden-after-school": "anime", // ゴールデンアフタースクール(ダイヤのA act II)
+  "everlasting-dream": "anime", // Everlasting Dream(ダイヤのA act II)
+  "hollow-hunger": "anime", // HOLLOW HUNGER(オーバーロードIV)
+  "highest-oxt": "anime", // HIGHEST(陰の実力者になりたくて！)
+  "grayscale-dominator": "anime", // grayscale dominator(陰の実力者になりたくて！2nd season)
+  "wheeler-dealer": "anime", // WHEELER-DEALER(劇場版オーバーロード 聖王国編)
+  "kabukimono-spirit": "other", // カブキモノSPIRIT(パチンコ『e花の慶次』)
+  "otoko-no-ikusa-furyuu-nare": "other", // 漢の戦、風流なれ(パチンコ『e花の慶次』)
+};
+
+type TieInCategory = "anime" | "other" | "none";
+
+function tieInCategoryOf(slug: string, tieIn: string | null): TieInCategory {
+  if (!tieIn) return "none";
+  if (slug in tieInAnimeOverrides) return tieInAnimeOverrides[slug];
+  // 上の辞書に無い(=未確認の)新しいタイアップ曲は、文中に「アニメ」の
+  // 文字列があるかどうかで簡易判定する(正確な分類ではないフォールバック)。
+  return tieIn.includes("アニメ") ? "anime" : "other";
+}
+
+type GameTrack = {
+  slug: string;
+  title: string;
+  group: string;
+  date: string;
+  year: number;
+  tieIn: string | null;
+  tieInCategory: TieInCategory;
+  charCount: number;
+  hasMV: boolean;
+  inAlbum: boolean;
+  liveCount: number;
+  coverSrc: string | null;
+};
+
+const gameTracks: GameTrack[] = singleTracks
+  .map((t) => ({
+    slug: t.slug!,
+    title: t.title,
+    group: t.group,
+    date: t.date,
+    year: Number(t.sortDate.slice(0, 4)),
+    tieIn: t.tieIn ?? null,
+    tieInCategory: tieInCategoryOf(t.slug!, t.tieIn ?? null),
+    // 文字数は見た目の長さのヒントなので、空白(全角・半角とも)は数えない
+    // (ユーザー要望)。
+    charCount: t.title.replace(/[\s　]/g, "").length,
+    hasMV: Boolean(t.youtube) && !t.youtubeAudioOnly,
+    inAlbum: hasAppearance(t.slug, t.title, albumSlugs, albumTitles),
+    liveCount: liveCountOf(t.slug, t.title),
+    coverSrc: resolveTrackCoverSrc(t.image, t.title, getAlbumCoverImages(t), t.preferAlbumCover),
+  }))
+  .sort((a, b) => a.title.localeCompare(b.title, "ja"));
+
+const MAX_GUESSES = 6;
+---
+
+<Layout title="シングルあてゲーム | 014 BASE">
+  <div class="wordle-hero">
+    <p class="wordle-hero-eyebrow">予想して、答えに近づこう</p>
+    <h1 class="wordle-hero-title">シングル<span>あてゲーム</span></h1>
+    <p class="wordle-hero-lead">
+      ランダムに選ばれたオーイシのシングル1曲を、曲名を予想しながら当てるゲームです。<br />
+      予想するたびに「名義」「発売年」「タイアップ」など7つの項目で正解との一致度が表示されるので、<br />
+      そのヒントを手がかりに次の予想を絞り込んでいきましょう。予想できるのは{MAX_GUESSES}回までです。
+    </p>
+    <p class="wordle-hero-note">
+      出題対象はシングルリリースされた曲のみです(アルバム収録曲・提供曲・映像作品は対象外)。<br />
+      進行状況はこのページの中だけで完結し、サーバーには保存されません(ページを閉じると消えます)。
+    </p>
+  </div>
+
+  <div class="wordle-panel">
+    <div class="wordle-status">
+      <span class="wordle-status-count" id="wordle-count">のこり {MAX_GUESSES}/{MAX_GUESSES}回</span>
+      <button type="button" class="wordle-new-button" id="wordle-new-button">別の曲で遊び直す</button>
+    </div>
+
+    <div class="guess-field">
+      <svg class="guess-search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+        <path d="M20 20L16.5 16.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
+      <input type="search" id="guess-input" placeholder="曲名で検索して予想..." autocomplete="off" aria-label="曲名で予想する" />
+      <ul class="guess-suggestions" id="guess-suggestions" hidden></ul>
+    </div>
+
+    <div class="result-wrap" id="result-grid"></div>
+
+    <div class="wordle-end" id="wordle-end" hidden>
+      <img class="wordle-end-cover" id="wordle-end-cover" alt="" />
+      <div class="wordle-end-body">
+        <p class="wordle-end-message" id="wordle-end-message"></p>
+        <p class="wordle-end-title" id="wordle-end-title"></p>
+        <a class="wordle-end-link" id="wordle-end-link" href="#">曲ページを見る →</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="wordle-data" set:html={JSON.stringify({ gameTracks, maxGuesses: MAX_GUESSES })} />
+</Layout>
+
+<script>
+  type TieInCategory = "anime" | "other" | "none";
+  type GameTrack = {
+    slug: string;
+    title: string;
+    group: string;
+    date: string;
+    year: number;
+    tieIn: string | null;
+    tieInCategory: TieInCategory;
+    charCount: number;
+    hasMV: boolean;
+    inAlbum: boolean;
+    liveCount: number;
+    coverSrc: string | null;
+  };
+
+  const data: { gameTracks: GameTrack[]; maxGuesses: number } = JSON.parse(
+    document.getElementById("wordle-data")!.textContent!
+  );
+  const { gameTracks, maxGuesses } = data;
+
+  // ライブ収録回数の段階表示(ユーザー要望: 0,1,3,5以上)。比較のヒント自体は
+  // 丸める前の実数(liveCount)を使い、表示だけこのラベルに変換する。
+  const LIVE_BUCKET_LABELS = ["0回", "1回", "2〜4回", "5回以上"] as const;
+  function liveBucketIndex(count: number): 0 | 1 | 2 | 3 {
+    if (count <= 0) return 0;
+    if (count === 1) return 1;
+    if (count <= 4) return 2;
+    return 3;
+  }
+  function liveBucketLabel(count: number): string {
+    return LIVE_BUCKET_LABELS[liveBucketIndex(count)];
+  }
+  const TIE_IN_CATEGORY_LABELS: Record<TieInCategory, string> = {
+    anime: "アニメ",
+    other: "アニメ以外",
+    none: "タイアップなし",
+  };
+
+  const countEl = document.getElementById("wordle-count") as HTMLSpanElement;
+  const newButton = document.getElementById("wordle-new-button") as HTMLButtonElement;
+  const input = document.getElementById("guess-input") as HTMLInputElement;
+  const suggestionsEl = document.getElementById("guess-suggestions") as HTMLUListElement;
+  const resultGrid = document.getElementById("result-grid") as HTMLDivElement;
+  const endPanel = document.getElementById("wordle-end") as HTMLDivElement;
+  const endCover = document.getElementById("wordle-end-cover") as HTMLImageElement;
+  const endMessage = document.getElementById("wordle-end-message") as HTMLParagraphElement;
+  const endTitle = document.getElementById("wordle-end-title") as HTMLParagraphElement;
+  const endLink = document.getElementById("wordle-end-link") as HTMLAnchorElement;
+
+  let target: GameTrack;
+  let guessedSlugs: string[] = [];
+  let gameOver = false;
+  let highlightIndex = -1;
+
+  function randomTrack(excludeSlug?: string): GameTrack {
+    const pool = excludeSlug ? gameTracks.filter((t) => t.slug !== excludeSlug) : gameTracks;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function escapeHtml(str: string): string {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function startGame(excludeSlug?: string) {
+    target = randomTrack(excludeSlug);
+    guessedSlugs = [];
+    gameOver = false;
+    highlightIndex = -1;
+    input.value = "";
+    input.disabled = false;
+    closeSuggestions();
+    endPanel.hidden = true;
+    resultGrid.innerHTML = "";
+    updateCount();
+
+    // 最初の1回はプレイヤーではなくシステム側がランダムに予想を出す
+    // (ユーザー要望)。正解そのものを出すと即終了してしまうので、
+    // 正解を除いた中からランダムに選ぶ。
+    applyGuess(randomTrack(target.slug));
+  }
+
+  function updateCount() {
+    const remaining = maxGuesses - guessedSlugs.length;
+    countEl.textContent = gameOver ? `${guessedSlugs.length}/${maxGuesses}回使用` : `のこり ${remaining}/${maxGuesses}回`;
+  }
+
+  // ===== 予想の検索・サジェスト =====
+  function closeSuggestions() {
+    suggestionsEl.hidden = true;
+    suggestionsEl.innerHTML = "";
+    highlightIndex = -1;
+  }
+
+  function renderSuggestions(query: string) {
+    const q = query.trim().toLowerCase();
+    if (!q) {
+      closeSuggestions();
+      return;
+    }
+    const matches = gameTracks
+      .filter((t) => t.title.toLowerCase().includes(q) || (t.tieIn ?? "").toLowerCase().includes(q))
+      .slice(0, 8);
+
+    if (matches.length === 0) {
+      suggestionsEl.innerHTML = `<li class="guess-suggestion-empty">該当する曲が見つかりませんでした。</li>`;
+      suggestionsEl.hidden = false;
+      highlightIndex = -1;
+      return;
+    }
+
+    suggestionsEl.innerHTML = matches
+      .map((t, i) => {
+        const already = guessedSlugs.includes(t.slug);
+        return `
+          <li>
+            <button type="button" class="guess-suggestion-item${already ? " is-disabled" : ""}" data-slug="${t.slug}" data-index="${i}" ${already ? "disabled" : ""}>
+              ${
+                t.coverSrc
+                  ? `<img class="guess-suggestion-cover" src="${t.coverSrc}" alt="" loading="lazy" />`
+                  : `<span class="guess-suggestion-cover guess-suggestion-cover-placeholder" aria-hidden="true">♪</span>`
+              }
+              <span class="guess-suggestion-body">
+                <span class="guess-suggestion-title">${escapeHtml(t.title)}</span>
+                <span class="guess-suggestion-date">${escapeHtml(t.date)}</span>
+              </span>
+              ${already ? `<span class="guess-suggestion-tag">予想済み</span>` : ""}
+            </button>
+          </li>
+        `;
+      })
+      .join("");
+    suggestionsEl.hidden = false;
+    highlightIndex = -1;
+
+    suggestionsEl.querySelectorAll<HTMLButtonElement>(".guess-suggestion-item").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (button.disabled) return;
+        submitGuess(button.dataset.slug!);
+      });
+    });
+  }
+
+  input.addEventListener("input", () => {
+    if (gameOver) return;
+    renderSuggestions(input.value);
+  });
+
+  input.addEventListener("keydown", (event) => {
+    if (gameOver) return;
+    const items = Array.from(suggestionsEl.querySelectorAll<HTMLButtonElement>(".guess-suggestion-item:not(:disabled)"));
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      if (items.length === 0) return;
+      highlightIndex = (highlightIndex + 1) % items.length;
+      items.forEach((it, i) => it.classList.toggle("is-highlighted", i === highlightIndex));
+      items[highlightIndex].scrollIntoView({ block: "nearest" });
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      if (items.length === 0) return;
+      highlightIndex = (highlightIndex - 1 + items.length) % items.length;
+      items.forEach((it, i) => it.classList.toggle("is-highlighted", i === highlightIndex));
+      items[highlightIndex].scrollIntoView({ block: "nearest" });
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      if (highlightIndex >= 0 && items[highlightIndex]) {
+        submitGuess(items[highlightIndex].dataset.slug!);
+      } else if (items.length === 1) {
+        submitGuess(items[0].dataset.slug!);
+      }
+    } else if (event.key === "Escape") {
+      closeSuggestions();
+    }
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!(event.target instanceof Node)) return;
+    if (!input.contains(event.target) && !suggestionsEl.contains(event.target)) closeSuggestions();
+  });
+
+  // ===== 予想の判定・結果表示 =====
+  type NumericCmp = "match" | "up" | "down"; // up = 正解はもっと大きい、down = 正解はもっと小さい
+
+  function cmpNumeric(guessVal: number, targetVal: number): NumericCmp {
+    if (guessVal === targetVal) return "match";
+    return guessVal < targetVal ? "up" : "down";
+  }
+
+  function renderResultRow(guess: GameTrack) {
+    const groupMatch = guess.group === target.group;
+    const yearCmp = cmpNumeric(guess.year, target.year);
+    const tieInMatch = guess.tieInCategory === target.tieInCategory;
+    const charCmp = cmpNumeric(guess.charCount, target.charCount);
+    const mvMatch = guess.hasMV === target.hasMV;
+    const albumMatch = guess.inAlbum === target.inAlbum;
+    const liveCmp = cmpNumeric(guess.liveCount, target.liveCount);
+    // ライブ収録は0/1/2〜4/5以上の段階(0〜3)で「近さ」を見る。
+    const liveBucketCmp = cmpNumeric(liveBucketIndex(guess.liveCount), liveBucketIndex(target.liveCount));
+
+    const card = document.createElement("div");
+    card.className = "pg-card";
+
+    card.innerHTML = `
+      <div class="pg-card-header">
+        ${
+          guess.coverSrc
+            ? `<img class="pg-card-cover" src="${guess.coverSrc}" alt="" loading="lazy" />`
+            : `<span class="pg-card-cover pg-card-cover-placeholder" aria-hidden="true">♪</span>`
+        }
+        <span class="pg-card-title">${escapeHtml(guess.title)}</span>
+      </div>
+    `;
+
+    const grid = document.createElement("div");
+    grid.className = "pg-card-grid";
+    card.appendChild(grid);
+
+    // state: "match"(緑/的中) "close"(黄/惜しい) "miss"(グレー/不一致)
+    // wide: 1マス分広く使うタイル(名義など情報量が多い項目向け)
+    function addTile(label: string, state: "match" | "close" | "miss", text: string, arrow?: "up" | "down", wide = false) {
+      const tile = document.createElement("div");
+      tile.className = `pg-tile pg-tile-${state}${wide ? " pg-tile-wide" : ""}`;
+      tile.innerHTML = `
+        <span class="pg-tile-label">${escapeHtml(label)}</span>
+        <span class="pg-tile-value">${escapeHtml(text)}${arrow ? `<i class="pg-arrow pg-arrow-${arrow}" aria-hidden="true"></i>` : ""}</span>
+      `;
+      grid.appendChild(tile);
+    }
+
+    // 数値系は「近い(黄)」か「遠い(グレー)」かも見せる。ユーザーが段階を
+    // 把握しやすいよう、しきい値はそれぞれの項目の尺度に合わせて決めている。
+    function numericState(cmp: NumericCmp, diff: number, closeWithin: number): "match" | "close" | "miss" {
+      if (cmp === "match") return "match";
+      return diff <= closeWithin ? "close" : "miss";
+    }
+
+    addTile("名義", groupMatch ? "match" : "miss", guess.group, undefined, true);
+    addTile(
+      "発売年",
+      numericState(yearCmp, Math.abs(guess.year - target.year), 2),
+      String(guess.year),
+      yearCmp === "match" ? undefined : yearCmp
+    );
+    addTile("タイアップ", tieInMatch ? "match" : "miss", TIE_IN_CATEGORY_LABELS[guess.tieInCategory]);
+    addTile(
+      "文字数",
+      numericState(charCmp, Math.abs(guess.charCount - target.charCount), 2),
+      `${guess.charCount}文字`,
+      charCmp === "match" ? undefined : charCmp
+    );
+    addTile("MV", mvMatch ? "match" : "miss", guess.hasMV ? "MVあり" : "MVなし");
+    addTile("アルバム収録", albumMatch ? "match" : "miss", guess.inAlbum ? "収録あり" : "収録なし");
+    addTile(
+      "ライブ収録",
+      numericState(liveBucketCmp, Math.abs(liveBucketIndex(guess.liveCount) - liveBucketIndex(target.liveCount)), 1),
+      liveBucketLabel(guess.liveCount),
+      liveCmp === "match" ? undefined : liveCmp
+    );
+
+    resultGrid.appendChild(card);
+  }
+
+  function endGame(won: boolean) {
+    gameOver = true;
+    input.disabled = true;
+    closeSuggestions();
+    updateCount();
+
+    endPanel.hidden = false;
+    endMessage.textContent = won
+      ? `正解です！${guessedSlugs.length}回目で当てました 🎉`
+      : `残念、${maxGuesses}回以内に当てられませんでした。正解は…`;
+    endTitle.textContent = target.title;
+    endLink.href = `/works/${target.slug}`;
+    if (target.coverSrc) {
+      endCover.src = target.coverSrc;
+      endCover.hidden = false;
+    } else {
+      endCover.hidden = true;
+    }
+  }
+
+  // 予想を1件確定させて結果行を描画し、勝敗判定まで行う共通処理。
+  // 手入力の予想(submitGuess)と、初回にシステムが自動で出す予想の両方から呼ぶ。
+  function applyGuess(guess: GameTrack) {
+    guessedSlugs.push(guess.slug);
+    renderResultRow(guess);
+    updateCount();
+
+    if (guess.slug === target.slug) {
+      endGame(true);
+    } else if (guessedSlugs.length >= maxGuesses) {
+      endGame(false);
+    }
+  }
+
+  function submitGuess(slug: string) {
+    if (gameOver || guessedSlugs.includes(slug)) return;
+    const guess = gameTracks.find((t) => t.slug === slug);
+    if (!guess) return;
+
+    applyGuess(guess);
+    input.value = "";
+    closeSuggestions();
+    if (!gameOver) input.focus();
+  }
+
+  newButton.addEventListener("click", () => startGame(target?.slug));
+
+  startGame();
+</script>
+
+<style is:global>
+  /*
+    MY PICKと同じ理由(クライアントJSでinnerHTML経由で要素を生成するため)で
+    is:global にしている。クラス名はこのページ固有(wordle-*, guess-*, result-*,
+    pg-*)のみを使っているため他ページとの衝突は無い。
+    Zen Maru Gothicは「ポケげっさー」を参考にした丸ゴシック体(ユーザー要望)。
+    このページの実行領域(.wordle-panel)だけに適用し、サイト全体のフォントは変えない。
+  */
+  @import url("https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap");
+
+  .wordle-hero {
+    margin: 0.5rem 0 1.5rem;
+    text-align: center;
+  }
+
+  .wordle-hero-eyebrow {
+    margin: 0 0 0.35rem;
+    color: var(--color-accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .wordle-hero-title {
+    margin: 0 0 0.75rem;
+    font-size: 2rem;
+  }
+
+  .wordle-hero-title span {
+    background: linear-gradient(120deg, var(--color-accent), #c99a6c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .wordle-hero-lead {
+    max-width: 640px;
+    margin: 0 auto 0.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+
+  .wordle-hero-note {
+    max-width: 640px;
+    margin: 0 auto;
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    line-height: 1.6;
+  }
+
+  .wordle-panel {
+    font-family: "Zen Maru Gothic", var(--font-sans, sans-serif);
+    margin-bottom: 2rem;
+  }
+
+  .wordle-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .wordle-status-count {
+    font-weight: 700;
+    color: var(--color-text);
+    font-size: 0.9rem;
+  }
+
+  .wordle-new-button {
+    padding: 0.5rem 1.1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .wordle-new-button:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .guess-field {
+    position: relative;
+    margin-bottom: 1.25rem;
+  }
+
+  .guess-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+
+  #guess-input {
+    width: 100%;
+    padding: 0.8rem 1rem 0.8rem 2.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    font-family: inherit;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+  }
+
+  #guess-input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 20%, transparent);
+  }
+
+  #guess-input:disabled {
+    opacity: 0.6;
+  }
+
+  .guess-suggestions {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 0.4rem);
+    left: 0;
+    right: 0;
+    max-height: 320px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.5rem;
+    list-style: none;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: var(--color-surface);
+    box-shadow: 0 12px 30px rgba(47, 44, 40, 0.15);
+  }
+
+  .guess-suggestions[hidden] {
+    display: none;
+  }
+
+  .guess-suggestion-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.5rem 0.6rem;
+    margin-bottom: 0.3rem;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .guess-suggestion-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .guess-suggestion-item:hover:not(.is-disabled),
+  .guess-suggestion-item.is-highlighted {
+    background: var(--color-bg);
+  }
+
+  .guess-suggestion-item.is-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .guess-suggestion-cover {
+    flex: none;
+    width: 42px;
+    height: 42px;
+    object-fit: cover;
+    border-radius: 7px;
+  }
+
+  .guess-suggestion-cover-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #e5ded3, #cfc3af);
+    color: rgba(0, 0, 0, 0.4);
+    font-size: 1rem;
+  }
+
+  .guess-suggestion-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  .guess-suggestion-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .guess-suggestion-date {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+  }
+
+  .guess-suggestion-tag {
+    flex: none;
+    margin-left: auto;
+    font-size: 0.68rem;
+    color: var(--color-accent);
+  }
+
+  .guess-suggestion-empty {
+    padding: 0.9rem;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+  }
+
+  /*
+    ここから先はユーザー要望の「ポケげっさー」(poke-guesser.jp)を参考にした
+    見た目。1予想=1カードのレイアウト、太めの縁取り、ベタ塗りの緑/黄/グレーで
+    一致度を示す配色・三角矢印は、あちらのサイトの実装(CSS変数の値まで)を
+    直接確認した上で寄せている。丸ゴシック体(Zen Maru Gothic)もそのため。
+  */
+  .result-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .pg-card {
+    border: 3px solid var(--color-text);
+    border-radius: 14px;
+    background: var(--color-surface);
+    overflow: hidden;
+    box-shadow: 0 3px 0 rgba(47, 44, 40, 0.12);
+  }
+
+  .pg-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.8rem;
+    background: var(--color-text);
+    color: #fff;
+  }
+
+  .pg-card-cover {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+
+  .pg-card-cover-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #e5ded3, #cfc3af);
+    color: rgba(0, 0, 0, 0.4);
+    font-size: 0.9rem;
+  }
+
+  .pg-card-title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pg-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.45rem;
+    padding: 0.5rem;
+  }
+
+  .pg-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    min-height: 3.1rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 8px;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  .pg-tile-wide {
+    grid-column: 1 / -1;
+  }
+
+  .pg-tile-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    opacity: 0.85;
+  }
+
+  .pg-tile-value {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  .pg-arrow {
+    flex: none;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+  }
+
+  .pg-arrow-up {
+    border-bottom: 8px solid currentColor;
+  }
+
+  .pg-arrow-down {
+    border-top: 8px solid currentColor;
+  }
+
+  .pg-tile-match {
+    background: #64b46c;
+    color: #fff;
+  }
+
+  .pg-tile-close {
+    background: #f7d864;
+    color: #4a3c0a;
+  }
+
+  .pg-tile-close .pg-arrow {
+    color: #a3680f;
+  }
+
+  .pg-tile-miss {
+    background: #726b63;
+    color: #fff;
+  }
+
+  .pg-tile-miss .pg-arrow {
+    color: #f2a65a;
+  }
+
+  .wordle-end {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    background: var(--color-surface);
+    box-shadow: 0 6px 20px rgba(47, 44, 40, 0.08);
+  }
+
+  .wordle-end[hidden] {
+    display: none;
+  }
+
+  .wordle-end-cover {
+    flex: none;
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 12px;
+  }
+
+  .wordle-end-cover[hidden] {
+    display: none;
+  }
+
+  .wordle-end-body {
+    min-width: 0;
+  }
+
+  .wordle-end-message {
+    margin: 0 0 0.25rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  .wordle-end-title {
+    margin: 0 0 0.4rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-accent);
+  }
+
+  .wordle-end-link {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .wordle-end-link:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 640px) {
+    .wordle-status {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>
