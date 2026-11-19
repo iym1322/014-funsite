@@ -141,6 +141,7 @@ export const schedule: ScheduleEvent[] = [
   { date: "2026-12-02", title: "CLUB014限定！オーイシマサヨシ忘年会ライブ", type: "live", note: "川崎CLUB CITTA’(神奈川公演1日目)", sourceUrl: "https://www.014014.jp/news/8039" },
   { date: "2026-12-03", title: "CLUB014限定！オーイシマサヨシ忘年会ライブ", type: "live", note: "川崎CLUB CITTA’(神奈川公演2日目)", sourceUrl: "https://www.014014.jp/news/8039" },
   { date: "2026-12-06", title: "HIROSHIMA CONTI-NeW FeS 2026", type: "live", note: "広島グリーンアリーナ(オーイシマサヨシの出演は12/6のみ)", sourceUrl: "https://www.014014.jp/news/8059" },
+  { date: "2026-12-13", title: "「シュガーソルト／ハイメンテナンスガール」発売記念オンラインサイン会", type: "event", sourceUrl: "https://www.014014.jp/news/8111" },
   { date: "2026-12-16", title: "森口博子「ANISON COVERS 3」リリース", type: "release", note: "オーイシマサヨシがゲスト歌唱参加(「CARNIVAL・BABEL ～カルナバル・バベル～」)", sourceUrl: "https://www.014014.jp/news/7973" },
   { date: "2026-12-17", title: "CLUB014限定！オーイシマサヨシ忘年会ライブ", type: "live", note: "心斎橋BIGCAT(大阪公演)", sourceUrl: "https://www.014014.jp/news/8039" },
   { date: "2026-12-26", title: "COUNTDOWN JAPAN 26/27 supported by au", type: "live", note: "幕張メッセ 国際展示場 1〜11ホール(オーイシマサヨシの出演は12/26のみ)", sourceUrl: "https://www.014014.jp/news/8082" },
