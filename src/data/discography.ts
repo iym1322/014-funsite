@@ -2734,6 +2734,14 @@ const raw: Omit<Track, "sortDate">[] = [
   {
     group: "オーイシマサヨシ",
     type: "シングル",
+    date: "2026.11.27",
+    title: "HYPER!!",
+    tieIn: "「配信者ハイパーゲーム大会 FINAL」テーマソング",
+    note: "作詞:大石昌良・加藤純一、作曲:大石昌良、編曲:大石昌良・eba。11/28・29開催の東京ドーム公演オープニングで大石昌良本人による生歌唱パフォーマンスが予定されている。",
+  },
+  {
+    group: "オーイシマサヨシ",
+    type: "シングル",
     date: "2025.09.01",
     title: "Butter-Fly - From THE FIRST TAKE",
     note: "angela、オーイシマサヨシ、奥井雅美、TrySail、FLOWによる合同歌唱",
